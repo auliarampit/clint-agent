@@ -1,0 +1,157 @@
+# clint
+
+Tim agent Claude Code: dari membaca dokumen, menulis kode, meninjau, menguji, sampai membuat MR.
+Dipasang sekali sebagai plugin, berlaku di semua project. Anda cukup review dan merge.
+
+## 4 perintah
+
+| Perintah | Untuk |
+|---|---|
+| `/clint:cek` | pagi / "ada update apa?": tarik docs & design, cocokkan dengan kode, MR & pipeline, disk |
+| `/clint:jalankan <apa yang mau dikerjakan>` | **semua pekerjaan**, kecil sampai modul penuh. Hasil: MR + satu laporan |
+| `/clint:tinjau !123` | review MR rekan (hanya laporan) |
+| `/clint:siapkan-project mobile` | sekali per project |
+
+Anda **tidak perlu memanggil agent**; agent dipanggil oleh perintah di atas.
+
+## Contoh `jalankan`
+
+```
+/clint:jalankan perbaiki daftar produk: tambah tarik-untuk-muat-ulang     ← tugas kecil, 1 PR
+/clint:jalankan MOB-10                                                   ← modul baru, rencana dibuat otomatis
+/clint:jalankan docs/plans/mr-mob-10.md                                  ← lanjutkan rencana (PR selesai dilewati)
+/clint:jalankan docs/plans/mr-mob-10.md PR-5                             ← hanya PR-5
+/clint:jalankan docs/plans/mr-mob-10.md PR-5..PR-7                       ← PR-5 sampai PR-7
+/clint:jalankan ../docs/<feedback-QA>.md                                 ← butir feedback/bug yang masih open
+/clint:jalankan terapkan saran reviewer 1 dan 2 di !123             ← tindak lanjut MR, push ke MR yang sama
+/clint:jalankan perbaiki pipeline !123                                   ← pipeline merah
+/clint:jalankan                                                          ← kerjakan temuan /clint:cek barusan
+```
+
+## Rutinitas
+
+```
+pagi    /clint:cek
+kerja   /clint:jalankan ...   → tunggu laporan → review MR → merge
+rekan   /clint:tinjau !123
+```
+
+Kode yang Anda tulis langsung di sesi (≥ 40 baris) ditinjau dan dirapikan otomatis.
+
+## Yang terjadi di dalam `jalankan`
+
+```
+tarik dev + docs + designs
+   → rencana: dibuat / diperbarui bila perlu (tugas kecil: tanpa rencana)
+   → per PR (yang tidak saling bergantung: paralel, maks 3):
+        branch baru (worktree hanya bila beberapa PR jalan bersamaan) → pengembang menulis kode
+        → peninjau + reviewer-senior (+ auditor-keamanan, penyelaras-desain bila relevan)
+        → temuan wajib diperbaiki otomatis (maks 2 putaran)
+        → penguji E2E bila rencana minta
+        → commit (stage eksplisit) → push → MR ke dev → verifikasi MR → kembali ke branch asal
+   → satu laporan: tabel PR/MR/putusan peninjau + urutan merge
+```
+
+PR yang bergantung pada PR lain dibangun di atas branch-nya; MR tetap ke `dev`, deskripsi
+menyebut urutan merge. Satu PR gagal → hanya PR yang bergantung padanya dilewati.
+
+## Agent (dipanggil otomatis)
+
+| Agent | Peran | Model |
+|---|---|---|
+| `perencana` | rencana per PR dari PRD/SAD/STD/API contract/prototype | Sonnet |
+| `pengembang` | menulis kode, lint/typecheck/test | Opus |
+| `peninjau` | sesuai rencana, dokumen, aturan project? | Sonnet |
+| `reviewer-senior` | clean code & clean architecture? | Opus |
+| `auditor-keamanan` | ada celah keamanan? | Opus |
+| `penyelaras-desain` | sama dengan prototype? | Sonnet |
+| `penguji` | E2E happy path + error path | Sonnet |
+| `pemulih-pipeline` | perbaiki CI yang gagal | Opus |
+| `pelacak-perubahan` | apa yang berubah di docs/design/dev | Sonnet |
+| `penjaga` | MR, pipeline, branch, worktree, disk | Haiku |
+
+## Otomatis tanpa perintah (hooks)
+
+| Kapan | Efek |
+|---|---|
+| sesi dimulai | 4 prinsip kerja dimuat (tidak dobel bila project sudah punya salinannya) |
+| file diedit | formatter project dijalankan pada file itu |
+| sesi selesai dengan ≥ 40 baris kode belum ditinjau | `/clint:tinjau` jalan sendiri: tinjau + perbaiki. Sekali per perubahan |
+
+## Hemat token
+
+Model tidak diturunkan; yang dijaga cara kerjanya:
+
+- peninjau menerima path file diff + potongan rencana, bukan dokumen utuh;
+- hasil test pengembang diteruskan, tidak dijalankan ulang;
+- putaran perbaikan hanya memverifikasi temuan sebelumnya;
+- auditor & penyelaras hanya jalan bila diff relevan; potret layar hanya bila perlu;
+- tinjau otomatis hanya ≥ 40 baris, sekali per perubahan;
+- setiap agent membaca seperlunya (`grep`, potongan baris), memotong keluaran panjang, laporan padat.
+
+## Konfigurasi project: `.claude/clint.json`
+
+Dibuat oleh `siapkan-project`.
+
+```jsonc
+{
+  "baseBranch": "dev",
+  "mr": { "cli": "glab", "targetBranch": "dev" },     // glab (GitLab) / gh (GitHub)
+  "autoReviewMinLines": 40,                           // "autoReview": false untuk mematikan
+  "worktreeRoot": "../mobile-worktrees",
+  "relatedRepos": [                                   // [] untuk monorepo
+    { "name": "docs",    "path": "../docs",    "branch": "main", "role": "docs" },
+    { "name": "designs", "path": "../designs", "branch": "main", "role": "design" }
+  ],
+  "docs": { "plans": "docs/plans", "requirements": "../docs", "design": "../designs/aplikasi.html" },
+  "surfaces": [
+    { "name": "mobile", "root": ".", "adapter": ".claude/mobile-stack.md",
+      "lint": "bun run lint", "typecheck": "bun run typecheck", "test": "bun run test",
+      "e2e": "bun run test:e2e", "formatFile": "bunx prettier --write" }
+  ]
+}
+```
+
+Monorepo: tambah entri `surfaces` per app (mis. `apps/admin` web, `apps/api` backend).
+
+## Struktur repo
+
+```
+clint/
+  README.md
+  agents/            10 agent
+  skills/            cek · jalankan · tinjau · siapkan-project
+  hooks/
+  kit/               master skill/rules/adapter yang DISALIN ke project (lihat kit/README.md)
+  .claude-plugin/    (tersembunyi) plugin.json + marketplace.json — jangan dihapus/dipindah
+```
+
+Skill platform, rules, dan adapter disalin ke `.claude/` project supaya rekan tim tanpa plugin
+tetap mendapat aturan yang sama. `/clint:siapkan-project sinkron` membandingkan salinan dengan master.
+
+## Pasang & update
+
+```bash
+claude plugin marketplace add auliarampit/clint-agent    # dari GitHub
+# atau lokal: claude plugin marketplace add ~/Desktop/clint
+claude plugin install clint@clint
+
+# setelah mengubah kit
+cd ~/Desktop/clint && git commit -am "..."
+claude plugin marketplace update clint && claude plugin update clint@clint
+```
+
+Lalu di VSCode: `Cmd+Shift+P` → **Developer: Reload Window**, buka sesi baru.
+
+## Aturan emas master skill
+
+Kalimat yang bisa menjadi salah karena orang lain mengubah kode tidak boleh ada di skill; tempatnya di
+adapter, atau diganti perintah verifikasi. Penjelasan: `kit/mobile/README.md`.
+
+## Peta jalan
+
+| Fase | Isi | Status |
+|---|---|---|
+| 1 | core + mobile | selesai |
+| 2 | web (konvensi portable + adapter, dari rules frontend project yang sudah berjalan) | berikutnya |
+| 3 | backend (backend-features, backend-i18n, prisma-database) | menyusul |

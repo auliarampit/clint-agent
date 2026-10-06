@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "clint",
+  "description": "Agent, skill, dan aturan kerja portable untuk project mobile, web, dan backend",
+  "owner": {
+    "name": "Aulia Rahmat"
+  },
+  "plugins": [
+    {
+      "name": "clint",
+      "description": "Alur PR otomatis (rencana → kerja → tinjau → uji → MR), prinsip kerja wajib, dan master skill per platform",
+      "source": "./",
+      "version": "0.9.1"
+    }
+  ]
+}

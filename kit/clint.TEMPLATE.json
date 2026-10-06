@@ -1,0 +1,41 @@
+{
+  "baseBranch": "dev",
+  "mr": {
+    "cli": "glab",
+    "targetBranch": "dev"
+  },
+  "autoReviewMinLines": 40,
+  "worktreeRoot": "../{nama-repo}-worktrees",
+  "relatedRepos": [
+    {
+      "name": "docs",
+      "path": "../docs",
+      "branch": "main",
+      "role": "docs"
+    },
+    {
+      "name": "designs",
+      "path": "../designs",
+      "branch": "main",
+      "role": "design"
+    }
+  ],
+  "docs": {
+    "plans": "{path rencana PR / TIDAK ADA}",
+    "requirements": "{path PRD/SAD/STD/API contract / TIDAK ADA}",
+    "design": "{path prototype desain / TIDAK ADA}",
+    "feedback": "{folder feedback/bug QA / TIDAK ADA}"
+  },
+  "surfaces": [
+    {
+      "name": "mobile",
+      "root": ".",
+      "adapter": ".claude/mobile-stack.md",
+      "lint": "bun run lint",
+      "typecheck": "bun run typecheck",
+      "test": "bun run test",
+      "e2e": "bun run test:e2e",
+      "formatFile": "bunx prettier --write"
+    }
+  ]
+}
