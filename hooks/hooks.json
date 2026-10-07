@@ -1,5 +1,5 @@
 {
-  "description": "Prinsip kerja di awal sesi, format otomatis setelah edit, tinjauan otomatis saat sesi selesai mengubah kode",
+  "description": "Prinsip kerja di awal sesi, format otomatis setelah edit, tinjauan otomatis saat sesi selesai mengubah kode; kabar suara + notifikasi saat cek/jalankan selesai",
   "hooks": {
     "SessionStart": [
       {
@@ -30,6 +30,11 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-review.sh\"",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/kabar.sh\"",
+            "timeout": 10
           }
         ]
       }

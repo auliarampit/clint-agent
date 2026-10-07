@@ -221,3 +221,13 @@ Seperti rekan kerja mengabari lewat chat, maksimal ±12 baris:
 - Tanpa tabel, tanpa putusan per agent, tanpa hash/path kecuali untuk tindak lanjut.
 
 Merge tetap oleh user.
+
+## Kabar suara (wajib, di akhir)
+
+Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) ke file kabar;
+hook akan menampilkannya sebagai notifikasi dan membacakannya:
+
+```bash
+printf '%s' "<kalimat inti>" > "${TMPDIR:-/tmp}/clint-kabar.txt"
+```
+Contoh: "Selesai. Tiga MR siap direview, satu tertahan karena test gagal."

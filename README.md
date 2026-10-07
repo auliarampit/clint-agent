@@ -78,6 +78,28 @@ menyebut urutan merge. Satu PR gagal → hanya PR yang bergantung padanya dilewa
 | file diedit | formatter project dijalankan pada file itu |
 | sesi selesai dengan ≥ 40 baris kode belum ditinjau | `/clint:tinjau` jalan sendiri: tinjau + perbaiki. Sekali per perubahan |
 
+## Mode JARVIS
+
+| Kemampuan | Cara kerja |
+|---|---|
+| **Sapaan pagi** | Senin–Jumat jam 08.00, `/clint:cek` jalan sendiri (mode baca saja), kalimat intinya muncul sebagai notifikasi + dibacakan. Laporan lengkap: `~/Library/Logs/clint/<tanggal>-<project>.md`. Laptop tidur → jalan saat bangun |
+| **Bersuara** | `cek` dan `jalankan` menutup dengan satu kalimat inti yang dibacakan (suara Damayanti, bahasa Indonesia) + notifikasi Mac. Gratis token (suara lokal) |
+| **Perintah suara** | tombol mikrofon di kotak chat Claude |
+| **Kabar ke HP** | notifikasi push saat agent selesai |
+| **Kendali dari HP** | Remote Control aktif saat Claude Code dibuka; lanjutkan sesi dari aplikasi Claude |
+| **Ingat kebiasaan** | memori Claude Code |
+
+Agent **tidak** bergerak sendiri tanpa perintah (mis. memperbaiki pipeline diam-diam); ia hanya
+mengabari dan menyiapkan perintahnya.
+
+```bash
+scripts/pasang-sapaan.sh 8 0 ~/path/project-a ~/path/project-b   # jadwal + daftar project
+scripts/pasang-sapaan.sh --cabut                                 # matikan sapaan pagi
+scripts/sapaan-pagi.sh --uji ~/path/project-a                    # uji tanpa biaya cek
+```
+
+Matikan suara per project: `"suara": false` di `.claude/clint.json`; sementara: `CLINT_SUARA=0`.
+
 ## Hemat token
 
 Model tidak diturunkan; yang dijaga cara kerjanya:

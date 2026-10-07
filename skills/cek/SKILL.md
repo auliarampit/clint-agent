@@ -15,10 +15,21 @@ argument-hint: [sejak <periode>]
 
 **Singkat dan manusiawi.** Seperti rekan kerja mengabari lewat chat:
 
-- Satu kalimat pembuka, mis. "Ada 3 hal untuk mobile hari ini, 2 bisa langsung dikerjakan."
+- Buka dengan sapaan sesuai waktu lalu kalimat inti, mis. "Selamat pagi. Ada 3 hal untuk mobile
+  hari ini, 2 bisa langsung dikerjakan."
 - Lalu daftar pendek, satu baris per hal, bahasa sehari-hari, sebut nama layar/fitur:
   "Daftar produk belum bisa ditarik untuk dimuat ulang (feedback #8)."
 - Yang tidak perlu tindakan cukup satu baris penutup, mis. "Selain itu aman: MR dan pipeline bersih."
 - Akhiri dengan satu perintah siap ketik.
 - Tanpa judul besar, tanpa tabel, tanpa hash commit/path kecuali benar-benar diperlukan.
   Maksimal ±10 baris.
+
+## Kabar suara (wajib, di akhir)
+
+Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) ke file kabar;
+hook akan menampilkannya sebagai notifikasi dan membacakannya:
+
+```bash
+printf '%s' "<kalimat inti>" > "${TMPDIR:-/tmp}/clint-kabar.txt"
+```
+Contoh: "Selamat pagi. Ada dua hal untuk mobile hari ini, pipeline aman."
