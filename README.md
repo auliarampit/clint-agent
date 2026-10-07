@@ -110,7 +110,7 @@ menunggu (submenu *Salin perintah*), tombol *Buka laporan terakhir*, *Cek semua 
 
 ```bash
 brew install --cask swiftbar
-mkdir -p ~/.config/clint/swiftbar && ln -sf ~/Desktop/clint/swiftbar/clint.1m.py ~/.config/clint/swiftbar/
+mkdir -p ~/.config/clint/swiftbar && ln -sf ~/Desktop/clint/swiftbar/clint.py ~/.config/clint/swiftbar/
 defaults write com.ameba.SwiftBar PluginDirectory -string "$HOME/.config/clint/swiftbar" && open -a SwiftBar
 ```
 
@@ -127,7 +127,9 @@ memindahkannya ke *Menunggu review*; MR yang sudah merged/closed hilang sendiri 
 `docs.pic` di `.claude/clint.json` (dokumen pembagian tugas, mis. sprint tracker). `cek` lalu hanya
 melaporkan butir yang PIC-nya Anda; milik orang lain cukup disebut jumlahnya.
 
-Ikon memakai `~/.config/clint/ikon.png` bila ada (bulat, 44×44 px); tanpa itu dipakai ikon bawaan.
+Ikon dan animasi cincin dibuat dari gambar pribadi `~/.config/clint/avatar.jpg` dengan
+`python3 scripts/buat-ikon.py` (butuh Pillow); tanpa itu dipakai ikon bawaan. Plugin berjenis streamable:
+perubahan tampil dalam 1 detik dan cincin avatar berputar saat agent bekerja.
 
 **Avatar (opsional):** taruh gambar persegi di `~/.config/clint/avatar.jpg`; layar laporan menampilkannya.
 Gambar ini sengaja tidak disimpan di repo.

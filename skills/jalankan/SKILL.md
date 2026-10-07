@@ -201,16 +201,18 @@ Kegagalan satu PR (masih ada temuan wajib setelah 2 putaran, test gagal, konflik
 
 ## Status di menu bar
 
+Saat mulai, setiap ganti PR/tahap, dan saat selesai, tulis kemajuan (murah, satu perintah):
+```bash
+printf '%s' '{"judul":"jalankan MOB-10","mulai":"11.21","pr":2,"total":4,"label":"PR-2/4","tahap":"ditinjau reviewer-senior","catatan":"PR-1 → MR !127 · PR-3 dan PR-4 menunggu"}' > ~/Library/Logs/clint/kerja.json
+```
+`label` pendek (tampil di sebelah ikon); untuk tugas tunggal pakai `"pr":1,"total":1`. Hapus file itu
+di akhir (`rm -f ~/Library/Logs/clint/kerja.json`), termasuk bila berhenti karena gagal.
+
 Bila tugas berasal dari butir laporan `cek` (feedback, bug, temuan), setelah MR terverifikasi pindahkan
 butir itu ke "menunggu review" supaya badge menu bar ikut berkurang (tanpa token):
 `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); python3 "$R/scripts/laporan-ubah.py" review "<ID/teks butir>" "MR !<n>" "<url MR>"`
 Tindak lanjut yang tidak menghasilkan MR baru (mis. perbaikan di MR yang sama) → `... selesai "<ID/teks>"`.
 
-
-Saat mulai, setiap ganti PR/tahap, dan saat selesai, perbarui status (murah, satu baris):
-`printf '%s\n%s\n' "PR-2/4" "PR-2 · ditinjau reviewer-senior" > ~/Library/Logs/clint/kerja.txt`
-Baris 1 pendek (tampil di sebelah ikon), baris berikut rincian. Hapus file itu di akhir
-(`rm -f ~/Library/Logs/clint/kerja.txt`), termasuk bila berhenti karena gagal.
 
 ## Hemat token
 

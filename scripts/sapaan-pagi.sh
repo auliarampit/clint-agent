@@ -17,9 +17,10 @@ if [ $# -gt 0 ]; then proyek="$(printf '%s\n' "$@")"; else proyek="$(bash "$root
 [ -n "$proyek" ] || exit 0
 kerja="$(echo "$proyek" | head -1)"
 # Status untuk menu bar selama pemeriksaan berjalan.
-printf '%s\n%s\n' "cek $(echo "$proyek" | wc -l | tr -d ' ') project" "$(echo "$proyek" | xargs -n1 basename | paste -sd, -)" > "$log/kerja.txt"
-trap 'rm -f "$log/kerja.txt"; open -g "swiftbar://refreshplugin?name=clint.1m.py" 2>/dev/null' EXIT
-open -g "swiftbar://refreshplugin?name=clint.1m.py" 2>/dev/null
+n="$(echo "$proyek" | wc -l | tr -d ' ')"; daftar="$(echo "$proyek" | xargs -n1 basename | paste -sd, - | sed 's/,/, /g')"
+jq -n --arg n "$n" --arg d "$daftar" --arg m "$(date +%H.%M)" \
+  '{judul:("cek " + $n + " project"), mulai:$m, label:("cek " + $n), tahap:("memeriksa " + $d), catatan:"laporan terbuka begitu selesai"}' > "$log/kerja.json"
+trap 'rm -f "$log/kerja.json"' EXIT
 tambah=(--add-dir "$log"); while read -r p; do tambah+=(--add-dir "$p"); done <<< "$proyek"
 
 if [ "$uji" = 1 ]; then

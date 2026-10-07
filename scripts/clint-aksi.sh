@@ -5,7 +5,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"; cfg="$HOME/.config/clint"; log="$HOME/
 mkdir -p "$cfg"
 kabar(){ bash "$root/hooks/kabar.sh" "$1"; }
 diam(){ CLINT_SUARA=0 bash "$root/hooks/kabar.sh" "$1"; }   # notifikasi saja
-segar(){ open -g "swiftbar://refreshplugin?name=clint.1m.py" 2>/dev/null; }
+segar(){ :; }   # plugin streamable membaca perubahan sendiri dalam 1 detik
 case "$1" in
   salin)  printf '%s' "$2" | pbcopy; diam "Perintah disalin. Tempel di Claude Code, project $3." ;;
   laporan) f="$(ls -t "$log"/*.html 2>/dev/null | head -1)"
