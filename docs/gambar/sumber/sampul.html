@@ -1,0 +1,56 @@
+<!doctype html><html lang='id'><head><meta charset='utf-8'><style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{--bg:#0E1420;--bg2:#141C2B;--card:#1A2333;--line:#2A3548;--ink:#EEF2F7;--muted:#97A3B6;--dim:#6B778B;
+--dawn:#F0954A;--dawn2:#FFB37A;--dawn-soft:rgba(240,149,74,.14);--ok:#4CC38A;--warn:#E8B84A;--crit:#EF6B6B;--blue:#7AA7F5;--violet:#B79AF0;
+--fd:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;--fb:"IBM Plex Sans",-apple-system,system-ui,sans-serif;--fm:"IBM Plex Mono",Menlo,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{width:100%;height:100%}
+body{background:radial-gradient(90% 120% at 100% 0%,#2A1E1A 0%,transparent 55%),radial-gradient(70% 90% at 0% 100%,#122238 0%,transparent 60%),var(--bg);
+color:var(--ink);font:16px/1.5 var(--fb);padding:56px 64px;overflow:hidden}
+.eyebrow{font:500 13px var(--fm);letter-spacing:.14em;text-transform:uppercase;color:var(--dawn)}
+h1,h2{font-family:var(--fd);letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:40px;font-weight:800;margin:8px 0 6px;line-height:1.12}
+.sub{color:var(--muted);font-size:18px;max-width:60ch}
+.logo{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:800 34px/1 var(--fd);color:var(--bg);
+background:radial-gradient(circle at 35% 30%,var(--dawn2),var(--dawn));box-shadow:0 0 0 4px var(--bg),0 0 0 6px var(--dawn);flex:none}
+.logo.s{width:22px;height:22px;font-size:13px;box-shadow:0 0 0 2px #000,0 0 0 3.5px var(--dawn)}
+.logo.m{width:40px;height:40px;font-size:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.mono{font-family:var(--fm)}
+.pill{display:inline-block;font:500 12px var(--fm);padding:3px 9px;border-radius:999px}
+.opus{background:rgba(240,149,74,.16);color:var(--dawn2)}.sonnet{background:rgba(122,167,245,.16);color:var(--blue)}.haiku{background:rgba(183,154,240,.16);color:var(--violet)}
+.foot{position:absolute;left:64px;right:64px;bottom:36px;display:flex;justify-content:space-between;color:var(--dim);font:13px var(--fm)}
+
+.cmd{font:500 15px var(--fm);padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--muted)}
+.cmd.hl{border-color:var(--dawn);color:var(--dawn2);background:var(--dawn-soft)}
+.term{overflow:hidden;box-shadow:0 30px 60px -30px #000}
+.term .bar{display:flex;align-items:center;gap:7px;padding:12px 16px;border-bottom:1px solid var(--line);font:13px var(--fm);color:var(--dim)}
+.term .bar i{width:11px;height:11px;border-radius:50%;background:#3A465A}.term .bar span{margin-left:8px}
+.lines{padding:22px 24px;display:grid;gap:11px;font:15px/1.4 var(--fm)}
+.lines b{color:var(--dawn)}.lines .run{color:var(--warn)}.ok{color:var(--ok)}.run{color:var(--dawn2)}.run span{color:var(--dim);margin-left:8px}.dim{color:var(--dim)}
+.done{margin-top:10px;padding:14px 16px;border-radius:10px;background:var(--dawn-soft);color:var(--ink);font:500 15px var(--fb)}
+</style></head><body>
+<div style="display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;height:100%">
+ <div style="display:grid;gap:26px">
+  <div style="display:flex;align-items:center;gap:18px"><div class="logo">c</div>
+   <h1 style="font-size:84px;font-weight:800;line-height:1">clint</h1></div>
+  <p style="font-size:27px;line-height:1.35;font-family:var(--fd);font-weight:600;max-width:20ch">Tim agent Claude Code yang mengerjakan tiket sampai jadi MR.</p>
+  <p class="sub">Satu perintah: rencana, kode, tinjauan berlapis, E2E, dan MR. Anda tinggal review dan merge.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px">
+   <span class="cmd">/clint:cek</span><span class="cmd hl">/clint:jalankan</span><span class="cmd">/clint:tinjau</span><span class="cmd">/clint:siapkan-project</span></div>
+ </div>
+ <div class="card term">
+  <div class="bar"><i></i><i></i><i></i><span>Claude Code · toko-online</span></div>
+  <div class="lines">
+   <p><b>›</b> /clint:jalankan MOB-10</p>
+   <p class="ok">✓ rencana 4 PR dibuat dari PRD, SAD, dan API contract</p>
+   <p class="ok">✓ PR-1 → MR !127 · tinjauan berlapis lulus</p>
+   <p class="ok">✓ PR-2 → MR !128 · 2 temuan reviewer-senior diperbaiki</p>
+   <p class="ok">✓ PR-3 → MR !129 · E2E 4/4 lulus</p>
+   <p class="run">! PR-4 tertahan · test gagal, perubahan disimpan sebagai wip</p>
+   <div class="done">Beres: 3 MR siap Anda review, 1 perlu keputusan Anda. Merge berurutan !127 → !128.</div>
+  </div>
+ </div>
+</div>
+<div class="foot"><span>10 agent senior · 4 perintah · menu bar & suara tanpa token</span><span>github.com/auliarampit/clint-agent</span></div>
+</body></html>

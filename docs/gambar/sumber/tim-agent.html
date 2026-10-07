@@ -1,0 +1,34 @@
+<!doctype html><html lang='id'><head><meta charset='utf-8'><style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{--bg:#0E1420;--bg2:#141C2B;--card:#1A2333;--line:#2A3548;--ink:#EEF2F7;--muted:#97A3B6;--dim:#6B778B;
+--dawn:#F0954A;--dawn2:#FFB37A;--dawn-soft:rgba(240,149,74,.14);--ok:#4CC38A;--warn:#E8B84A;--crit:#EF6B6B;--blue:#7AA7F5;--violet:#B79AF0;
+--fd:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;--fb:"IBM Plex Sans",-apple-system,system-ui,sans-serif;--fm:"IBM Plex Mono",Menlo,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{width:100%;height:100%}
+body{background:radial-gradient(90% 120% at 100% 0%,#2A1E1A 0%,transparent 55%),radial-gradient(70% 90% at 0% 100%,#122238 0%,transparent 60%),var(--bg);
+color:var(--ink);font:16px/1.5 var(--fb);padding:56px 64px;overflow:hidden}
+.eyebrow{font:500 13px var(--fm);letter-spacing:.14em;text-transform:uppercase;color:var(--dawn)}
+h1,h2{font-family:var(--fd);letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:40px;font-weight:800;margin:8px 0 6px;line-height:1.12}
+.sub{color:var(--muted);font-size:18px;max-width:60ch}
+.logo{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:800 34px/1 var(--fd);color:var(--bg);
+background:radial-gradient(circle at 35% 30%,var(--dawn2),var(--dawn));box-shadow:0 0 0 4px var(--bg),0 0 0 6px var(--dawn);flex:none}
+.logo.s{width:22px;height:22px;font-size:13px;box-shadow:0 0 0 2px #000,0 0 0 3.5px var(--dawn)}
+.logo.m{width:40px;height:40px;font-size:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.mono{font-family:var(--fm)}
+.pill{display:inline-block;font:500 12px var(--fm);padding:3px 9px;border-radius:999px}
+.opus{background:rgba(240,149,74,.16);color:var(--dawn2)}.sonnet{background:rgba(122,167,245,.16);color:var(--blue)}.haiku{background:rgba(183,154,240,.16);color:var(--violet)}
+.foot{position:absolute;left:64px;right:64px;bottom:36px;display:flex;justify-content:space-between;color:var(--dim);font:13px var(--fm)}
+.legend{display:flex;gap:28px;margin-top:26px;color:var(--muted);font-size:15px}.legend .pill{margin-right:8px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:30px}
+.ag{padding:16px;display:grid;gap:8px;align-content:start;min-height:150px}
+.ag .t{display:flex;flex-direction:column;gap:7px;align-items:flex-start}.ag b{font:700 17px var(--fd)}
+.ag p{color:var(--muted);font-size:14px;line-height:1.4}
+</style></head><body>
+<div class="eyebrow">Tim di balik layar</div>
+<h2>10 agent senior, dipanggil otomatis</h2>
+<p class="sub">Anda tidak memanggil agent. Perintah clint yang menugaskan mereka, dengan model yang sesuai bebannya.</p>
+<div class="grid"><div class="ag card"><div class="t"><b>perencana</b><span class="pill sonnet">Sonnet</span></div><p>Memecah modul jadi rencana per PR dari PRD, SAD, STD, API contract, prototype</p></div><div class="ag card"><div class="t"><b>pengembang</b><span class="pill opus">Opus</span></div><p>Menulis kode satu PR, lint, typecheck, test</p></div><div class="ag card"><div class="t"><b>peninjau</b><span class="pill sonnet">Sonnet</span></div><p>Sesuai rencana, dokumen, dan aturan project?</p></div><div class="ag card"><div class="t"><b>reviewer-senior</b><span class="pill opus">Opus</span></div><p>Clean code dan clean architecture</p></div><div class="ag card"><div class="t"><b>auditor-keamanan</b><span class="pill opus">Opus</span></div><p>OWASP Mobile Top 10, MASVS, API Security</p></div><div class="ag card"><div class="t"><b>penyelaras-desain</b><span class="pill sonnet">Sonnet</span></div><p>Selisih tampilan dengan prototype</p></div><div class="ag card"><div class="t"><b>penguji</b><span class="pill sonnet">Sonnet</span></div><p>E2E happy path + error path</p></div><div class="ag card"><div class="t"><b>pemulih-pipeline</b><span class="pill opus">Opus</span></div><p>Memperbaiki CI yang gagal dari penyebabnya</p></div><div class="ag card"><div class="t"><b>pelacak-perubahan</b><span class="pill sonnet">Sonnet</span></div><p>Apa yang berubah di docs, design, dev</p></div><div class="ag card"><div class="t"><b>penjaga</b><span class="pill haiku">Haiku</span></div><p>MR, pipeline, branch, worktree, disk</p></div></div>
+<div class="legend"><span><span class="pill opus">Opus</span> menulis dan menilai kode</span><span><span class="pill sonnet">Sonnet</span> membaca, meninjau, menguji</span><span><span class="pill haiku">Haiku</span> mengumpulkan status</span></div>
+</body></html>

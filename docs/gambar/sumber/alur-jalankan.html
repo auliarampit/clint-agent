@@ -1,0 +1,55 @@
+<!doctype html><html lang='id'><head><meta charset='utf-8'><style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{--bg:#0E1420;--bg2:#141C2B;--card:#1A2333;--line:#2A3548;--ink:#EEF2F7;--muted:#97A3B6;--dim:#6B778B;
+--dawn:#F0954A;--dawn2:#FFB37A;--dawn-soft:rgba(240,149,74,.14);--ok:#4CC38A;--warn:#E8B84A;--crit:#EF6B6B;--blue:#7AA7F5;--violet:#B79AF0;
+--fd:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;--fb:"IBM Plex Sans",-apple-system,system-ui,sans-serif;--fm:"IBM Plex Mono",Menlo,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{width:100%;height:100%}
+body{background:radial-gradient(90% 120% at 100% 0%,#2A1E1A 0%,transparent 55%),radial-gradient(70% 90% at 0% 100%,#122238 0%,transparent 60%),var(--bg);
+color:var(--ink);font:16px/1.5 var(--fb);padding:56px 64px;overflow:hidden}
+.eyebrow{font:500 13px var(--fm);letter-spacing:.14em;text-transform:uppercase;color:var(--dawn)}
+h1,h2{font-family:var(--fd);letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:40px;font-weight:800;margin:8px 0 6px;line-height:1.12}
+.sub{color:var(--muted);font-size:18px;max-width:60ch}
+.logo{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:800 34px/1 var(--fd);color:var(--bg);
+background:radial-gradient(circle at 35% 30%,var(--dawn2),var(--dawn));box-shadow:0 0 0 4px var(--bg),0 0 0 6px var(--dawn);flex:none}
+.logo.s{width:22px;height:22px;font-size:13px;box-shadow:0 0 0 2px #000,0 0 0 3.5px var(--dawn)}
+.logo.m{width:40px;height:40px;font-size:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.mono{font-family:var(--fm)}
+.pill{display:inline-block;font:500 12px var(--fm);padding:3px 9px;border-radius:999px}
+.opus{background:rgba(240,149,74,.16);color:var(--dawn2)}.sonnet{background:rgba(122,167,245,.16);color:var(--blue)}.haiku{background:rgba(183,154,240,.16);color:var(--violet)}
+.foot{position:absolute;left:64px;right:64px;bottom:36px;display:flex;justify-content:space-between;color:var(--dim);font:13px var(--fm)}
+
+.flow{display:flex;align-items:stretch;gap:10px;margin-top:34px}
+.st{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 14px;display:flex;flex-direction:column;gap:6px;position:relative}
+.st.wide{flex:2.3}.st.hl{border-color:var(--dawn);background:linear-gradient(180deg,var(--dawn-soft),var(--card))}
+.st .n{font:500 12px var(--fm);color:var(--dawn)}.st b{font:700 18px var(--fd)}.st small{color:var(--muted);font-size:13.5px}
+.st .pill{align-self:flex-start;margin-top:auto}
+.st ul{list-style:none;padding:0;display:grid;gap:6px;font-size:14px}.st li{padding:6px 9px;border-radius:8px;background:var(--bg2)}
+.st em{display:block;font-style:normal;color:var(--muted);font-size:12.5px}
+.ar{align-self:center;color:var(--dawn);font:600 22px var(--fb)}
+.loop{margin:16px 0 0 34%;width:46%;text-align:center;padding:10px;border:1.5px dashed var(--dawn);border-radius:12px;color:var(--dawn2);font:500 14px var(--fm)}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+.mini{display:grid;gap:4px;padding:14px 16px;border-left:3px solid var(--line)}.mini b{font-weight:600}.mini span{color:var(--muted);font-size:14.5px}
+</style></head><body>
+<div class="eyebrow">/clint:jalankan</div>
+<h2>Satu perintah, satu rantai kerja</h2>
+<p class="sub">Tugas kecil langsung jadi 1 PR. Modul besar dibuatkan rencana, PR yang tidak saling bergantung dikerjakan paralel.</p>
+<div class="flow">
+ <div class="st"><span class="n">1</span><b>Tarik terbaru</b><small>dev, docs, design</small></div><div class="ar">→</div>
+ <div class="st"><span class="n">2</span><b>Rencana</b><small>perencana</small><span class="pill sonnet">Sonnet</span></div><div class="ar">→</div>
+ <div class="st"><span class="n">3</span><b>Kode</b><small>pengembang</small><span class="pill opus">Opus</span></div><div class="ar">→</div>
+ <div class="st wide"><span class="n">4</span><b>Tinjauan paralel</b>
+   <ul><li>peninjau <em>sesuai rencana &amp; aturan?</em></li><li>reviewer-senior <em>clean code &amp; arsitektur?</em></li>
+   <li>auditor-keamanan <em>OWASP, bila relevan</em></li><li>penyelaras-desain <em>sama dengan prototype?</em></li></ul></div><div class="ar">→</div>
+ <div class="st"><span class="n">5</span><b>E2E</b><small>penguji</small><span class="pill sonnet">Sonnet</span></div><div class="ar">→</div>
+ <div class="st hl"><span class="n">6</span><b>MR</b><small>stage eksplisit, push, verifikasi</small></div>
+</div>
+<div class="loop">↺ temuan wajib dikirim balik ke pengembang · maksimal 2 putaran · masih gagal → berhenti, tanpa MR</div>
+<div class="row">
+ <div class="mini"><b>Paralel bila aman</b><span>PR tanpa dependensi jalan bersamaan (maks 3), masing-masing di worktree sendiri.</span></div>
+ <div class="mini"><b>Bertumpuk bila perlu</b><span>PR yang bergantung dibangun di atas branch dependensinya; deskripsi MR menyebut urutan merge.</span></div>
+ <div class="mini"><b>Satu laporan di akhir</b><span>Tautan MR, apa yang berubah bagi pengguna, dan yang perlu Anda putuskan.</span></div>
+</div>
+</body></html>

@@ -1,0 +1,48 @@
+<!doctype html><html lang='id'><head><meta charset='utf-8'><style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{--bg:#0E1420;--bg2:#141C2B;--card:#1A2333;--line:#2A3548;--ink:#EEF2F7;--muted:#97A3B6;--dim:#6B778B;
+--dawn:#F0954A;--dawn2:#FFB37A;--dawn-soft:rgba(240,149,74,.14);--ok:#4CC38A;--warn:#E8B84A;--crit:#EF6B6B;--blue:#7AA7F5;--violet:#B79AF0;
+--fd:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;--fb:"IBM Plex Sans",-apple-system,system-ui,sans-serif;--fm:"IBM Plex Mono",Menlo,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{width:100%;height:100%}
+body{background:radial-gradient(90% 120% at 100% 0%,#2A1E1A 0%,transparent 55%),radial-gradient(70% 90% at 0% 100%,#122238 0%,transparent 60%),var(--bg);
+color:var(--ink);font:16px/1.5 var(--fb);padding:56px 64px;overflow:hidden}
+.eyebrow{font:500 13px var(--fm);letter-spacing:.14em;text-transform:uppercase;color:var(--dawn)}
+h1,h2{font-family:var(--fd);letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:40px;font-weight:800;margin:8px 0 6px;line-height:1.12}
+.sub{color:var(--muted);font-size:18px;max-width:60ch}
+.logo{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:800 34px/1 var(--fd);color:var(--bg);
+background:radial-gradient(circle at 35% 30%,var(--dawn2),var(--dawn));box-shadow:0 0 0 4px var(--bg),0 0 0 6px var(--dawn);flex:none}
+.logo.s{width:22px;height:22px;font-size:13px;box-shadow:0 0 0 2px #000,0 0 0 3.5px var(--dawn)}
+.logo.m{width:40px;height:40px;font-size:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.mono{font-family:var(--fm)}
+.pill{display:inline-block;font:500 12px var(--fm);padding:3px 9px;border-radius:999px}
+.opus{background:rgba(240,149,74,.16);color:var(--dawn2)}.sonnet{background:rgba(122,167,245,.16);color:var(--blue)}.haiku{background:rgba(183,154,240,.16);color:var(--violet)}
+.foot{position:absolute;left:64px;right:64px;bottom:36px;display:flex;justify-content:space-between;color:var(--dim);font:13px var(--fm)}
+
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
+.col{padding:22px;display:flex;flex-direction:column;gap:10px;min-height:380px}
+.big{font:800 34px/1 var(--fd);color:var(--dawn)}.col b{font:700 19px var(--fd)}.col p{color:var(--muted);font-size:15px}
+.toast{margin-top:8px;display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.toast small{display:block;color:var(--muted);font-size:13.5px}
+.ft{margin-top:auto;color:var(--dim);font:12.5px var(--fm)}
+.chat{display:grid;gap:8px;margin-top:4px}.chat p{padding:8px 12px;border-radius:12px;font-size:14px;max-width:85%}
+.chat .u{justify-self:end;background:#2D5DA8;color:#fff}.chat .c{background:var(--dawn-soft);color:var(--dawn2)}
+.col ul{padding-left:18px;display:grid;gap:8px;color:var(--muted);font-size:14.5px}.col code{font:13px var(--fm);color:var(--ink)}
+</style></head><body>
+<div class="eyebrow">Mode JARVIS</div>
+<h2>Menyapa, bersuara, dan bisa dipanggil</h2>
+<p class="sub">Semua jalan di Mac Anda. Suara dan menu bar tidak memakai token. Agent tidak bergerak tanpa perintah.</p>
+<div class="cols">
+ <div class="col card"><span class="big">08.00</span><b>Sapaan pagi</b>
+  <p>Senin–Jumat, semua project aktif dicek dalam satu sesi, mode baca saja.</p>
+  <div class="toast"><span class="logo s">c</span><div><b>clint</b><small>Selamat pagi. 3 hal menunggu hari ini, pipeline aman.</small></div></div>
+  <small class="ft">Layar laporan terbuka · kalimat inti dibacakan</small></div>
+ <div class="col card"><span class="big">“Hey Siri”</span><b>Perintah suara</b>
+  <div class="chat"><p class="u">Hey Siri, Halo Clint</p><p class="c">Halo, ada yang bisa saya bantu?</p><p class="u">Cek project toko online</p><p class="c">Siap, saya periksa. Laporannya menyusul.</p></div>
+  <small class="ft">Dikte bahasa Indonesia · suara Damayanti</small></div>
+ <div class="col card"><span class="big">Tetap</span><b>Aturan aman</b>
+  <ul><li>Merge selalu oleh manusia</li><li>Tanpa <code>git add -A</code>, screenshot tidak ikut commit</li><li>Sapaan pagi tidak bisa edit, commit, atau push</li><li>Hanya tugas milik Anda yang dilaporkan</li><li>Bisukan sampai besok dari menu bar</li></ul></div>
+</div>
+</body></html>

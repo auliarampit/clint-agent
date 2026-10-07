@@ -1,114 +1,168 @@
 # clint
 
-Tim agent Claude Code: dari membaca dokumen, menulis kode, meninjau, menguji, sampai membuat MR.
-Dipasang sekali sebagai plugin, berlaku di semua project. Anda cukup review dan merge.
+![clint — tim agent Claude Code yang mengerjakan tiket sampai jadi MR](docs/gambar/sampul.png)
+
+**clint** adalah plugin Claude Code berisi 10 agent senior yang bekerja sebagai satu tim: membaca
+dokumen, merencanakan, menulis kode, meninjau berlapis, menguji, sampai membuat MR. Dipasang sekali,
+berlaku di semua project. Anda cukup **review dan merge**.
+
+- **Satu perintah untuk semua pekerjaan.** Tugas kecil langsung jadi 1 PR; modul besar dibuatkan
+  rencana dan PR-nya dikerjakan paralel bila aman.
+- **Tinjauan berlapis sebelum MR.** Kesesuaian dokumen, clean code, keamanan OWASP, dan kesesuaian
+  desain; temuan wajib diperbaiki otomatis.
+- **Tahu kondisi kerja tanpa bertanya.** Laporan pagi gabungan, menu bar yang menampilkan agent yang
+  sedang bekerja, kabar suara, dan perintah lewat "Hey Siri".
+- **Hemat token.** Model tidak diturunkan; yang dijaga cara kerja agent. Menu bar, suara, dan
+  pembaruan status tidak memakai token sama sekali.
+
+---
+
+## Daftar isi
+
+1. [Mulai cepat](#mulai-cepat)
+2. [4 perintah](#4-perintah)
+3. [Cara kerja `jalankan`](#cara-kerja-jalankan)
+4. [Tim agent](#tim-agent)
+5. [Laporan pagi](#laporan-pagi)
+6. [Menu bar](#menu-bar)
+7. [Mode JARVIS](#mode-jarvis)
+8. [Otomatis tanpa perintah](#otomatis-tanpa-perintah)
+9. [Hemat token](#hemat-token)
+10. [Konfigurasi](#konfigurasi)
+11. [Struktur repo dan perawatan](#struktur-repo-dan-perawatan)
+12. [Peta jalan](#peta-jalan)
+
+---
+
+## Mulai cepat
+
+```bash
+claude plugin marketplace add auliarampit/clint-agent
+claude plugin install clint@clint
+```
+
+Lalu di VS Code: `Cmd+Shift+P` → **Developer: Reload Window**, buka sesi baru di project Anda, dan
+jalankan sekali:
+
+```
+/clint:siapkan-project mobile
+```
+
+Perintah ini menyalin skill dan rules platform ke `.claude/`, mengisi adapter stack dari hasil
+verifikasi (bukan tebakan), dan membuat `.claude/clint.json`. Tidak ada yang di-commit; Anda periksa
+dulu.
 
 ## 4 perintah
 
 | Perintah | Untuk |
 |---|---|
-| `/clint:cek` | pagi / "ada update apa?": tarik docs & design, cocokkan dengan kode, MR & pipeline, disk |
-| `/clint:jalankan <apa yang mau dikerjakan>` | **semua pekerjaan**, kecil sampai modul penuh. Hasil: MR + satu laporan |
-| `/clint:tinjau !123` | review MR rekan (hanya laporan) |
-| `/clint:siapkan-project mobile` | sekali per project |
+| `/clint:cek` | "Ada update apa?" Tarik docs dan design, cocokkan dengan kode, feedback QA yang masih open, MR, pipeline. `/clint:cek semua` untuk semua project aktif sekaligus |
+| `/clint:jalankan <apa yang mau dikerjakan>` | **Semua pekerjaan**, dari perbaikan kecil sampai modul penuh. Hasil: MR + satu laporan |
+| `/clint:tinjau !123` | Review MR rekan (hanya laporan, tanpa mengubah kode) |
+| `/clint:siapkan-project` | Sekali per project. `sinkron` untuk membandingkan salinan dengan master |
 
-Anda **tidak perlu memanggil agent**; agent dipanggil oleh perintah di atas.
-
-## Contoh `jalankan`
+Anda **tidak perlu memanggil agent**; perintah di atas yang menugaskan mereka.
 
 ```
-/clint:jalankan perbaiki daftar produk: tambah tarik-untuk-muat-ulang     ← tugas kecil, 1 PR
-/clint:jalankan MOB-10                                                   ← modul baru, rencana dibuat otomatis
-/clint:jalankan docs/plans/mr-mob-10.md                                  ← lanjutkan rencana (PR selesai dilewati)
-/clint:jalankan docs/plans/mr-mob-10.md PR-5                             ← hanya PR-5
-/clint:jalankan docs/plans/mr-mob-10.md PR-5..PR-7                       ← PR-5 sampai PR-7
-/clint:jalankan ../docs/<feedback-QA>.md                                 ← butir feedback/bug yang masih open
-/clint:jalankan terapkan saran reviewer 1 dan 2 di !123             ← tindak lanjut MR, push ke MR yang sama
-/clint:jalankan perbaiki pipeline !123                                   ← pipeline merah
-/clint:jalankan                                                          ← kerjakan temuan /clint:cek barusan
+/clint:jalankan perbaiki daftar produk: tambah tarik-untuk-muat-ulang   ← tugas kecil, 1 PR
+/clint:jalankan MOB-10                                                 ← modul baru, rencana dibuat otomatis
+/clint:jalankan docs/plans/mob-10.md                                   ← lanjutkan rencana (PR selesai dilewati)
+/clint:jalankan docs/plans/mob-10.md PR-5..PR-7                        ← sebagian PR saja
+/clint:jalankan ../docs/qa/feedback-ui.md                              ← butir feedback/bug yang masih open
+/clint:jalankan terapkan saran reviewer 1 dan 2 di !123                ← tindak lanjut MR, push ke MR yang sama
+/clint:jalankan perbaiki pipeline !123                                 ← pipeline merah
+/clint:jalankan                                                        ← kerjakan temuan /clint:cek barusan
 ```
 
-## Rutinitas
+Rutinitas harian:
 
 ```
-pagi    /clint:cek
-kerja   /clint:jalankan ...   → tunggu laporan → review MR → merge
+pagi    laporan terbuka sendiri jam 08.00 (atau /clint:cek)
+kerja   /clint:jalankan ...   → tunggu kabar → review MR → merge
 rekan   /clint:tinjau !123
 ```
 
-Kode yang Anda tulis langsung di sesi (≥ 40 baris) ditinjau dan dirapikan otomatis.
+## Cara kerja `jalankan`
 
-## Yang terjadi di dalam `jalankan`
+![Alur /clint:jalankan](docs/gambar/alur-jalankan.png)
 
-```
-tarik dev + docs + designs
-   → rencana: dibuat / diperbarui bila perlu (tugas kecil: tanpa rencana)
-   → per PR (yang tidak saling bergantung: paralel, maks 3):
-        branch baru (worktree hanya bila beberapa PR jalan bersamaan) → pengembang menulis kode
-        → peninjau + reviewer-senior (+ auditor-keamanan, penyelaras-desain bila relevan)
-        → temuan wajib diperbaiki otomatis (maks 2 putaran)
-        → penguji E2E bila rencana minta
-        → commit (stage eksplisit) → push → MR ke dev → verifikasi MR → kembali ke branch asal
-   → satu laporan: tabel PR/MR/putusan peninjau + urutan merge
-```
+- **Tarik terbaru dulu**: `dev`, docs, dan design, supaya rencana dan kode memakai acuan terbaru.
+- **Rencana otomatis** untuk modul atau tugas > 1 PR; diperbarui bila dokumen berubah sejak rencana
+  terakhir. Tugas kecil langsung dikerjakan tanpa file rencana.
+- **Tempat kerja**: satu PR dikerjakan langsung di repo utama; worktree hanya dibuat bila beberapa PR
+  jalan bersamaan. Perubahan Anda yang belum di-commit tidak pernah disentuh.
+- **Tinjauan paralel** setelah kode ditulis; temuan wajib dikirim balik ke pengembang, maksimal 2
+  putaran. Masih gagal → berhenti tanpa MR, perubahan disimpan sebagai commit `wip` lokal.
+- **E2E** dijalankan bila rencana memintanya atau bila perubahan terlihat pengguna.
+- **MR**: stage eksplisit (tanpa `git add -A`), tarik base lagi, push, buat MR, dan pastikan MR-nya
+  benar-benar ada. PR yang bergantung dibangun di atas branch dependensinya; deskripsi MR menyebut
+  urutan merge.
 
-PR yang bergantung pada PR lain dibangun di atas branch-nya; MR tetap ke `dev`, deskripsi
-menyebut urutan merge. Satu PR gagal → hanya PR yang bergantung padanya dilewati.
+## Tim agent
 
-## Agent (dipanggil otomatis)
+![10 agent senior](docs/gambar/tim-agent.png)
 
 | Agent | Peran | Model |
 |---|---|---|
-| `perencana` | rencana per PR dari PRD/SAD/STD/API contract/prototype | Sonnet |
-| `pengembang` | menulis kode, lint/typecheck/test | Opus |
-| `peninjau` | sesuai rencana, dokumen, aturan project? | Sonnet |
-| `reviewer-senior` | clean code & clean architecture? | Opus |
-| `auditor-keamanan` | ada celah keamanan? | Opus |
-| `penyelaras-desain` | sama dengan prototype? | Sonnet |
+| `perencana` | rencana per PR dari PRD, SAD, STD, API contract, prototype | Sonnet |
+| `pengembang` | menulis kode, lint, typecheck, test | Opus |
+| `peninjau` | sesuai rencana, dokumen, dan aturan project? | Sonnet |
+| `reviewer-senior` | clean code dan clean architecture | Opus |
+| `auditor-keamanan` | OWASP Mobile Top 10 + MASVS, Top 10 web, API Security Top 10 | Opus |
+| `penyelaras-desain` | selisih tampilan dengan prototype | Sonnet |
 | `penguji` | E2E happy path + error path | Sonnet |
-| `pemulih-pipeline` | perbaiki CI yang gagal | Opus |
-| `pelacak-perubahan` | apa yang berubah di docs/design/dev | Sonnet |
+| `pemulih-pipeline` | memperbaiki CI yang gagal dari penyebabnya | Opus |
+| `pelacak-perubahan` | apa yang berubah di docs, design, `dev`, plus feedback QA yang masih open | Sonnet |
 | `penjaga` | MR, pipeline, branch, worktree, disk | Haiku |
 
-## Otomatis tanpa perintah (hooks)
+Semua agent bekerja dengan standar senior: pahami konteks dulu, solusi paling sederhana yang benar,
+setiap kesimpulan dibuktikan, dan berhenti bila keputusan di luar wewenangnya.
 
-| Kapan | Efek |
-|---|---|
-| sesi dimulai | 4 prinsip kerja dimuat (tidak dobel bila project sudah punya salinannya) |
-| file diedit | formatter project dijalankan pada file itu |
-| sesi selesai dengan ≥ 40 baris kode belum ditinjau | `/clint:tinjau` jalan sendiri: tinjau + perbaiki. Sekali per perubahan |
-| sesi selesai setelah `cek`/`jalankan` | kalimat inti dibacakan + notifikasi Mac (`hooks/kabar.sh`) |
-| prompt, tool, agent mulai/selesai, sesi berakhir | status sesi untuk menu bar ditulis ke `~/.config/clint/sesi/` (`hooks/status-sesi.sh`). Pesan sistem/agent tidak menimpa tugas sesi |
+## Laporan pagi
 
-## Mode JARVIS
+![Laporan pagi gabungan](docs/gambar/laporan-pagi.png)
 
-| Kemampuan | Cara kerja |
-|---|---|
-| **Sapaan pagi** | Senin–Jumat 08.00, clint memeriksa **semua project aktif** (punya `.claude/clint.json` dan dibuka di Claude Code 3 hari terakhir) dalam satu sesi, mode baca saja. Begitu siap: **layar laporan gabungan terbuka**, kalimat inti dibacakan, notifikasi muncul. Arsip: `~/Library/Logs/clint/<tanggal>.html`. Laptop tidur → jalan saat bangun |
-| **Bersuara** | `cek` dan `jalankan` menutup dengan satu kalimat inti yang dibacakan (suara Damayanti, bahasa Indonesia) + notifikasi Mac. Gratis token (suara lokal) |
-| **Perintah suara** | **"Hey Siri, Halo Clint"** → clint menjawab → ucapkan *"cek project toko online"* / *"cek semua project"* → layar laporan + suara. Tanpa menekan mikrofon. Perlu Pintasan "Halo Clint" (lihat di bawah) |
-| **Kabar ke HP** | notifikasi push saat agent selesai |
-| **Ingat kebiasaan** | memori Claude Code |
+Senin–Jumat jam 08.00, clint memeriksa **semua project aktif** (punya `.claude/clint.json` dan dibuka di
+Claude Code 3 hari terakhir) dalam satu sesi, mode baca saja. Begitu siap, layar laporan terbuka,
+kalimat inti dibacakan, dan notifikasi muncul bersamaan. Laptop tidur → jalan saat bangun.
 
-Agent **tidak** bergerak sendiri tanpa perintah (mis. memperbaiki pipeline diam-diam); ia hanya
-mengabari dan menyiapkan perintahnya.
+- Butir dikelompokkan per tindakan: *Perlu perhatian*, *Perlu dikerjakan*, *Perlu Anda cek*,
+  *Menunggu pihak lain*.
+- Feedback QA yang masih open dibaca sampai rinciannya, bukan hanya judul tabel.
+- **Hanya butir milik Anda**: isi nama Anda di `~/.config/clint/saya.json` dan, untuk project tim,
+  `docs.pic` di `.claude/clint.json` (mis. sprint tracker). Butir milik rekan cukup disebut jumlahnya.
 
 ```bash
-scripts/pasang-sapaan.sh 8 0                                     # jadwal; project aktif dideteksi otomatis
-scripts/pasang-sapaan.sh --cabut                                 # matikan sapaan pagi
-scripts/sapaan-pagi.sh --uji                                     # uji layar + suara dengan data contoh
-scripts/proyek-aktif.sh 3                                        # lihat project yang dianggap aktif
+scripts/pasang-sapaan.sh 8 0          # jadwal Senin–Jumat 08.00
+scripts/pasang-sapaan.sh --cabut      # matikan
+scripts/sapaan-pagi.sh --uji          # uji layar + suara dengan data contoh
+scripts/proyek-aktif.sh 3             # project yang dianggap aktif
 ```
 
-**Pintasan "Halo Clint"** (sekali, di app Pintasan/Shortcuts): buat pintasan baru bernama **Halo Clint**
-dengan 3 tindakan: (1) *Jalankan Skrip Shell* `bash ~/Desktop/clint/scripts/clint-suara.sh sapa`,
-(2) *Dikte Teks* — bahasa Indonesia, berhenti setelah jeda, (3) *Jalankan Skrip Shell*
-`bash ~/Desktop/clint/scripts/clint-suara.sh "$1"` dengan input *Teks yang Didikte* sebagai argumen.
+Arsip laporan: `~/Library/Logs/clint/`. Laporan lebih dari 3 hari dihapus otomatis; file teknis hanya
+disimpan bila gagal.
 
-**Menu bar (SwiftBar):** ikon clint di menu bar Mac. Badge oranye = jumlah hal yang menunggu, ✓ hijau =
-aman, ! merah = ada yang gagal, ⟳ = agent sedang bekerja (dengan label kemajuan). Menu berisi hal yang
-menunggu (submenu *Salin perintah*), tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project ▸*,
-*Halo Clint*, dan *Pengaturan ▸* (suara, bisukan sampai besok). Membaca file lokal saja, tidak memakai token.
+## Menu bar
+
+![Menu bar clint](docs/gambar/menu-bar.png)
+
+Ikon clint di menu bar Mac (lewat SwiftBar) menampilkan kondisi kerja sepanjang hari:
+
+| Ikon | Arti |
+|---|---|
+| angka | jumlah hal yang menunggu |
+| cincin berputar + label | agent sedang bekerja, mis. `PR-2/4` |
+| `✓` | semua aman |
+| `!` | ada yang gagal |
+
+Isi menu: kemajuan PR, setiap sesi Claude Code yang bekerja (termasuk di VS Code) beserta agent yang
+sedang jalan, hal yang menunggu (submenu *Salin perintah*, *Buka MR di browser*, *Buka project di VS
+Code*, *Tandai selesai*), dan tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project*, *Halo
+Clint*, *Pengaturan*.
+
+Badge berkurang sendiri tanpa cek ulang: butir yang dikerjakan `jalankan` pindah ke *Menunggu review*;
+MR yang merged/closed hilang, termasuk butir tanpa tautan bila ID-nya (mis. `BUG-42`) disebut MR yang
+merged setelah laporan dibuat (dicek tiap 15 menit lewat `glab`/`gh`).
 
 ```bash
 brew install --cask swiftbar
@@ -116,30 +170,42 @@ mkdir -p ~/.config/clint/swiftbar && ln -sf ~/Desktop/clint/swiftbar/clint.py ~/
 defaults write com.ameba.SwiftBar PluginDirectory -string "$HOME/.config/clint/swiftbar" && open -a SwiftBar
 ```
 
-Bagian **Agent & sesi** di menu menampilkan setiap sesi Claude Code (termasuk di VS Code) yang sedang
-bekerja, berjalan di latar, menunggu Anda, atau baru selesai, lengkap dengan agent yang sedang jalan dan
-tugasnya. Datanya dari hook clint (`hooks/status-sesi.sh` → `~/.config/clint/sesi/`), tanpa token. Klik
-sesi atau butir tugas → VS Code terbuka di project itu; butir MR → MR terbuka di browser.
+Avatar dan animasi cincin (opsional): taruh gambar persegi di `~/.config/clint/avatar.jpg`, lalu
+`python3 scripts/buat-ikon.py` (butuh Pillow). Gambar pribadi ini sengaja tidak disimpan di repo.
+Setelah file plugin diubah, jalankan ulang SwiftBar.
 
-**Badge ikut berkurang tanpa cek ulang (tanpa token):** `jalankan` yang membuat MR untuk sebuah butir
-memindahkannya ke *Menunggu review*; MR yang sudah merged/closed hilang sendiri, termasuk butir tanpa tautan MR bila ID-nya
-(mis. `MOM-M-11`) disebut MR yang merged setelah laporan dibuat (dicek tiap 15 menit lewat glab/gh); atau klik *Tandai selesai* di submenu butir.
+## Mode JARVIS
 
-**Hanya tugas milik Anda:** isi `~/.config/clint/saya.json` (`{"nama":["Aulia"]}`) dan, untuk project tim,
-`docs.pic` di `.claude/clint.json` (dokumen pembagian tugas, mis. sprint tracker). `cek` lalu hanya
-melaporkan butir yang PIC-nya Anda; milik orang lain cukup disebut jumlahnya.
+![Mode JARVIS](docs/gambar/mode-jarvis.png)
 
-Ikon dan animasi cincin dibuat dari gambar pribadi `~/.config/clint/avatar.jpg` dengan
-`python3 scripts/buat-ikon.py` (butuh Pillow); tanpa itu dipakai ikon bawaan. Plugin berjenis streamable:
-perubahan tampil dalam 1 detik dan cincin avatar berputar saat agent bekerja.
-Setelah file plugin diubah, jalankan ulang SwiftBar (`osascript -e 'quit app "SwiftBar"'; open -a SwiftBar`).
+| Kemampuan | Cara kerja |
+|---|---|
+| Sapaan pagi | lihat [Laporan pagi](#laporan-pagi) |
+| Bersuara | `cek` dan `jalankan` ditutup dengan satu kalimat yang dibacakan (suara Damayanti) + notifikasi Mac |
+| Perintah suara | **"Hey Siri, Halo Clint"** → clint menyapa → ucapkan *"cek project toko online"* atau *"cek semua project"* |
+| Kabar ke HP | notifikasi push Claude saat agent selesai |
 
-**Avatar (opsional):** taruh gambar persegi di `~/.config/clint/avatar.jpg`; layar laporan menampilkannya.
-Gambar ini sengaja tidak disimpan di repo.
+Pintasan **Halo Clint** (sekali, di app Pintasan): (1) *Jalankan Skrip Shell*
+`bash ~/Desktop/clint/scripts/clint-suara.sh sapa`, (2) *Dikte Teks* bahasa Indonesia, (3) *Jalankan
+Skrip Shell* `bash ~/Desktop/clint/scripts/clint-suara.sh "$1"` dengan *Teks yang Didikte* sebagai
+argumen.
 
-Log dibersihkan otomatis: laporan lebih dari 3 hari dihapus, file teknis hanya disimpan bila gagal.
+Matikan suara per project dengan `"suara": false` di `.claude/clint.json`, sementara dengan
+`CLINT_SUARA=0`, atau *Pengaturan → Bisukan sampai besok* di menu bar. Agent **tidak** bergerak sendiri
+tanpa perintah; ia hanya mengabari dan menyiapkan perintahnya.
 
-Matikan suara per project: `"suara": false` di `.claude/clint.json`; sementara: `CLINT_SUARA=0`.
+## Otomatis tanpa perintah
+
+| Kapan | Efek |
+|---|---|
+| sesi dimulai | 4 prinsip kerja dimuat (tidak dobel bila project sudah punya salinannya) |
+| file diedit | formatter project dijalankan pada file itu, termasuk di worktree |
+| sesi selesai dengan ≥ 40 baris kode belum ditinjau | `/clint:tinjau` jalan sendiri: tinjau + perbaiki, sekali per perubahan |
+| `cek`/`jalankan` selesai | kalimat inti dibacakan + notifikasi Mac |
+| prompt, agent mulai/selesai, sesi berakhir | status sesi untuk menu bar (`~/.config/clint/sesi/`) |
+
+Hook dimuat saat proses Claude dinyalakan. Setelah memasang atau memperbarui clint, lakukan **Reload
+Window** di VS Code agar sesi baru memakai hook terbaru.
 
 ## Hemat token
 
@@ -148,13 +214,14 @@ Model tidak diturunkan; yang dijaga cara kerjanya:
 - peninjau menerima path file diff + potongan rencana, bukan dokumen utuh;
 - hasil test pengembang diteruskan, tidak dijalankan ulang;
 - putaran perbaikan hanya memverifikasi temuan sebelumnya;
-- auditor & penyelaras hanya jalan bila diff relevan; potret layar hanya bila perlu;
-- tinjau otomatis hanya ≥ 40 baris, sekali per perubahan;
-- setiap agent membaca seperlunya (`grep`, potongan baris), memotong keluaran panjang, laporan padat.
+- auditor dan penyelaras hanya jalan bila diff relevan; potret layar hanya bila perlu;
+- tinjau otomatis hanya untuk ≥ 40 baris, sekali per perubahan;
+- setiap agent membaca seperlunya (`grep`, potongan baris), memotong keluaran panjang, laporan padat;
+- menu bar, suara, status sesi, dan pembaruan badge berjalan di Mac tanpa token.
 
-## Konfigurasi project: `.claude/clint.json`
+## Konfigurasi
 
-Dibuat oleh `siapkan-project`.
+`.claude/clint.json` per project, dibuat oleh `siapkan-project`:
 
 ```jsonc
 {
@@ -168,9 +235,9 @@ Dibuat oleh `siapkan-project`.
     { "name": "designs", "path": "../designs", "branch": "main", "role": "design" }
   ],
   "docs": { "plans": "docs/plans", "requirements": "../docs", "design": "../designs/aplikasi.html",
-            "feedback": "../docs/qa/feedback",           // butir feedback/bug QA untuk cek & jalankan
-            "pic": "docs/sprints" },                      // pembagian tugas; cek hanya lapor butir milik Anda
-  "suara": true,                                      // false: kabar tanpa suara untuk project ini
+            "feedback": "../docs/qa/feedback",        // butir feedback/bug QA
+            "pic": "docs/sprints" },                   // pembagian tugas; laporan hanya butir milik Anda
+  "suara": true,
   "surfaces": [
     { "name": "mobile", "root": ".", "adapter": ".claude/mobile-stack.md",
       "lint": "bun run lint", "typecheck": "bun run typecheck", "test": "bun run test",
@@ -179,10 +246,17 @@ Dibuat oleh `siapkan-project`.
 }
 ```
 
-Path yang tidak berlaku diisi `"TIDAK ADA"`. Monorepo: tambah entri `surfaces` per app
-(mis. `apps/admin` web, `apps/api` backend).
+Path yang tidak berlaku diisi `"TIDAK ADA"`. Monorepo: tambah entri `surfaces` per app (mis.
+`apps/admin` web, `apps/api` backend).
 
-## Struktur repo
+Konfigurasi pribadi (tidak di repo mana pun):
+
+| File | Isi |
+|---|---|
+| `~/.config/clint/saya.json` | `{"nama": ["Nama Anda", "username-git"]}` untuk filter PIC |
+| `~/.config/clint/avatar.jpg` | avatar laporan dan menu bar (opsional) |
+
+## Struktur repo dan perawatan
 
 ```
 clint/
@@ -190,38 +264,32 @@ clint/
   agents/            10 agent
   skills/            cek · jalankan · tinjau · siapkan-project
   hooks/             prinsip kerja, format, tinjau otomatis, kabar, status sesi
-  scripts/           sapaan pagi, layar laporan, perintah suara, ikon menu bar
-  swiftbar/          plugin menu bar (clint.py)
+  scripts/           sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
+  swiftbar/          plugin menu bar (clint.py, streamable)
   kit/               master skill/rules/adapter yang DISALIN ke project (lihat kit/README.md)
-  .claude-plugin/    (tersembunyi) plugin.json + marketplace.json — jangan dihapus/dipindah
+  docs/gambar/       gambar README; sumbernya di docs/gambar/sumber (python3 buat.py)
+  .claude-plugin/    plugin.json + marketplace.json (jangan dihapus atau dipindah)
 ```
 
-Skill platform, rules, dan adapter disalin ke `.claude/` project supaya rekan tim tanpa plugin
-tetap mendapat aturan yang sama. `/clint:siapkan-project sinkron` membandingkan salinan dengan master.
+Skill platform, rules, dan adapter **disalin** ke `.claude/` project supaya rekan tim tanpa plugin
+tetap mendapat aturan yang sama. Aturan emas untuk master skill: kalimat yang bisa menjadi salah karena
+orang lain mengubah kode tidak boleh ada di skill; tempatnya di adapter, atau diganti perintah
+verifikasi (penjelasan: `kit/mobile/README.md`).
 
-## Pasang & update
+Memperbarui setelah mengubah kit:
 
 ```bash
-claude plugin marketplace add auliarampit/clint-agent    # dari GitHub
-# atau lokal: claude plugin marketplace add ~/Desktop/clint
-claude plugin install clint@clint
-
-# setelah mengubah kit
 cd ~/Desktop/clint && git commit -am "..."
 claude plugin marketplace update clint && claude plugin update clint@clint
 ```
 
-Lalu di VSCode: `Cmd+Shift+P` → **Developer: Reload Window**, buka sesi baru.
-
-## Aturan emas master skill
-
-Kalimat yang bisa menjadi salah karena orang lain mengubah kode tidak boleh ada di skill; tempatnya di
-adapter, atau diganti perintah verifikasi. Penjelasan: `kit/mobile/README.md`.
+Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 docs/gambar/sumber/buat.py`
+(butuh Microsoft Edge atau Google Chrome); datanya contoh fiktif.
 
 ## Peta jalan
 
 | Fase | Isi | Status |
 |---|---|---|
-| 1 | core + mobile | selesai |
-| 2 | web (konvensi portable + adapter, dari rules frontend project yang sudah berjalan) | berikutnya |
-| 3 | backend (backend-features, backend-i18n, prisma-database) | menyusul |
+| 1 | core + mobile, alur PR otomatis, laporan pagi, menu bar, mode JARVIS | selesai |
+| 2 | web: konvensi portable + adapter | berikutnya |
+| 3 | backend: konvensi portable + adapter | menyusul |

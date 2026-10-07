@@ -1,0 +1,56 @@
+<!doctype html><html lang='id'><head><meta charset='utf-8'><style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{--bg:#0E1420;--bg2:#141C2B;--card:#1A2333;--line:#2A3548;--ink:#EEF2F7;--muted:#97A3B6;--dim:#6B778B;
+--dawn:#F0954A;--dawn2:#FFB37A;--dawn-soft:rgba(240,149,74,.14);--ok:#4CC38A;--warn:#E8B84A;--crit:#EF6B6B;--blue:#7AA7F5;--violet:#B79AF0;
+--fd:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;--fb:"IBM Plex Sans",-apple-system,system-ui,sans-serif;--fm:"IBM Plex Mono",Menlo,monospace}
+*{box-sizing:border-box;margin:0}
+html,body{width:100%;height:100%}
+body{background:radial-gradient(90% 120% at 100% 0%,#2A1E1A 0%,transparent 55%),radial-gradient(70% 90% at 0% 100%,#122238 0%,transparent 60%),var(--bg);
+color:var(--ink);font:16px/1.5 var(--fb);padding:56px 64px;overflow:hidden}
+.eyebrow{font:500 13px var(--fm);letter-spacing:.14em;text-transform:uppercase;color:var(--dawn)}
+h1,h2{font-family:var(--fd);letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:40px;font-weight:800;margin:8px 0 6px;line-height:1.12}
+.sub{color:var(--muted);font-size:18px;max-width:60ch}
+.logo{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:800 34px/1 var(--fd);color:var(--bg);
+background:radial-gradient(circle at 35% 30%,var(--dawn2),var(--dawn));box-shadow:0 0 0 4px var(--bg),0 0 0 6px var(--dawn);flex:none}
+.logo.s{width:22px;height:22px;font-size:13px;box-shadow:0 0 0 2px #000,0 0 0 3.5px var(--dawn)}
+.logo.m{width:40px;height:40px;font-size:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.mono{font-family:var(--fm)}
+.pill{display:inline-block;font:500 12px var(--fm);padding:3px 9px;border-radius:999px}
+.opus{background:rgba(240,149,74,.16);color:var(--dawn2)}.sonnet{background:rgba(122,167,245,.16);color:var(--blue)}.haiku{background:rgba(183,154,240,.16);color:var(--violet)}
+.foot{position:absolute;left:64px;right:64px;bottom:36px;display:flex;justify-content:space-between;color:var(--dim);font:13px var(--fm)}
+
+.pts{display:grid;gap:8px;padding-left:18px;color:var(--muted)}
+.rep{padding:24px 28px;display:grid;gap:10px;align-content:start;align-self:center;background:#F6F8FB;color:#18212D;border:0}
+.rep .top{display:flex;gap:12px;align-items:center}.logo.terang{box-shadow:0 0 0 3px #F6F8FB,0 0 0 5px var(--dawn);color:#fff}.rep .eb{font:500 12px var(--fm);letter-spacing:.06em;text-transform:uppercase;color:#5A6676}
+.rep h1{font:800 32px/1.15 var(--fd)}.rep h1 em{font-style:normal;color:#C9671E}.lead{color:#3A4656;font-size:15.5px}
+.chips{display:flex;gap:8px}.ch{font:500 12px var(--fm);padding:3px 9px;border-radius:999px}.ch.a{background:#E2EAF7;color:#2D5DA8}.ch.b{background:#EEE5F7;color:#7A4AA8}
+.rep h3{font:600 14.5px var(--fb);margin-top:4px}.rep h3 span{font:500 12px var(--fm);color:#5A6676;margin-left:6px}
+.it{background:#E9EEF4;border-radius:10px;padding:10px 14px;display:grid;gap:5px;border-left:4px solid #C9671E}.it.ck{border-left-color:#A86A0B}
+.it p{font-size:14.5px}.m{display:flex;gap:8px;align-items:center;color:#5A6676;font-size:12.5px}
+.c{display:flex;gap:8px;align-items:center}.c code{font:12.5px var(--fm);background:#fff;border:1px solid #D6DDE7;border-radius:6px;padding:2px 8px}
+.c button{font:500 12px var(--fb);border:1px solid #D6DDE7;background:none;border-radius:6px;padding:2px 9px}
+.pl{display:flex;gap:8px;flex-wrap:wrap}.pl span{font-size:12.5px;padding:4px 10px;border-radius:999px}.g{background:#E1F1E9;color:#2F7D5B}.w{background:#FBF0D9;color:#A86A0B}
+</style></head><body>
+<div style="display:grid;grid-template-columns:.75fr 1.25fr;gap:44px;height:100%">
+ <div style="display:grid;gap:16px;align-content:center">
+  <div class="eyebrow">/clint:cek semua · 08.00</div>
+  <h2>Satu laporan pagi untuk semua project aktif</h2>
+  <p class="sub" style="font-size:17px">Docs, design, feedback QA, MR, dan pipeline dicek bersamaan. Hanya butir yang PIC-nya Anda. Dikelompokkan per tindakan.</p>
+  <ul class="pts"><li>Feedback QA yang masih open, sampai rinciannya</li><li>Tombol Salin untuk perintah lanjutan</li><li>Kalimat inti dibacakan, notifikasi muncul</li></ul>
+ </div>
+ <div class="rep card">
+  <div class="top"><span class="logo m terang">c</span><span class="eb">clint · Rabu, 7 Oktober 2026 · 08.02</span></div>
+  <h1>Selamat pagi. <em>3 hal</em> menunggu hari ini.</h1>
+  <p class="lead">Dua bisa langsung dikerjakan, satu MR menunggu review Anda. Pipeline aman di 2 project.</p>
+  <div class="chips"><span class="ch a">toko-online · mobile</span><span class="ch b">portal-admin</span></div>
+  <h3>Perlu dikerjakan <span>2</span></h3>
+  <div class="it do"><p>Daftar produk belum bisa ditarik untuk dimuat ulang.</p><div class="m"><span class="ch a">mobile</span>Feedback UI #8</div><div class="c"><code>/clint:jalankan feedback UI #8</code><button>Salin</button></div></div>
+  <div class="it do"><p>Field harga di API contract berganti nama, layar admin belum menyesuaikan.</p><div class="m"><span class="ch b">portal-admin</span>API-PRICE-3</div></div>
+  <h3>Perlu Anda cek <span>1</span></h3>
+  <div class="it ck"><p>Ganti email dengan OTP siap direview.</p><div class="m"><span class="ch a">mobile</span>MR !128 · tinjauan otomatis lulus</div></div>
+  <div class="pl"><span class="g">Pipeline aman</span><span class="g">4 butir milik rekan dilewati</span><span class="w">Disk tinggal 18 GB</span></div>
+ </div>
+</div>
+</body></html>
