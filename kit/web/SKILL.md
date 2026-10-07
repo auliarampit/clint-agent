@@ -77,11 +77,14 @@ Hal yang sama untuk hook/composable, util format (tanggal, uang, angka), dan kli
 
 ```
 {featuresRoot}/{feature}/
-  {uiFolder}/      komponen tampilan: menerima data, memanggil handler, tanpa logika bisnis
-  {logicFolder}/   state, hook/composable, aturan bisnis murni (bisa dites tanpa render)
-  {dataFolder}/    pemanggilan API, pemetaan payload ↔ model, kunci cache
-  {testFolder}/
+  {uiFolder}       komponen tampilan: menerima data, memanggil handler, tanpa logika bisnis
+  {logicFolder}    state, hook/composable, aturan bisnis murni (bisa dites tanpa render)
+  {dataFolder}     pemanggilan API, pemetaan payload ↔ model, kunci cache
+  {testFolder}     atau berdampingan dengan file yang dites, sesuai adapter
 ```
+
+Nama dan bentuk lokasi (folder atau satu file, mis. satu file API per feature) **mengikuti adapter
+§6 dan feature yang sudah ada**, bukan bagan di atas. Yang wajib adalah pemisahan perannya.
 
 - Route/page **tipis**: memilih data dan layout, lalu menyerahkan ke komponen feature.
 - Arah dependensi: `ui → logic → data`. Data tidak pernah mengimpor UI.

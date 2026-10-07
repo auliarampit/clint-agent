@@ -52,6 +52,7 @@ Verifikasi: `jq '.dependencies' {appRoot}/package.json`; lihat folder route.
 | State global UI | | |
 | Form + validasi skema | | |
 | Auth/sesi di klien | | |
+| Gating izin di UI (komponen/fungsi) | | |
 
 > Ini pilihan project dan mengikat. Mencampur dua mekanisme untuk hal yang sama ditolak review.
 
@@ -63,23 +64,25 @@ Verifikasi: `jq '.dependencies' {appRoot}/package.json`; lihat folder route.
 | Penanganan error/401/refresh | |
 | Pemetaan kode error → pesan | |
 | Prefix variabel lingkungan publik | |
+| File validasi variabel lingkungan | |
 | Casing payload API | |
 
 ## 6. Struktur folder feature
 
-Verifikasi: `ls {featuresRoot}; ls -R {featuresRoot}/$(ls {featuresRoot} | head -1)`
+Verifikasi: `ls {featuresRoot}; find {featuresRoot}/<feature-contoh> -maxdepth 2` (pilih feature yang matang)
 
 | Hal | Nilai |
 |---|---|
 | `{featuresRoot}` | |
-| Subfolder UI / logic / data / test | |
+| Lokasi UI / logic / data (folder atau file) | |
+| Lokasi test (folder sendiri / berdampingan) | |
 | Path alias | |
 
 ## 7. Komponen bersama & design system
 
 | Tingkat | Lokasi | Cara melihat isinya |
 |---|---|---|
-| Library/design system | | |
+| Library/design system (package monorepo bila ada) | | |
 | Komponen bersama app | | |
 | Ikon | | |
 
@@ -110,6 +113,8 @@ Verifikasi: `ls {featuresRoot}; ls -R {featuresRoot}/$(ls {featuresRoot} | head 
 
 | Tool | Perintah | Catatan |
 |---|---|---|
+
+| Quality gate (mis. analisis statis yang memblokir merge) + aturan yang paling sering kena | | |
 
 Satu formatter saja; formatter yang **tidak** dipakai: …
 
