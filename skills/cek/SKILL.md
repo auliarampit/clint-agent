@@ -1,10 +1,15 @@
 ---
 name: cek
 description: Satu perintah untuk tahu kondisi kerja di project ini, atau di semua project aktif ("cek semua project") dengan satu layar laporan gabungan — tarik docs/designs/base branch dan cocokkan perubahannya dengan kode, plus MR open, pipeline gagal, branch tertinggal, worktree, dan sisa disk. Pakai di awal hari, saat user bertanya "ada update apa?" atau "apa yang perlu saya urus?".
-argument-hint: [semua] [sejak <periode>]
+argument-hint: [semua | nama project] [sejak <periode>] [--json <path>] [--tanpa-layar]
 ---
 
 ## Mode project ini (default)
+
+Argumen berupa **nama project lain** (mis. `/clint:cek toko-online`) → cari path-nya dengan
+`bash "$R/scripts/cari-proyek.sh" "<nama>"` (R seperti di mode `semua`), lalu jalankan mode
+`semua` untuk path itu saja.
+
 
 1. Jalankan bersamaan agent `pelacak-perubahan` (teruskan periode bila disebut) dan `penjaga`.
 2. Susun laporan sesuai **Gaya laporan** di bawah. Isinya mencakup: update docs/design dan
@@ -15,14 +20,14 @@ argument-hint: [semua] [sejak <periode>]
 
 ## Mode `semua` ("cek semua project")
 
-1. Daftar project aktif:
+1. Daftar project: bila argumen menyebut path project, pakai **hanya** itu. Bila tidak, project aktif:
    `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); bash "$R/scripts/proyek-aktif.sh" 3`
    (user boleh menyebut project tambahan atau jumlah hari lain).
 2. Untuk **setiap** project, jalankan `pelacak-perubahan` dan `penjaga` — semuanya dalam **satu
    pesan** (paralel). Beri tiap agent path project-nya; agent bekerja dengan `git -C <path>` dan
    membaca `<path>/.claude/clint.json`.
 3. Gabungkan menjadi satu laporan dan tulis sebagai JSON ke
-   `~/Library/Logs/clint/<YYYY-MM-DD>.json` dengan tool **Write**, bentuknya:
+   path dari `--json` bila diberikan, selain itu `~/Library/Logs/clint/<YYYY-MM-DD-HHMM>.json`, dengan tool **Write**, bentuknya:
    ```json
    {"tanggal":"Rabu, 7 Oktober 2026 · 08.00",
     "judul":"Selamat pagi. 4 hal menunggu hari ini.",
@@ -34,11 +39,10 @@ argument-hint: [semua] [sejak <periode>]
     "rincian":[{"proyek":"<nama>","butir":["<1 baris>"]}]}
    ```
    Butir mengikuti gaya laporan di bawah; kelompok kosong ditulis `[]`.
-4. Bila dijalankan di sesi interaktif: render dan buka layarnya,
+4. Kecuali ada `--tanpa-layar` (dipakai sapaan pagi, yang merender sendiri): render dan buka layarnya,
    `python3 "$R/scripts/render-laporan.py" <json> "${json%.json}.html" && open "${json%.json}.html"`,
-   lalu di chat cukup kalimat inti + "laporan sudah terbuka". (Saat dijalankan sapaan pagi, skrip
-   yang merender dan membuka.)
-5. Sesi interaktif: tulis kabar suara seperti di bawah. (Sapaan pagi membacakan `kalimat` dari JSON.)
+   lalu di chat cukup kalimat inti + "laporan sudah terbuka".
+5. Kecuali ada `--tanpa-layar`: tulis kabar suara seperti di bawah. (Sapaan pagi membacakan `kalimat` dari JSON.)
 
 ## Gaya laporan ke user (wajib)
 

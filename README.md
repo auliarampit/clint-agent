@@ -84,7 +84,7 @@ menyebut urutan merge. Satu PR gagal → hanya PR yang bergantung padanya dilewa
 |---|---|
 | **Sapaan pagi** | Senin–Jumat 08.00, clint memeriksa **semua project aktif** (punya `.claude/clint.json` dan dibuka di Claude Code 3 hari terakhir) dalam satu sesi, mode baca saja. Begitu siap: **layar laporan gabungan terbuka**, kalimat inti dibacakan, notifikasi muncul. Arsip: `~/Library/Logs/clint/<tanggal>.html`. Laptop tidur → jalan saat bangun |
 | **Bersuara** | `cek` dan `jalankan` menutup dengan satu kalimat inti yang dibacakan (suara Damayanti, bahasa Indonesia) + notifikasi Mac. Gratis token (suara lokal) |
-| **Perintah suara** | tombol mikrofon di kotak chat: "cek project ini" → `/clint:cek`; "cek semua project" → `/clint:cek semua` (layar laporan gabungan) |
+| **Perintah suara** | **"Hey Siri, Halo Clint"** → clint menjawab → ucapkan *"cek project toko online"* / *"cek semua project"* → layar laporan + suara. Tanpa menekan mikrofon. Perlu Pintasan "Halo Clint" (lihat di bawah) |
 | **Kabar ke HP** | notifikasi push saat agent selesai |
 | **Ingat kebiasaan** | memori Claude Code |
 
@@ -97,6 +97,13 @@ scripts/pasang-sapaan.sh --cabut                                 # matikan sapaa
 scripts/sapaan-pagi.sh --uji                                     # uji layar + suara dengan data contoh
 scripts/proyek-aktif.sh 3                                        # lihat project yang dianggap aktif
 ```
+
+**Pintasan "Halo Clint"** (sekali, di app Pintasan/Shortcuts): buat pintasan baru bernama **Halo Clint**
+dengan 3 tindakan: (1) *Jalankan Skrip Shell* `bash ~/Desktop/clint/scripts/clint-suara.sh sapa`,
+(2) *Dikte Teks* — bahasa Indonesia, berhenti setelah jeda, (3) *Jalankan Skrip Shell*
+`bash ~/Desktop/clint/scripts/clint-suara.sh "$1"` dengan input *Teks yang Didikte* sebagai argumen.
+
+Log dibersihkan otomatis: laporan lebih dari 3 hari dihapus, file teknis hanya disimpan bila gagal.
 
 Matikan suara per project: `"suara": false` di `.claude/clint.json`; sementara: `CLINT_SUARA=0`.
 
