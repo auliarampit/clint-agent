@@ -22,5 +22,6 @@ case "$1" in
   sapaan) diam "Sapaan pagi Senin sampai Jumat jam 08.00. Ubah lewat scripts/pasang-sapaan.sh." ;;
   vscode) if [ -n "$2" ]; then open -a "Visual Studio Code" "$2"; else open -a "Visual Studio Code"; fi ;;
   buka)   open "$2" ;;
+  selesai) python3 "$root/scripts/laporan-ubah.py" selesai "$2"; diam "Ditandai selesai." ;;
 esac
 segar

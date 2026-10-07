@@ -1,6 +1,6 @@
 {
   "name": "clint",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Tim agent untuk alur PR otomatis (rencana → kerja → tinjau → uji → MR), prinsip kerja wajib, dan master skill per platform",
   "author": {
     "name": "Aulia Rahmat"

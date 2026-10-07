@@ -74,6 +74,13 @@ L = lambda key: (lap or {}).get(key) or []
 gagal, kerjakan, cek, tunggu = L("gagal"), L("kerjakan"), L("cek"), L("tunggu")
 menunggu = len(gagal) + len(kerjakan) + len(cek)
 
+# Status MR dicek tiap 15 menit di latar (glab/gh, tanpa token): MR merged/closed hilang dari laporan.
+cap = os.path.join(CFG, "mr-dicek")
+if lap is not None and (not os.path.exists(cap) or time.time() - os.path.getmtime(cap) > 900):
+    open(cap, "w").close()
+    subprocess.Popen(["python3", os.path.join(ROOT, "scripts/laporan-ubah.py"), "periksa-mr"],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
 # ---- ikon + badge ----
 ikon = os.path.join(CFG, "ikon.png")
 img = f"image={base64.b64encode(open(ikon, 'rb').read()).decode()} width=18 height=18" if os.path.exists(ikon) \
@@ -120,6 +127,7 @@ def butir(x, warna):
         print(f"--Buka MR di browser | {aksi('buka', x['url'])}")
     if DIR.get(x.get("proyek")):
         print(f"--Buka project di VS Code | {aksi('vscode', DIR[x['proyek']])}")
+    print(f"--Tandai selesai | {aksi('selesai', x.get('teks'), refresh=True)} sfimage=checkmark")
 
 
 def durasi(dt):

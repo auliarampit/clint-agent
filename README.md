@@ -119,6 +119,10 @@ bekerja, berjalan di latar, menunggu Anda, atau baru selesai, lengkap dengan age
 tugasnya. Datanya dari hook clint (`hooks/status-sesi.sh` → `~/.config/clint/sesi/`), tanpa token. Klik
 sesi atau butir tugas → VS Code terbuka di project itu; butir MR → MR terbuka di browser.
 
+**Badge ikut berkurang tanpa cek ulang (tanpa token):** `jalankan` yang membuat MR untuk sebuah butir
+memindahkannya ke *Menunggu review*; MR yang sudah merged/closed hilang sendiri (status MR dicek tiap
+15 menit lewat glab/gh); atau klik *Tandai selesai* di submenu butir.
+
 **Hanya tugas milik Anda:** isi `~/.config/clint/saya.json` (`{"nama":["Aulia"]}`) dan, untuk project tim,
 `docs.pic` di `.claude/clint.json` (dokumen pembagian tugas, mis. sprint tracker). `cek` lalu hanya
 melaporkan butir yang PIC-nya Anda; milik orang lain cukup disebut jumlahnya.
