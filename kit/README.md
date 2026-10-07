@@ -14,7 +14,10 @@ project, supaya rekan tim yang tidak memasang plugin tetap mendapat aturan yang 
 | `web/referensi/*.md` | `.claude/skills/skill-web/referensi/` | aksesibilitas, performa, keamanan, pola UI |
 | `web/web-e2e.md` | `.claude/rules/` | aturan test E2E browser |
 | `web/adapters/TEMPLATE.md` | `.claude/web-stack.md` | diisi per project |
-| `backend/` | — | Fase 3 |
+| `backend/SKILL.md` | `.claude/skills/skill-backend/` | konvensi inti backend/API, jangan diedit per project |
+| `backend/referensi/*.md` | `.claude/skills/skill-backend/referensi/` | kontrak API, data & migrasi, keamanan API, keandalan |
+| `backend/backend-test.md` | `.claude/rules/` | aturan test integrasi dan kontrak |
+| `backend/adapters/TEMPLATE.md` | `.claude/backend-stack.md` | diisi per project |
 
 Alasan pemisahan konvensi (skill) dan inventaris (adapter) ada di `mobile/README.md`.
 Panduan pemakaian agent dan skill ada di README utama repo.

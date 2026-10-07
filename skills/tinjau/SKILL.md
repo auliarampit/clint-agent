@@ -24,7 +24,9 @@ Jalankan bersamaan, dalam satu pesan:
 - `penyelaras-desain`: bila diff menyentuh UI dan `docs.design` bukan `TIDAK ADA`;
 - `auditor-aksesibilitas`: bila diff menyentuh komponen tampilan, form, dialog, navigasi, atau warna;
 - `auditor-performa`: bila diff menambah dependensi, menyentuh daftar besar, gambar, pengambilan data,
-  atau komponen yang sering dirender.
+  atau komponen yang sering dirender;
+- `auditor-database`: bila diff menyentuh migrasi, skema, repository/akses data, atau query;
+- `auditor-kontrak-api`: bila diff menyentuh endpoint, DTO/skema validasi, atau file kontrak.
 
 Input dari kamu ke setiap peninjau (hemat token):
 - simpan diff sekali ke file sementara (`git -C <path kerja> diff <base> > <tmp>/pr.diff`) dan

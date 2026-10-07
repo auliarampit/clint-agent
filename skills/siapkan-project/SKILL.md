@@ -18,6 +18,10 @@ kit/web/SKILL.md                  → .claude/skills/skill-web/SKILL.md
 kit/web/referensi/*.md            → .claude/skills/skill-web/referensi/
 kit/web/web-e2e.md                → .claude/rules/web-e2e.md
 kit/web/adapters/TEMPLATE.md      → .claude/web-stack.md            (diisi)
+kit/backend/SKILL.md              → .claude/skills/skill-backend/SKILL.md
+kit/backend/referensi/*.md        → .claude/skills/skill-backend/referensi/
+kit/backend/backend-test.md       → .claude/rules/backend-test.md
+kit/backend/adapters/TEMPLATE.md  → .claude/backend-stack.md        (diisi)
 ```
 
 Skill dan rules platform **disalin** ke project (bukan dirujuk dari plugin) supaya rekan tim

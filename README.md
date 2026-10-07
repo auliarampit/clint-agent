@@ -2,15 +2,15 @@
 
 ![clint — tim agent Claude Code yang mengerjakan tiket sampai jadi MR](docs/gambar/sampul.png)
 
-**clint** adalah plugin Claude Code berisi 12 agent senior yang bekerja sebagai satu tim: membaca
+**clint** adalah plugin Claude Code berisi 14 agent senior yang bekerja sebagai satu tim: membaca
 dokumen, merencanakan, menulis kode, meninjau berlapis, menguji, sampai membuat MR. Dipasang sekali,
 berlaku di semua project. Anda cukup **review dan merge**.
 
 - **Satu perintah untuk semua pekerjaan.** Tugas kecil langsung jadi 1 PR; modul besar dibuatkan
   rencana dan PR-nya dikerjakan paralel bila aman.
 - **Tinjauan berlapis sebelum MR.** Kesesuaian dokumen, clean code, keamanan OWASP, aksesibilitas
-  WCAG 2.2, performa, dan kesesuaian desain; temuan wajib diperbaiki otomatis.
-- **Mobile dan web.** Skill platform yang portable: konvensi inti + adapter fakta stack per project.
+  WCAG 2.2, performa, database, kontrak API, dan kesesuaian desain; temuan wajib diperbaiki otomatis.
+- **Mobile, web, dan backend.** Skill platform yang portable: konvensi inti + adapter fakta stack per project.
 - **Tahu kondisi kerja tanpa bertanya.** Laporan pagi gabungan, menu bar yang menampilkan agent yang
   sedang bekerja, kabar suara, dan perintah lewat "Hey Siri".
 - **Hemat token.** Model tidak diturunkan; yang dijaga cara kerja agent. Menu bar, suara, dan
@@ -46,7 +46,7 @@ Lalu di VS Code: `Cmd+Shift+P` → **Developer: Reload Window**, buka sesi baru 
 jalankan sekali:
 
 ```
-/clint:siapkan-project mobile      # atau: web
+/clint:siapkan-project mobile      # atau: web, backend
 ```
 
 Perintah ini menyalin skill dan rules platform ke `.claude/`, mengisi adapter stack dari hasil
@@ -101,7 +101,7 @@ rekan   /clint:tinjau !123
 
 ## Tim agent
 
-![12 agent senior](docs/gambar/tim-agent.png)
+![14 agent senior](docs/gambar/tim-agent.png)
 
 | Agent | Peran | Model |
 |---|---|---|
@@ -116,6 +116,8 @@ rekan   /clint:tinjau !123
 | `pelacak-perubahan` | apa yang berubah di docs, design, `dev`, plus feedback QA yang masih open | Sonnet |
 | `auditor-aksesibilitas` | WCAG 2.2 AA: semantik, keyboard, fokus, label, kontras | Sonnet |
 | `auditor-performa` | Core Web Vitals, bundle, render, pengambilan data | Sonnet |
+| `auditor-database` | migrasi aman, integritas, transaksi, indeks, N+1 | Opus |
+| `auditor-kontrak-api` | implementasi vs API contract, perubahan yang merusak klien | Sonnet |
 | `penjaga` | MR, pipeline, branch, worktree, disk | Haiku |
 
 Semua agent bekerja dengan standar senior: pahami konteks dulu, solusi paling sederhana yang benar,
@@ -264,12 +266,12 @@ Konfigurasi pribadi (tidak di repo mana pun):
 ```
 clint/
   README.md
-  agents/            12 agent
+  agents/            14 agent
   skills/            cek · jalankan · tinjau · siapkan-project
   hooks/             prinsip kerja, format, tinjau otomatis, kabar, status sesi
   scripts/           sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
   swiftbar/          plugin menu bar (clint.py, streamable)
-  kit/               master skill/rules/adapter mobile dan web yang DISALIN ke project (lihat kit/README.md)
+  kit/               master skill/rules/adapter mobile, web, dan backend yang DISALIN ke project (lihat kit/README.md)
   docs/gambar/       gambar README; sumbernya di docs/gambar/sumber (python3 buat.py)
   .claude-plugin/    plugin.json + marketplace.json (jangan dihapus atau dipindah)
 ```
@@ -295,4 +297,4 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 |---|---|---|
 | 1 | core + mobile, alur PR otomatis, laporan pagi, menu bar, mode JARVIS | selesai |
 | 2 | web: skill inti + referensi (aksesibilitas, performa, keamanan, pola UI), aturan E2E, adapter; auditor aksesibilitas dan performa | selesai |
-| 3 | backend: konvensi portable + adapter | menyusul |
+| 3 | backend: skill inti + referensi (kontrak API, data & migrasi, keamanan API, keandalan), aturan test, adapter; auditor database dan kontrak API | selesai |
