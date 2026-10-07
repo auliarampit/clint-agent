@@ -11,8 +11,10 @@ f="$dir/$sid.json"; now="$(date +%s)"
   '{cwd:$c,status:"siap",tugas:"",mulai:$t,update:$t,agents:{}}' > "$f"
 ubah(){ jq "$@" "$f" > "$f.tmp" && mv "$f.tmp" "$f"; }
 case "$ev" in
-  UserPromptSubmit) ubah --arg p "$(jq -r '.prompt // ""' <<<"$input" | tr '\n' ' ' | cut -c1-90)" --argjson t "$now" \
-                      '.status="bekerja" | .tugas=$p | .mulai=$t | .update=$t' ;;
+  UserPromptSubmit) p="$(jq -r '.prompt // ""' <<<"$input" | tr '\n' ' ' | cut -c1-90)"
+                    # Pesan sistem/agent (diawali "<") bukan tugas baru: status saja, tugas lama dipertahankan.
+                    if [[ "$p" == \<* ]]; then ubah --argjson t "$now" '.status="bekerja" | .update=$t'
+                    else ubah --arg p "$p" --argjson t "$now" '.status="bekerja" | .tugas=$p | .mulai=$t | .update=$t'; fi ;;
   SubagentStart) ubah --arg i "$(jq -r '.agent_id // .tool_use_id // "?"' <<<"$input")" \
                       --arg a "$(jq -r '.agent_type // .subagent_type // "agent"' <<<"$input")" --argjson t "$now" \
                       '.agents[$i]=$a | .update=$t' ;;
