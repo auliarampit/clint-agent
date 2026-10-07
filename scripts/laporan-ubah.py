@@ -11,6 +11,7 @@ if not os.path.exists(P):
     sys.exit(0)
 d = json.load(open(P, encoding="utf-8"))
 # Waktu laporan dibuat disimpan sekali; mtime berubah setiap kali butir diubah.
+baru_dibuat = "_dibuat" not in d
 d.setdefault("_dibuat", os.path.getmtime(P))
 cocok = lambda x, k: k and (k == x.get("teks") or k == x.get("sumber") or k in (x.get("teks") or ""))
 
@@ -36,6 +37,7 @@ elif aksi == "review":
         simpan()
 elif aksi == "periksa-mr":
     import re, datetime
+    berubah = baru_dibuat
     dibuat = datetime.datetime.fromtimestamp(d["_dibuat"]).astimezone()
     DIR = {x.get("nama"): x.get("dir") for x in d.get("proyek") or [] if x.get("dir")}
 
@@ -70,10 +72,10 @@ elif aksi == "periksa-mr":
             ids = re.findall(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+\b", x.get("sumber") or "")
             dirp = DIR.get(x.get("proyek"))
             if not x.get("url") and ids and dirp and all(merged_setelah_laporan(dirp, i) for i in ids):
+                berubah = True
                 continue
             sisa.append(x)
         d[g] = sisa
-    berubah = False
     for g in GRUP:
         sisa = []
         for x in d.get(g) or []:
@@ -91,4 +93,5 @@ elif aksi == "periksa-mr":
                     continue
             sisa.append(x)
         d[g] = sisa
-    simpan()
+    if berubah:            # simpan hanya bila ada butir yang berubah (mtime tetap jujur)
+        simpan()

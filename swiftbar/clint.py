@@ -98,7 +98,8 @@ def baca():
     if os.path.exists(p):
         try:
             lap = json.load(open(p, encoding="utf-8"))
-            waktu = datetime.datetime.fromtimestamp(os.path.getmtime(p)).strftime("%H.%M")
+            # Waktu laporan DIBUAT, bukan waktu file terakhir disentuh (pengecekan MR / tandai selesai).
+            waktu = datetime.datetime.fromtimestamp(lap.get("_dibuat") or os.path.getmtime(p)).strftime("%H.%M")
         except Exception:
             lap = None
     kerja = None
