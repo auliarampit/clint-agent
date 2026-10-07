@@ -16,6 +16,10 @@ kabar="${TMPDIR:-/tmp}/clint-kabar.txt"; rm -f "$kabar" "$json"
 if [ $# -gt 0 ]; then proyek="$(printf '%s\n' "$@")"; else proyek="$(bash "$root/scripts/proyek-aktif.sh" 3)"; fi
 [ -n "$proyek" ] || exit 0
 kerja="$(echo "$proyek" | head -1)"
+# Status untuk menu bar selama pemeriksaan berjalan.
+printf '%s\n%s\n' "cek $(echo "$proyek" | wc -l | tr -d ' ') project" "$(echo "$proyek" | xargs -n1 basename | paste -sd, -)" > "$log/kerja.txt"
+trap 'rm -f "$log/kerja.txt"; open -g "swiftbar://refreshplugin?name=clint.1m.py" 2>/dev/null' EXIT
+open -g "swiftbar://refreshplugin?name=clint.1m.py" 2>/dev/null
 tambah=(--add-dir "$log"); while read -r p; do tambah+=(--add-dir "$p"); done <<< "$proyek"
 
 if [ "$uji" = 1 ]; then
@@ -36,6 +40,7 @@ fi
 if [ -s "$json" ] && python3 "$root/scripts/render-laporan.py" "$json" "$html"; then
   open "$html"
   [ -s "$kabar" ] || jq -r '.kalimat // empty' "$json" > "$kabar"
+  cp "$json" "$log/terakhir.json"
   rm -f "${json%.json}.log" "$json"
 else
   printf '%s' "Sapaan pagi gagal membuat laporan. Lihat log clint." > "$kabar"

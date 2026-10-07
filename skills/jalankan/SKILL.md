@@ -199,6 +199,13 @@ Kegagalan satu PR (masih ada temuan wajib setelah 2 putaran, test gagal, konflik
   laporan untuk diperiksa user. (Working tree bersih = hook tinjau otomatis tidak terpicu ulang.)
 - PR yang bergantung padanya **dilewati**; PR lain tetap jalan.
 
+## Status di menu bar
+
+Saat mulai, setiap ganti PR/tahap, dan saat selesai, perbarui status (murah, satu baris):
+`printf '%s\n%s\n' "PR-2/4" "PR-2 · ditinjau reviewer-senior" > ~/Library/Logs/clint/kerja.txt`
+Baris 1 pendek (tampil di sebelah ikon), baris berikut rincian. Hapus file itu di akhir
+(`rm -f ~/Library/Logs/clint/kerja.txt`), termasuk bila berhenti karena gagal.
+
 ## Hemat token
 
 - Jangan membaca dokumen/rencana utuh di sesi utama; cukup tabel *Urutan pekerjaan* dan potongan

@@ -33,12 +33,15 @@ Argumen berupa **nama project lain** (mis. `/clint:cek toko-online`) → cari pa
     "judul":"Selamat pagi. 4 hal menunggu hari ini.",
     "kalimat":"<kalimat inti untuk dibacakan>", "lead":"<1 kalimat pendukung>",
     "proyek":[{"nama":"<nama pendek>","aktif":"kemarin"}],
+    "gagal":[{"teks":"Pipeline !123 gagal di lint","proyek":"<nama>","sumber":"MR !123","perintah":"/clint:jalankan perbaiki pipeline !123","url":"<tautan MR>"}],
     "kerjakan":[{"teks":"<1 kalimat>","proyek":"<nama>","sumber":"<ID/MR>","perintah":"/clint:jalankan ..."}],
-    "cek":[...], "tunggu":[...],
+    "cek":[{"teks":"...","proyek":"...","sumber":"MR !123","url":"<tautan MR>"}], "tunggu":[...],
     "aman":["Pipeline aman di 2 project"], "peringatan":["Disk tinggal 18 GB"],
     "rincian":[{"proyek":"<nama>","butir":["<1 baris>"]}]}
    ```
-   Butir mengikuti gaya laporan di bawah; kelompok kosong ditulis `[]`.
+   Butir mengikuti gaya laporan di bawah; kelompok kosong ditulis `[]`. `gagal` = pipeline/pekerjaan
+   gagal (memberi ikon merah di menu bar); `url` diisi untuk butir MR. Salinan terakhir juga ditulis ke
+   `~/Library/Logs/clint/terakhir.json` (dibaca menu bar).
 4. Kecuali ada `--tanpa-layar` (dipakai sapaan pagi, yang merender sendiri): render dan buka layarnya,
    `python3 "$R/scripts/render-laporan.py" <json> "${json%.json}.html" && open "${json%.json}.html"`,
    lalu di chat cukup kalimat inti + "laporan sudah terbuka".

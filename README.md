@@ -103,6 +103,19 @@ dengan 3 tindakan: (1) *Jalankan Skrip Shell* `bash ~/Desktop/clint/scripts/clin
 (2) *Dikte Teks* — bahasa Indonesia, berhenti setelah jeda, (3) *Jalankan Skrip Shell*
 `bash ~/Desktop/clint/scripts/clint-suara.sh "$1"` dengan input *Teks yang Didikte* sebagai argumen.
 
+**Menu bar (SwiftBar):** ikon clint di menu bar Mac. Badge oranye = jumlah hal yang menunggu, ✓ hijau =
+aman, ! merah = ada yang gagal, ⟳ = agent sedang bekerja (dengan label kemajuan). Menu berisi hal yang
+menunggu (submenu *Salin perintah*), tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project ▸*,
+*Halo Clint*, dan *Pengaturan ▸* (suara, bisukan sampai besok). Membaca file lokal saja, tidak memakai token.
+
+```bash
+brew install --cask swiftbar
+mkdir -p ~/.config/clint/swiftbar && ln -sf ~/Desktop/clint/swiftbar/clint.1m.py ~/.config/clint/swiftbar/
+defaults write com.ameba.SwiftBar PluginDirectory -string "$HOME/.config/clint/swiftbar" && open -a SwiftBar
+```
+
+Ikon memakai `~/.config/clint/ikon.png` bila ada (bulat, 44×44 px); tanpa itu dipakai ikon bawaan.
+
 **Avatar (opsional):** taruh gambar persegi di `~/.config/clint/avatar.jpg`; layar laporan menampilkannya.
 Gambar ini sengaja tidak disimpan di repo.
 

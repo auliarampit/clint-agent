@@ -20,7 +20,8 @@ def butir(x):
                f'<button class="copy" type="button">Salin</button>'
                f'<span class="hint">jalankan di {e(x.get("proyek"))}</span></div>')
     return (f'<li class="item"><div class="body"><p>{e(x.get("teks"))}</p>'
-            f'<div class="meta">{chip(x.get("proyek"))}<span>{e(x.get("sumber"))}</span></div>{cmd}</div></li>')
+            f'<div class="meta">{chip(x.get("proyek"))}<span>{e(x.get("sumber"))}</span>'
+            f'{f"<a href=\"{e(x["url"])}\">buka</a>" if x.get("url") else ""}</div>{cmd}</div></li>')
 
 def grup(kunci, judul, kelas):
     xs = d.get(kunci) or []
@@ -39,7 +40,7 @@ pills = "".join(f'<span class="pill ok">{e(s)}</span>' for s in d.get("aman", []
 rincian = "".join(
     f'<section><h3>{e(r.get("proyek"))}</h3><ul>{"".join(f"<li>{e(b)}</li>" for b in r.get("butir", []))}</ul></section>'
     for r in d.get("rincian", []))
-kosong = "" if any(d.get(k) for k in ("kerjakan", "cek", "tunggu")) else \
+kosong = "" if any(d.get(k) for k in ("gagal", "kerjakan", "cek", "tunggu")) else \
     '<p class="lead">Tidak ada yang perlu ditindaklanjuti hari ini.</p>'
 
 CSS = """
@@ -60,7 +61,7 @@ h1,h2,h3{margin:0;text-wrap:balance}h1{font:700 clamp(30px,5vw,42px)/1.15 var(--
 .group{display:grid;gap:10px}.group h2{font:600 15px var(--f-body);display:flex;gap:10px;align-items:center}.count{font:500 12px var(--f-mono);color:var(--muted)}
 .items{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .item{display:grid;grid-template-columns:4px 1fr;gap:14px;background:var(--bg);border-radius:10px;padding:12px 14px 12px 0}
-.item:before{content:"";border-radius:0 3px 3px 0}.do .item:before{background:var(--dawn)}.check .item:before{background:var(--warn)}.wait .item:before{background:var(--line)}
+.item:before{content:"";border-radius:0 3px 3px 0}.do .item:before{background:var(--dawn)}.fail .item:before{background:#C23B3B}.check .item:before{background:var(--warn)}.wait .item:before{background:var(--line)}
 .body{min-width:0;display:grid;gap:6px}.body p{margin:0}.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;color:var(--muted);font-size:13px}
 .cmd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.cmd code{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:3px 8px;overflow-wrap:anywhere}
 .copy{font:500 12px var(--f-body);background:none;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 9px;cursor:pointer}.copy:hover{border-color:var(--dawn);color:var(--dawn)}
@@ -86,7 +87,7 @@ out = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name=
 <p class="lead">{e(d.get("lead"))}</p>
 <div class="projects">{"".join(chip(p.get("nama"), f' <small>{e(p.get("aktif"))}</small>' if p.get("aktif") else "") for p in proyek)}
 <button class="speak" id="speak" type="button" data-t="{e(d.get("kalimat"))}">▶ Bacakan</button></div></header>
-{kosong}{grup("kerjakan","Perlu dikerjakan","do")}{grup("cek","Perlu Anda cek","check")}{grup("tunggu","Menunggu pihak lain","wait")}
+{kosong}{grup("gagal","Perlu perhatian","fail")}{grup("kerjakan","Perlu dikerjakan","do")}{grup("cek","Perlu Anda cek","check")}{grup("tunggu","Menunggu pihak lain","wait")}
 <div class="calm">{pills}</div>
 {f'<details><summary>Rincian per project</summary><div class="grid">{rincian}</div></details>' if rincian else ""}
 <div class="foot">Dibuat oleh clint</div></main><script>{JS}</script></body></html>"""
