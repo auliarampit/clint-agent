@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pasang sapaan pagi (Senin–Jumat) lewat launchd.
-# Pakai: pasang-sapaan.sh <jam> <menit> <dir-project> [<dir-project> ...]   |   pasang-sapaan.sh --cabut
+# Pakai: pasang-sapaan.sh <jam> <menit>   |   pasang-sapaan.sh --cabut   (project aktif dideteksi otomatis)
 label="com.clint.sapaan-pagi"; plist="$HOME/Library/LaunchAgents/$label.plist"
 launchctl bootout "gui/$(id -u)/$label" 2>/dev/null
 if [ "$1" = "--cabut" ]; then rm -f "$plist"; echo "sapaan pagi dicabut"; exit 0; fi

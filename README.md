@@ -82,20 +82,20 @@ menyebut urutan merge. Satu PR gagal → hanya PR yang bergantung padanya dilewa
 
 | Kemampuan | Cara kerja |
 |---|---|
-| **Sapaan pagi** | Senin–Jumat jam 08.00, `/clint:cek` jalan sendiri (mode baca saja), kalimat intinya muncul sebagai notifikasi + dibacakan. Laporan lengkap: `~/Library/Logs/clint/<tanggal>-<project>.md`. Laptop tidur → jalan saat bangun |
+| **Sapaan pagi** | Senin–Jumat 08.00, clint memeriksa **semua project aktif** (punya `.claude/clint.json` dan dibuka di Claude Code 3 hari terakhir) dalam satu sesi, mode baca saja. Begitu siap: **layar laporan gabungan terbuka**, kalimat inti dibacakan, notifikasi muncul. Arsip: `~/Library/Logs/clint/<tanggal>.html`. Laptop tidur → jalan saat bangun |
 | **Bersuara** | `cek` dan `jalankan` menutup dengan satu kalimat inti yang dibacakan (suara Damayanti, bahasa Indonesia) + notifikasi Mac. Gratis token (suara lokal) |
-| **Perintah suara** | tombol mikrofon di kotak chat Claude |
+| **Perintah suara** | tombol mikrofon di kotak chat: "cek project ini" → `/clint:cek`; "cek semua project" → `/clint:cek semua` (layar laporan gabungan) |
 | **Kabar ke HP** | notifikasi push saat agent selesai |
-| **Kendali dari HP** | Remote Control aktif saat Claude Code dibuka; lanjutkan sesi dari aplikasi Claude |
 | **Ingat kebiasaan** | memori Claude Code |
 
 Agent **tidak** bergerak sendiri tanpa perintah (mis. memperbaiki pipeline diam-diam); ia hanya
 mengabari dan menyiapkan perintahnya.
 
 ```bash
-scripts/pasang-sapaan.sh 8 0 ~/path/project-a ~/path/project-b   # jadwal + daftar project
+scripts/pasang-sapaan.sh 8 0                                     # jadwal; project aktif dideteksi otomatis
 scripts/pasang-sapaan.sh --cabut                                 # matikan sapaan pagi
-scripts/sapaan-pagi.sh --uji ~/path/project-a                    # uji tanpa biaya cek
+scripts/sapaan-pagi.sh --uji                                     # uji layar + suara dengan data contoh
+scripts/proyek-aktif.sh 3                                        # lihat project yang dianggap aktif
 ```
 
 Matikan suara per project: `"suara": false` di `.claude/clint.json`; sementara: `CLINT_SUARA=0`.
