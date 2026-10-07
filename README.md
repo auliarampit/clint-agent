@@ -77,6 +77,8 @@ menyebut urutan merge. Satu PR gagal → hanya PR yang bergantung padanya dilewa
 | sesi dimulai | 4 prinsip kerja dimuat (tidak dobel bila project sudah punya salinannya) |
 | file diedit | formatter project dijalankan pada file itu |
 | sesi selesai dengan ≥ 40 baris kode belum ditinjau | `/clint:tinjau` jalan sendiri: tinjau + perbaiki. Sekali per perubahan |
+| sesi selesai setelah `cek`/`jalankan` | kalimat inti dibacakan + notifikasi Mac (`hooks/kabar.sh`) |
+| prompt, tool, agent mulai/selesai, sesi berakhir | status sesi untuk menu bar ditulis ke `~/.config/clint/sesi/` (`hooks/status-sesi.sh`). Pesan sistem/agent tidak menimpa tugas sesi |
 
 ## Mode JARVIS
 
@@ -120,8 +122,8 @@ tugasnya. Datanya dari hook clint (`hooks/status-sesi.sh` → `~/.config/clint/s
 sesi atau butir tugas → VS Code terbuka di project itu; butir MR → MR terbuka di browser.
 
 **Badge ikut berkurang tanpa cek ulang (tanpa token):** `jalankan` yang membuat MR untuk sebuah butir
-memindahkannya ke *Menunggu review*; MR yang sudah merged/closed hilang sendiri (status MR dicek tiap
-15 menit lewat glab/gh); atau klik *Tandai selesai* di submenu butir.
+memindahkannya ke *Menunggu review*; MR yang sudah merged/closed hilang sendiri, termasuk butir tanpa tautan MR bila ID-nya
+(mis. `MOM-M-11`) disebut MR yang merged setelah laporan dibuat (dicek tiap 15 menit lewat glab/gh); atau klik *Tandai selesai* di submenu butir.
 
 **Hanya tugas milik Anda:** isi `~/.config/clint/saya.json` (`{"nama":["Aulia"]}`) dan, untuk project tim,
 `docs.pic` di `.claude/clint.json` (dokumen pembagian tugas, mis. sprint tracker). `cek` lalu hanya
@@ -165,7 +167,10 @@ Dibuat oleh `siapkan-project`.
     { "name": "docs",    "path": "../docs",    "branch": "main", "role": "docs" },
     { "name": "designs", "path": "../designs", "branch": "main", "role": "design" }
   ],
-  "docs": { "plans": "docs/plans", "requirements": "../docs", "design": "../designs/aplikasi.html" },
+  "docs": { "plans": "docs/plans", "requirements": "../docs", "design": "../designs/aplikasi.html",
+            "feedback": "../docs/qa/feedback",           // butir feedback/bug QA untuk cek & jalankan
+            "pic": "docs/sprints" },                      // pembagian tugas; cek hanya lapor butir milik Anda
+  "suara": true,                                      // false: kabar tanpa suara untuk project ini
   "surfaces": [
     { "name": "mobile", "root": ".", "adapter": ".claude/mobile-stack.md",
       "lint": "bun run lint", "typecheck": "bun run typecheck", "test": "bun run test",
@@ -174,7 +179,8 @@ Dibuat oleh `siapkan-project`.
 }
 ```
 
-Monorepo: tambah entri `surfaces` per app (mis. `apps/admin` web, `apps/api` backend).
+Path yang tidak berlaku diisi `"TIDAK ADA"`. Monorepo: tambah entri `surfaces` per app
+(mis. `apps/admin` web, `apps/api` backend).
 
 ## Struktur repo
 
@@ -183,7 +189,9 @@ clint/
   README.md
   agents/            10 agent
   skills/            cek · jalankan · tinjau · siapkan-project
-  hooks/
+  hooks/             prinsip kerja, format, tinjau otomatis, kabar, status sesi
+  scripts/           sapaan pagi, layar laporan, perintah suara, ikon menu bar
+  swiftbar/          plugin menu bar (clint.py)
   kit/               master skill/rules/adapter yang DISALIN ke project (lihat kit/README.md)
   .claude-plugin/    (tersembunyi) plugin.json + marketplace.json — jangan dihapus/dipindah
 ```

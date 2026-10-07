@@ -10,6 +10,8 @@ GRUP = ("gagal", "kerjakan", "cek", "tunggu")
 if not os.path.exists(P):
     sys.exit(0)
 d = json.load(open(P, encoding="utf-8"))
+# Waktu laporan dibuat disimpan sekali; mtime berubah setiap kali butir diubah.
+d.setdefault("_dibuat", os.path.getmtime(P))
 cocok = lambda x, k: k and (k == x.get("teks") or k == x.get("sumber") or k in (x.get("teks") or ""))
 
 def simpan():
@@ -33,6 +35,44 @@ elif aksi == "review":
                                        "sumber": mr, "url": url})
         simpan()
 elif aksi == "periksa-mr":
+    import re, datetime
+    dibuat = datetime.datetime.fromtimestamp(d["_dibuat"]).astimezone()
+    DIR = {x.get("nama"): x.get("dir") for x in d.get("proyek") or [] if x.get("dir")}
+
+    def merged_setelah_laporan(dirp, ident):
+        """Ada MR/PR merged setelah laporan dibuat yang menyebut ident di judul/deskripsi? (tanpa token)"""
+        try:
+            if "github.com" in subprocess.run(["git", "-C", dirp, "remote", "get-url", "origin"],
+                                              capture_output=True, text=True, timeout=5).stdout:
+                out = subprocess.run(["gh", "pr", "list", "--state", "merged", "--search", ident, "--limit", "5",
+                                      "--json", "mergedAt,title,body"], cwd=dirp, capture_output=True, text=True, timeout=20).stdout
+                xs = [{"merged_at": x.get("mergedAt"), "title": x.get("title"), "description": x.get("body")} for x in json.loads(out or "[]")]
+            else:
+                out = subprocess.run(["glab", "mr", "list", "--merged", "--search", ident, "--per-page", "5", "-F", "json"],
+                                     cwd=dirp, capture_output=True, text=True, timeout=20).stdout
+                xs = json.loads(out or "[]")
+        except Exception:
+            return False
+        for x in xs:
+            try:
+                t = datetime.datetime.fromisoformat((x.get("merged_at") or "").replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            teks = f"{x.get('title') or ''} {x.get('description') or ''}".upper()
+            if t > dibuat and ident.upper() in teks:
+                return True
+        return False
+
+    # Butir tanpa url: selesai bila SEMUA ID-nya disebut MR yang merged setelah laporan dibuat.
+    for g in ("gagal", "kerjakan", "cek"):
+        sisa = []
+        for x in d.get(g) or []:
+            ids = re.findall(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+\b", x.get("sumber") or "")
+            dirp = DIR.get(x.get("proyek"))
+            if not x.get("url") and ids and dirp and all(merged_setelah_laporan(dirp, i) for i in ids):
+                continue
+            sisa.append(x)
+        d[g] = sisa
     berubah = False
     for g in GRUP:
         sisa = []
@@ -51,5 +91,4 @@ elif aksi == "periksa-mr":
                     continue
             sisa.append(x)
         d[g] = sisa
-    if berubah:
-        simpan()
+    simpan()
