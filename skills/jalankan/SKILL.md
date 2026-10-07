@@ -125,6 +125,8 @@ Jalankan **bersamaan** (satu pesan, beberapa pemanggilan agent), masing-masing d
 | `reviewer-senior` | selalu | clean code, clean architecture |
 | `auditor-keamanan` | diff menyentuh auth, API/HTTP, storage, konfigurasi, dependensi, WebView/deep link | celah keamanan |
 | `penyelaras-desain` | diff menyentuh UI **dan** `docs.design` bukan `TIDAK ADA` | selisih dengan prototype |
+| `auditor-aksesibilitas` | diff menyentuh komponen tampilan, form, dialog, navigasi, atau warna | WCAG 2.2 AA |
+| `auditor-performa` | diff menambah dependensi, menyentuh daftar besar, gambar, pengambilan data, atau komponen yang sering dirender | Core Web Vitals, bundle, render |
 
 Input dari orkestrator ke setiap peninjau (hemat token):
 - simpan diff sekali ke file sementara (`git -C <path kerja> diff <base> > <tmp>/pr.diff`) dan

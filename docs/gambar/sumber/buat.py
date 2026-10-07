@@ -64,7 +64,7 @@ GAMBAR.append(halaman("sampul", """
   </div>
  </div>
 </div>
-<div class="foot"><span>10 agent senior · 4 perintah · menu bar & suara tanpa token</span><span>github.com/auliarampit/clint-agent</span></div>
+<div class="foot"><span>12 agent senior · mobile & web · menu bar & suara tanpa token</span><span>github.com/auliarampit/clint-agent</span></div>
 """, css="""
 .cmd{font:500 15px var(--fm);padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--muted)}
 .cmd.hl{border-color:var(--dawn);color:var(--dawn2);background:var(--dawn-soft)}
@@ -87,7 +87,7 @@ GAMBAR.append(halaman("alur-jalankan", """
  <div class="st"><span class="n">3</span><b>Kode</b><small>pengembang</small><span class="pill opus">Opus</span></div><div class="ar">→</div>
  <div class="st wide"><span class="n">4</span><b>Tinjauan paralel</b>
    <ul><li>peninjau <em>sesuai rencana &amp; aturan?</em></li><li>reviewer-senior <em>clean code &amp; arsitektur?</em></li>
-   <li>auditor-keamanan <em>OWASP, bila relevan</em></li><li>penyelaras-desain <em>sama dengan prototype?</em></li></ul></div><div class="ar">→</div>
+   <li>auditor-keamanan <em>OWASP, bila relevan</em></li><li>penyelaras-desain <em>sama dengan prototype?</em></li><li>aksesibilitas &amp; performa <em>WCAG 2.2, Core Web Vitals</em></li></ul></div><div class="ar">→</div>
  <div class="st"><span class="n">5</span><b>E2E</b><small>penguji</small><span class="pill sonnet">Sonnet</span></div><div class="ar">→</div>
  <div class="st hl"><span class="n">6</span><b>MR</b><small>stage eksplisit, push, verifikasi</small></div>
 </div>
@@ -121,18 +121,20 @@ agen = [("perencana", "Memecah modul jadi rencana per PR dari PRD, SAD, STD, API
         ("penguji", "E2E happy path + error path", "sonnet"),
         ("pemulih-pipeline", "Memperbaiki CI yang gagal dari penyebabnya", "opus"),
         ("pelacak-perubahan", "Apa yang berubah di docs, design, dev", "sonnet"),
+        ("auditor-aksesibilitas", "WCAG 2.2 AA: keyboard, fokus, label, kontras", "sonnet"),
+        ("auditor-performa", "Core Web Vitals, bundle, render", "sonnet"),
         ("penjaga", "MR, pipeline, branch, worktree, disk", "haiku")]
 kartu = "".join(f'<div class="ag card"><div class="t"><b>{n}</b><span class="pill {m}">{m.capitalize()}</span></div><p>{d}</p></div>' for n, d, m in agen)
 GAMBAR.append(halaman("tim-agent", f"""
 <div class="eyebrow">Tim di balik layar</div>
-<h2>10 agent senior, dipanggil otomatis</h2>
+<h2>12 agent senior, dipanggil otomatis</h2>
 <p class="sub">Anda tidak memanggil agent. Perintah clint yang menugaskan mereka, dengan model yang sesuai bebannya.</p>
 <div class="grid">{kartu}</div>
 <div class="legend"><span><span class="pill opus">Opus</span> menulis dan menilai kode</span><span><span class="pill sonnet">Sonnet</span> membaca, meninjau, menguji</span><span><span class="pill haiku">Haiku</span> mengumpulkan status</span></div>
 """, css=""".legend{display:flex;gap:28px;margin-top:26px;color:var(--muted);font-size:15px}.legend .pill{margin-right:8px}
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:30px}
-.ag{padding:16px;display:grid;gap:8px;align-content:start;min-height:150px}
-.ag .t{display:flex;flex-direction:column;gap:7px;align-items:flex-start}.ag b{font:700 17px var(--fd)}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:30px}
+.ag{padding:14px;display:grid;gap:8px;align-content:start;min-height:150px}
+.ag .t{display:flex;flex-direction:column;gap:7px;align-items:flex-start}.ag b{font:700 15px var(--fd);overflow-wrap:anywhere}
 .ag p{color:var(--muted);font-size:14px;line-height:1.4}
 """))
 

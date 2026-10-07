@@ -14,6 +14,10 @@ kit/clint.TEMPLATE.json           → .claude/clint.json              (diisi)
 kit/mobile/SKILL.md               → .claude/skills/skill-mobile/SKILL.md
 kit/mobile/mobile-e2e.md          → .claude/rules/mobile-e2e.md
 kit/mobile/adapters/TEMPLATE.md   → .claude/mobile-stack.md         (diisi)
+kit/web/SKILL.md                  → .claude/skills/skill-web/SKILL.md
+kit/web/referensi/*.md            → .claude/skills/skill-web/referensi/
+kit/web/web-e2e.md                → .claude/rules/web-e2e.md
+kit/web/adapters/TEMPLATE.md      → .claude/web-stack.md            (diisi)
 ```
 
 Skill dan rules platform **disalin** ke project (bukan dirujuk dari plugin) supaya rekan tim

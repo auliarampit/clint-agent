@@ -21,7 +21,10 @@ Jalankan bersamaan, dalam satu pesan:
 - `peninjau` dan `reviewer-senior`: selalu;
 - `auditor-keamanan`: bila diff menyentuh auth, API/HTTP, storage, konfigurasi, dependensi,
   WebView/deep link;
-- `penyelaras-desain`: bila diff menyentuh UI dan `docs.design` bukan `TIDAK ADA`.
+- `penyelaras-desain`: bila diff menyentuh UI dan `docs.design` bukan `TIDAK ADA`;
+- `auditor-aksesibilitas`: bila diff menyentuh komponen tampilan, form, dialog, navigasi, atau warna;
+- `auditor-performa`: bila diff menambah dependensi, menyentuh daftar besar, gambar, pengambilan data,
+  atau komponen yang sering dirender.
 
 Input dari kamu ke setiap peninjau (hemat token):
 - simpan diff sekali ke file sementara (`git -C <path kerja> diff <base> > <tmp>/pr.diff`) dan
