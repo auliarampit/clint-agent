@@ -25,7 +25,8 @@
     "plans": "{path rencana PR / TIDAK ADA}",
     "requirements": "{path PRD/SAD/STD/API contract / TIDAK ADA}",
     "design": "{path prototype desain / TIDAK ADA}",
-    "feedback": "{folder feedback/bug QA / TIDAK ADA}"
+    "feedback": "{folder feedback/bug QA / TIDAK ADA}",
+    "pic": "{dokumen pembagian tugas/PIC, mis. docs/sprints / TIDAK ADA}"
   },
   "surfaces": [
     {

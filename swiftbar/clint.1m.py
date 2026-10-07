@@ -49,6 +49,27 @@ k = os.path.join(LOG, "kerja.txt")
 if os.path.exists(k) and time.time() - os.path.getmtime(k) < 3 * 3600:
     kerja = [x for x in open(k, encoding="utf-8").read().splitlines() if x.strip()]
 
+# Sesi Claude Code yang aktif (dicatat hooks/status-sesi.sh, tanpa token)
+def nama_proyek(d):
+    base, induk = os.path.basename(d), os.path.basename(os.path.dirname(d))
+    return f"{induk} · {base}" if os.path.exists(os.path.join(d, ".claude/clint.json")) and \
+        not os.path.exists(os.path.join(os.path.dirname(d), ".claude/clint.json")) and induk not in ("Desktop", "Documents") \
+        and len(base) < 12 else base
+
+sesi = []
+sd = os.path.join(CFG, "sesi")
+for fn in (os.listdir(sd) if os.path.isdir(sd) else []):
+    try:
+        f = os.path.join(sd, fn); x = json.load(open(f, encoding="utf-8")); umur = time.time() - os.path.getmtime(f)
+    except Exception:
+        continue
+    st = x.get("status")
+    if (st in ("bekerja", "latar") and umur < 3 * 3600) or (st == "menunggu" and umur < 3600) \
+            or (st == "selesai" and umur < 600):
+        x["umur"] = umur; sesi.append(x)
+sesi.sort(key=lambda x: x.get("mulai", 0))
+aktif_sesi = [x for x in sesi if x["status"] in ("bekerja", "latar")]
+
 L = lambda key: (lap or {}).get(key) or []
 gagal, kerjakan, cek, tunggu = L("gagal"), L("kerjakan"), L("cek"), L("tunggu")
 menunggu = len(gagal) + len(kerjakan) + len(cek)
@@ -57,8 +78,9 @@ menunggu = len(gagal) + len(kerjakan) + len(cek)
 ikon = os.path.join(CFG, "ikon.png")
 img = f"image={base64.b64encode(open(ikon, 'rb').read()).decode()} width=18 height=18" if os.path.exists(ikon) \
     else "sfimage=person.crop.circle"
-if kerja:
-    print(f"⟳ {bersih(kerja[0], 18)} | {img} color={ORANYE}")
+if kerja or aktif_sesi:
+    label = bersih(kerja[0], 18) if kerja else (f"{len(aktif_sesi)} sesi" if len(aktif_sesi) > 1 else "bekerja")
+    print(f"⟳ {label} | {img} color={ORANYE}")
 elif gagal:
     print(f"! | {img} color={MERAH}")
 elif lap is not None and menunggu == 0:
@@ -70,9 +92,9 @@ else:
 print("---")
 
 # ---- kepala ----
-if kerja:
+if kerja or aktif_sesi:
     print("Sedang bekerja | size=14")
-    print(f"{bersih(kerja[0])} | size=11 color={ABU}")
+    print(f"{bersih(kerja[0]) if kerja else str(len(aktif_sesi)) + ' sesi Claude Code aktif'} | size=11 color={ABU}")
 elif gagal:
     print("Ada yang gagal | size=14")
     print(f"{bersih(gagal[0].get('teks'))} | size=11 color={ABU}")
@@ -86,6 +108,8 @@ else:
 print("---")
 
 
+DIR = {p.get("nama"): p.get("dir") for p in L("proyek") if p.get("dir")}
+
 def butir(x, warna):
     print(f"{bersih(x.get('teks'), 60)} | sfimage=circle.fill sfcolor={warna}")
     print(f"--{bersih(x.get('proyek'))} · {bersih(x.get('sumber'))} | size=11 color={ABU}")
@@ -93,14 +117,32 @@ def butir(x, warna):
         print(f"--Salin perintah | {aksi('salin', x['perintah'], x.get('proyek'))}")
         print(f"----{bersih(x['perintah'])} | size=11 color={ABU}")
     if x.get("url"):
-        print(f"--Buka | {aksi('buka', x['url'])}")
+        print(f"--Buka MR di browser | {aksi('buka', x['url'])}")
+    if DIR.get(x.get("proyek")):
+        print(f"--Buka project di VS Code | {aksi('vscode', DIR[x['proyek']])}")
 
 
-if kerja:
-    print(f"Agent sedang bekerja | size=11 color={ABU}")
-    for baris in kerja[1:4]:
+def durasi(dt):
+    m = int(dt // 60)
+    return "baru saja" if m < 1 else f"{m} mnt" if m < 60 else f"{m // 60} j {m % 60} mnt"
+
+if sesi or kerja:
+    print(f"Agent & sesi | size=11 color={ABU}")
+    for baris in (kerja or [])[1:3]:
         print(f"{bersih(baris)} | size=12")
-    print(f"Lihat sesi di Claude Code | {aksi('vscode')}")
+    for x in sesi:
+        st = x["status"]
+        tanda = {"bekerja": ("circle.dotted", ORANYE, "bekerja"), "latar": ("circle.dotted", ORANYE, "di latar"),
+                 "menunggu": ("hand.raised.fill", "#C79A2B", "menunggu Anda"), "selesai": ("checkmark.circle", HIJAU, "selesai")}[st]
+        lama = durasi(time.time() - x.get("mulai", time.time())) if st != "selesai" else durasi(x["umur"]) + " lalu"
+        cwd = x.get("cwd", "")
+        print(f"{nama_proyek(cwd)} — {tanda[2]} · {lama} | sfimage={tanda[0]} sfcolor={tanda[1]} {aksi('vscode', cwd)}")
+        ag = sorted(set(a.split(":")[-1] for a in (x.get("agents") or {}).values()))
+        if ag:
+            print(f"--Agent: {bersih(', '.join(ag), 80)} | size=12")
+        if x.get("tugas"):
+            print(f"--Tugas: {bersih(x['tugas'], 80)} | size=12 color={ABU}")
+        print(f"--Buka di VS Code | {aksi('vscode', cwd)}")
     print("---")
 for judul, xs, warna in (("Perlu perhatian", gagal, MERAH), ("Perlu dikerjakan", kerjakan, ORANYE),
                          ("Menunggu review Anda", cek, "#C79A2B")):

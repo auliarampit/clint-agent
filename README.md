@@ -114,6 +114,15 @@ mkdir -p ~/.config/clint/swiftbar && ln -sf ~/Desktop/clint/swiftbar/clint.1m.py
 defaults write com.ameba.SwiftBar PluginDirectory -string "$HOME/.config/clint/swiftbar" && open -a SwiftBar
 ```
 
+Bagian **Agent & sesi** di menu menampilkan setiap sesi Claude Code (termasuk di VS Code) yang sedang
+bekerja, berjalan di latar, menunggu Anda, atau baru selesai, lengkap dengan agent yang sedang jalan dan
+tugasnya. Datanya dari hook clint (`hooks/status-sesi.sh` → `~/.config/clint/sesi/`), tanpa token. Klik
+sesi atau butir tugas → VS Code terbuka di project itu; butir MR → MR terbuka di browser.
+
+**Hanya tugas milik Anda:** isi `~/.config/clint/saya.json` (`{"nama":["Aulia"]}`) dan, untuk project tim,
+`docs.pic` di `.claude/clint.json` (dokumen pembagian tugas, mis. sprint tracker). `cek` lalu hanya
+melaporkan butir yang PIC-nya Anda; milik orang lain cukup disebut jumlahnya.
+
 Ikon memakai `~/.config/clint/ikon.png` bila ada (bulat, 44×44 px); tanpa itu dipakai ikon bawaan.
 
 **Avatar (opsional):** taruh gambar persegi di `~/.config/clint/avatar.jpg`; layar laporan menampilkannya.

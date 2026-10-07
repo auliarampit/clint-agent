@@ -35,6 +35,8 @@ yang tidak memasang plugin tetap mendapat aturan yang sama lewat repo.
    `formatFile` dari formatter yang benar-benar dipakai project.
    `docs.feedback`: folder feedback/bug QA (cari `ls -d ../docs/qa/feedback docs/qa 2>/dev/null`
    atau tanya); `TIDAK ADA` bila project tidak punya.
+   `docs.pic`: dokumen pembagian tugas (sprint tracker/backlog berkolom nama PIC); `TIDAK ADA` bila
+   satu orang mengerjakan semuanya.
    `relatedRepos`: repo git lain di folder induk yang menjadi sumber kerja (mis. `docs`,
    `designs`, `api`); cek dengan `ls ..` lalu `git -C ../<nama> rev-parse` dan tanyakan perannya
    bila tidak jelas dari nama. Monorepo tanpa repo pendamping → `[]`.

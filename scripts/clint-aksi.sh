@@ -20,7 +20,7 @@ case "$1" in
   bisu)   date -v+1d +%F > "$cfg/bisu-sampai"; CLINT_PAKSA=1 diam "Dibisukan sampai besok pagi." ;;
   bunyikan) rm -f "$cfg/bisu-sampai"; kabar "Kabar dinyalakan lagi." ;;
   sapaan) diam "Sapaan pagi Senin sampai Jumat jam 08.00. Ubah lewat scripts/pasang-sapaan.sh." ;;
-  vscode) open -a "Visual Studio Code" ;;
+  vscode) if [ -n "$2" ]; then open -a "Visual Studio Code" "$2"; else open -a "Visual Studio Code"; fi ;;
   buka)   open "$2" ;;
 esac
 segar

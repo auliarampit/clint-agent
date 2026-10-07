@@ -41,6 +41,16 @@ mengubah kode dan tidak membuat commit.
      butir tabel bisa berisi beberapa pekerjaan; laporkan semuanya, jangan hanya judul butir;
    - catat juga bila rincian menyebut tindakan itu belum ada di PRD/prototype.
 
+6. **Hanya butir milik user** (bila `~/.config/clint/saya.json` ada; berisi `nama`):
+   - PIC butir = kolom/field PIC, Owner, Assignee, Dev, atau Penanggung jawab pada butir itu;
+   - bila tidak ada, PIC **modul/epic** tempat butir itu berada, dari dokumen pembagian tugas:
+     `docs.pic` di clint.json bila diisi (mis. sprint tracker), selain itu cari header rencana
+     `PIC: <nama>` atau tabel modul berkolom nama di folder sprint/backlog (pakai `grep -n`, bukan
+     membaca utuh; cukup file sprint terbaru);
+   - laporkan butir yang PIC-nya cocok salah satu `nama` (tidak peka huruf besar), dan butir yang
+     PIC-nya tidak bisa ditentukan (tandai "PIC tidak jelas"); butir milik orang lain **dilewati**,
+     cukup sebut jumlahnya ("5 butir milik orang lain dilewati").
+
 ## Keluaran
 
 1. **Ringkasan per repo** (maks 5 baris per repo).

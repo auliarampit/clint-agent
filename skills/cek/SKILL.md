@@ -32,7 +32,7 @@ Argumen berupa **nama project lain** (mis. `/clint:cek toko-online`) → cari pa
    {"tanggal":"Rabu, 7 Oktober 2026 · 08.00",
     "judul":"Selamat pagi. 4 hal menunggu hari ini.",
     "kalimat":"<kalimat inti untuk dibacakan>", "lead":"<1 kalimat pendukung>",
-    "proyek":[{"nama":"<nama pendek>","aktif":"kemarin"}],
+    "proyek":[{"nama":"<nama pendek>","dir":"<path absolut project>","aktif":"kemarin"}],
     "gagal":[{"teks":"Pipeline !123 gagal di lint","proyek":"<nama>","sumber":"MR !123","perintah":"/clint:jalankan perbaiki pipeline !123","url":"<tautan MR>"}],
     "kerjakan":[{"teks":"<1 kalimat>","proyek":"<nama>","sumber":"<ID/MR>","perintah":"/clint:jalankan ..."}],
     "cek":[{"teks":"...","proyek":"...","sumber":"MR !123","url":"<tautan MR>"}], "tunggu":[...],
