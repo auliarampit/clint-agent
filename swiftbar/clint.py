@@ -145,7 +145,7 @@ def render():
             o(f"{bersih(utama + (' · ' + kerja['tahap'] if kerja.get('tahap') else ''), 60)} | size=13 font=HelveticaNeue-Medium {aksi('vscode', sesi_utama)}")
             if pr and total:
                 isi = round(26 * (int(pr) - 0.5) / int(total))
-                o(f"{'━' * isi}{'─' * (26 - isi)} | color={ORANYE} size=12 font=Menlo {aksi('vscode', sesi_utama)}")
+                o(f"{'━' * isi}{'─' * (26 - isi)} | size=12 font=Menlo {aksi('vscode', sesi_utama)}")
             if kerja.get("catatan"):
                 o(f"{bersih(kerja['catatan'], 60)} | size=12 color={ABU}")
         for x in sesi:
@@ -231,7 +231,7 @@ def judul(badge, frame=None):
     label, warna = badge
     img = frame or b64(os.path.join(CFG, "ikon.png"))
     gambar = f"image={img} width=18 height=18" if img else "sfimage=person.crop.circle"
-    return f"{label} | {gambar}" + (f" color={warna}" if warna else "")
+    return f"{label} | {gambar}"   # warna teks mengikuti sistem (putih di menu bar gelap)
 
 
 def tanda():

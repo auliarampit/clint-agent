@@ -130,6 +130,7 @@ melaporkan butir yang PIC-nya Anda; milik orang lain cukup disebut jumlahnya.
 Ikon dan animasi cincin dibuat dari gambar pribadi `~/.config/clint/avatar.jpg` dengan
 `python3 scripts/buat-ikon.py` (butuh Pillow); tanpa itu dipakai ikon bawaan. Plugin berjenis streamable:
 perubahan tampil dalam 1 detik dan cincin avatar berputar saat agent bekerja.
+Setelah file plugin diubah, jalankan ulang SwiftBar (`osascript -e 'quit app "SwiftBar"'; open -a SwiftBar`).
 
 **Avatar (opsional):** taruh gambar persegi di `~/.config/clint/avatar.jpg`; layar laporan menampilkannya.
 Gambar ini sengaja tidak disimpan di repo.
