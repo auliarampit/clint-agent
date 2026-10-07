@@ -10,6 +10,9 @@ f="$dir/$sid.json"; now="$(date +%s)"
 [ -f "$f" ] || jq -n --arg c "$(jq -r '.cwd // empty' <<<"$input")" --argjson t "$now" \
   '{cwd:$c,status:"siap",tugas:"",mulai:$t,update:$t,agents:{}}' > "$f"
 ubah(){ jq "$@" "$f" > "$f.tmp" && mv "$f.tmp" "$f"; }
+# Simpan path transkrip sekali: menu bar memakai waktu ubahnya sebagai tanda sesi masih hidup.
+tp="$(jq -r '.transcript_path // empty' <<<"$input")"
+[ -n "$tp" ] && [ "$(jq -r '.transkrip // empty' "$f")" != "$tp" ] && ubah --arg t "$tp" '.transkrip=$t'
 case "$ev" in
   UserPromptSubmit) p="$(jq -r '.prompt // ""' <<<"$input" | tr '\n' ' ' | cut -c1-90)"
                     # Pesan sistem/agent (diawali "<") bukan tugas baru: status saja, tugas lama dipertahankan.

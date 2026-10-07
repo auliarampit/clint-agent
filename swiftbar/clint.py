@@ -94,8 +94,18 @@ def baca():
         except Exception:
             continue
         st = x.get("status")
+        # Esc/interupsi tidak memicu hook Stop: status bisa tertahan "bekerja". Pakai aktivitas terakhir
+        # (hook atau transkrip). > 10 mnt tanpa aktivitas dan tanpa agent jalan → dianggap diam.
+        if st in ("bekerja", "latar"):
+            akt = umur
+            try:
+                akt = min(akt, time.time() - os.path.getmtime(x.get("transkrip") or ""))
+            except OSError:
+                pass
+            if akt > 600 and not x.get("agents"):
+                x["status"], st, x["diam"] = "diam", "diam", akt
         if (st in ("bekerja", "latar") and umur < 3 * 3600) or (st == "menunggu" and umur < 3600) \
-                or (st == "selesai" and umur < 600):
+                or (st in ("selesai", "diam") and umur < 1800 if st == "diam" else st == "selesai" and umur < 600):
             x["umur"] = umur; sesi.append(x)
     sesi.sort(key=lambda x: x.get("mulai", 0))
     return lap, waktu, kerja, sesi
@@ -151,8 +161,10 @@ def render():
         for x in sesi:
             st = x["status"]
             warna, kata = {"bekerja": (ORANYE, "bekerja"), "latar": (ORANYE, "di latar"),
-                           "menunggu": (KUNING, "menunggu Anda"), "selesai": (HIJAU, "selesai")}[st]
-            lama = durasi(time.time() - x.get("mulai", time.time())) if st != "selesai" else durasi(x["umur"]) + " lalu"
+                           "menunggu": (KUNING, "menunggu Anda"), "selesai": (HIJAU, "selesai"),
+                           "diam": (ABU, "tanpa aktivitas")}[st]
+            lama = durasi(x["diam"]) if st == "diam" else durasi(time.time() - x.get("mulai", time.time())) \
+                if st != "selesai" else durasi(x["umur"]) + " lalu"
             cwd = x.get("cwd", "")
             o(f"{nama_proyek(cwd)} — {kata} · {lama} | {titik(warna)} {aksi('vscode', cwd)}")
             ag = sorted(set(a.split(":")[-1] for a in (x.get("agents") or {}).values()))
@@ -165,7 +177,8 @@ def render():
         o("---")
     elif sesi:  # tidak bekerja, tapi ada sesi menunggu/baru selesai
         for x in sesi:
-            warna, kata = {"menunggu": (KUNING, "menunggu Anda"), "selesai": (HIJAU, "baru selesai")}.get(x["status"], (ABU, x["status"]))
+            warna, kata = {"menunggu": (KUNING, "menunggu Anda"), "selesai": (HIJAU, "baru selesai"),
+                           "diam": (ABU, "tanpa aktivitas")}.get(x["status"], (ABU, x["status"]))
             o(f"{nama_proyek(x.get('cwd', ''))} — {kata} | {titik(warna)} {aksi('vscode', x.get('cwd', ''))}")
         o("---")
 
