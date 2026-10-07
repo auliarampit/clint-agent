@@ -68,6 +68,30 @@ def nama_proyek(d):
     return f"{induk} · {base}" if len(base) < 12 and induk not in ("Desktop", "Documents", HOME) else base
 
 
+def giliran_selesai(path):
+    """True bila baris bermakna terakhir transkrip menunjukkan jawaban sudah tuntas (end_turn atau
+    ringkasan hook Stop). Pengaman bila hook status tidak tercatat dengan benar."""
+    try:
+        with open(path, "rb") as fh:
+            fh.seek(0, 2); fh.seek(max(0, fh.tell() - 65536))
+            baris = fh.read().decode("utf-8", "ignore").splitlines()[1:]
+    except (OSError, TypeError):
+        return False
+    for b in reversed(baris):
+        try:
+            r = json.loads(b)
+        except ValueError:
+            continue
+        t = r.get("type")
+        if t == "system" and r.get("subtype") == "stop_hook_summary":
+            return True
+        if t == "assistant":
+            return (r.get("message") or {}).get("stop_reason") == "end_turn"
+        if t == "user":
+            return False
+    return False
+
+
 def baca():
     lap, waktu = None, None
     p = os.path.join(LOG, "terakhir.json")
@@ -94,6 +118,12 @@ def baca():
         except Exception:
             continue
         st = x.get("status")
+        if st == "latar":               # format lama; kini Stop selalu menulis "selesai"
+            st = x["status"] = "selesai"
+        if st == "bekerja" and giliran_selesai(x.get("transkrip")):
+            st = x["status"] = "selesai"
+        if st == "selesai" and x.get("agents") and umur < 1800:
+            st = x["status"] = "latar"   # turn selesai, tapi agent latar masih berjalan
         # Esc/interupsi tidak memicu hook Stop: status bisa tertahan "bekerja". Pakai aktivitas terakhir
         # (hook atau transkrip). > 10 mnt tanpa aktivitas dan tanpa agent jalan → dianggap diam.
         if st in ("bekerja", "latar"):

@@ -25,8 +25,11 @@ case "$ev" in
                       'del(.agents[$i]) | .update=$t' ;;
   PostToolUse) touch "$f" ;;
   Notification) ubah --argjson t "$now" '.status="menunggu" | .update=$t' ;;
+  # background_tasks juga berisi tugas yang bukan agent (mis. pemantauan artifact), jadi tidak dipakai
+  # untuk menahan status "bekerja". Agent latar yang sungguhan tetap tercatat di .agents lewat
+  # SubagentStart/SubagentStop; yang lain dikosongkan.
   Stop) bg="$(jq '.background_tasks // [] | length' <<<"$input")"
-        if [ "$bg" -gt 0 ]; then ubah --argjson t "$now" '.status="latar" | .update=$t'
+        if [ "$bg" -gt 0 ]; then ubah --argjson t "$now" '.status="selesai" | .update=$t'
         else ubah --argjson t "$now" '.status="selesai" | .agents={} | .update=$t'; fi ;;
   SessionEnd) rm -f "$f" ;;
 esac
