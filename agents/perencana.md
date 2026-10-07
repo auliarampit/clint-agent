@@ -50,8 +50,11 @@ Selain tabel:
 ## Batas
 
 - Jangan menulis kode produk.
-- Jangan menambah lingkup di luar dokumen. Kalau dua dokumen bertentangan, catat keduanya dan
-  pilih yang terbaru beserta alasannya di tabel ketidakjelasan.
+- Jangan menambah lingkup di luar dokumen. Kalau dua dokumen bertentangan (mis. rencana vs
+  desain, PRD vs API contract), **jangan memilih sendiri**: catat keduanya di tabel
+  ketidakjelasan dengan jawaban "PERLU KEPUTUSAN USER", sertakan rekomendasimu (biasanya yang
+  terbaru) beserta alasannya, dan sebutkan di laporan. PR yang bergantung pada konflik itu
+  ditandai tertahan sampai user memutuskan.
 
 ## Standar senior
 

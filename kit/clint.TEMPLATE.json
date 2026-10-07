@@ -2,7 +2,8 @@
   "baseBranch": "dev",
   "mr": {
     "cli": "glab",
-    "targetBranch": "dev"
+    "targetBranch": "dev",
+    "mode": "mr"
   },
   "autoReviewMinLines": 40,
   "worktreeRoot": "../{nama-repo}-worktrees",

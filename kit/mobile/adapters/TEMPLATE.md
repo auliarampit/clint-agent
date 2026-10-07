@@ -163,7 +163,7 @@ Verifikasi: `ls {appRoot}/src/i18n/ 2>/dev/null; grep -E '"(i18next|react-i18nex
 
 ## 10. Lint & format
 
-Verifikasi: `ls {appRoot}/eslint.config.* biome.json .prettierrc* 2>/dev/null; grep -n "lint-staged" -A 8 package.json`
+Verifikasi: `ls {appRoot}/eslint.config.* biome.json .prettierrc* 2>/dev/null; grep -n "lint-staged" -A 8 package.json; grep -n -E "max-lines|max-len|max-lines-per-function" {appRoot}/eslint.config.* biome.json 2>/dev/null`
 
 | Tool | Memiliki | Perintah |
 |---|---|---|
@@ -174,6 +174,7 @@ Verifikasi: `ls {appRoot}/eslint.config.* biome.json .prettierrc* 2>/dev/null; g
 |---|---|
 | Formatter yang **tidak** dipakai | `{mis. Prettier — dimatikan di eslint config}` |
 | Pre-commit hook | `{apa yang dijalankan}` |
+| Ambang ukuran (`max-lines` per berkas, `max-len` per baris, `max-lines-per-function`) | `{angka dari config linter / TIDAK ADA}` |
 
 > **Satu formatter saja.** Menjalankan formatter yang bukan milik project ini
 > membuat diff berisik yang akan berubah lagi saat commit.
@@ -190,6 +191,15 @@ Verifikasi: `grep -n "coverageThreshold" {appRoot}/jest.config.js; ls -d {appRoo
 | E2E tool | `{Maestro / Detox / Appium / TIDAK ADA}` |
 | Lokasi flow E2E | `{path}` |
 | Locator E2E | `{testID / accessibilityLabel}` |
+
+**Jebakan lingkungan E2E** — masalah yang terbukti bukan bug produk tapi tampak seperti bug
+(env API terkunci, launcher dev client, izin per platform, bundler dingin). Satu baris per
+jebakan: gejala → pencegahan. Kosong → `TIDAK ADA`. `penguji` menyiapkan pencegahannya sebelum
+flow pertama dan mengusulkan baris baru bila menemukan jebakan lain.
+
+| Gejala | Pencegahan |
+|---|---|
+| `{mis. login gagal diam-diam di simulator}` | `{mis. jalankan bundler dengan env API yang benar}` |
 
 ## 12. Dokumen & proses
 

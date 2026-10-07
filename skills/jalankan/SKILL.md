@@ -15,6 +15,12 @@ pertanyaan teknis yang benar-benar memblokir.
 - Baca `.claude/clint.json`. Tidak ada → berhenti, tawarkan `/clint:siapkan-project`.
 - `git fetch origin --prune`. Tarik juga `relatedRepos` (`git -C <path> pull --ff-only` bila
   bersih) supaya rencana dan implementasi memakai dokumen dan desain terbaru.
+- Cocokkan tugas dengan `surfaces[]` (dari path/app yang disebut, atau dari rencana). Tugas
+  menyentuh app yang tidak ada di `surfaces[]` (mis. backend/web saat clint baru dipasang
+  untuk mobile) → berhenti, sebut surface yang tidak tercakup, dan sarankan mengerjakannya
+  tanpa clint (skill/rules project untuk app itu) atau menambah surface lewat
+  `/clint:siapkan-project`. Tugas campuran → kerjakan hanya bagian surface yang tercakup bila
+  user setuju.
 - `df -h ~`. Tentukan paralelisme: sisa ≥ 20 GB → maks 3 PR sekaligus; 5–20 GB → 1; < 5 GB →
   berhenti dan laporkan.
 
@@ -35,6 +41,10 @@ Untuk jalur rencana, panggil agent `perencana` bila:
 - dokumen/desain terkait berubah sejak rencana terakhir diubah
   (`git -C <relatedRepo> log --since=<tanggal commit terakhir rencana>` tidak kosong) → perbarui
   bagian PR yang belum selesai.
+
+Bila `perencana` melaporkan butir **PERLU KEPUTUSAN USER** (konflik dokumen): tanyakan ke
+user sekaligus dalam satu pesan (butir + rekomendasi), tulis jawabannya ke tabel
+ketidakjelasan rencana, baru lanjut. PR yang tidak tersangkut konflik boleh jalan lebih dulu.
 
 Rencana baru/berubah di-commit sebagai commit pertama (`docs(plans): ...`) di branch PR pertama.
 Ambil tabel **Urutan pekerjaan** (PR · Branch · Isi · Menutup · Bergantung · E2E).
@@ -93,7 +103,16 @@ Di langkah berikutnya, `<path kerja>` = repo utama atau path worktree tersebut.
 ### 5.2 Implementasi → agent `pengembang`
 
 Beri: `<path kerja>` (absolut), teks lengkap bagian rencana PR, surface yang terlibat.
-Tunggu laporannya. Kalau pengembang berhenti dengan pertanyaan teknis, teruskan ke user.
+Tunggu laporannya. Kalau pengembang berhenti dengan pertanyaan (teknis atau situasi
+wajib-tanya dari skill platform):
+
+1. Kumpulkan pertanyaan dari semua PR yang berhenti di gelombang ini, teruskan ke user dalam
+   **satu** pesan (per PR: pertanyaan, opsi, rekomendasi pengembang). Jangan menjawab sendiri.
+2. PR lain di gelombang yang sama tetap jalan sampai tinjauan; yang bergantung pada PR
+   tertahan menunggu.
+3. Setelah user menjawab, lanjutkan **agent pengembang yang sama** dengan SendMessage berisi
+   jawaban user (konteks dan pekerjaannya tetap). Agent sudah tidak tersedia → panggil
+   `pengembang` baru dengan bagian rencana + jawaban user + daftar file yang sudah diubah.
 
 ### 5.3 Tinjauan paralel
 
@@ -142,6 +161,22 @@ langkah 5.2 dengan temuan itu (dihitung dalam batas 2 putaran).
   Jangan `git add -A` / `commit -a`. Pastikan tidak ada screenshot, log, atau output build.
 - Pesan commit mengikuti gaya `git log --oneline -15` repo.
 - Tarik base sekali lagi sebelum push; rebase kalau tertinggal, lalu jalankan ulang lint/test.
+
+Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
+
+**`"push-base"`** (tim langsung push ke base branch, tanpa MR):
+- PR dikerjakan satu per satu urut gelombang; tidak ada MR bertumpuk.
+- Setelah rebase ke `origin/<baseBranch>`: di repo utama `git switch <baseBranch>`,
+  `git merge --ff-only origin/<baseBranch>`, lalu `git merge --ff-only <branch>`;
+  `git push origin <baseBranch>`. Bukan fast-forward → rebase ulang, jangan merge commit.
+- Push ditolak/diblokir (proteksi branch, izin) → biarkan commit di `<baseBranch>` lokal,
+  jangan force, dan minta user menjalankan `git push origin <baseBranch>` di laporan.
+- Tugas besar (> 1 PR) atau menyentuh pekerjaan orang lain → konfirmasi ke user sekali sebelum
+  push pertama.
+- Lewati langkah MR di bawah; temuan Saran/Rendah masuk laporan akhir. Di 5.6 hapus branch
+  lokal PR setelah push.
+
+**`"mr"`**:
 - `git push -u origin <branch>`.
 - Buat MR ke `mr.targetBranch` dengan `mr.cli` (`glab mr create` / `gh pr create`). Deskripsi:
   ringkasan, requirement yang dipenuhi (ID), cara verifikasi, hasil lint/typecheck/test/E2E,
@@ -151,7 +186,7 @@ langkah 5.2 dengan temuan itu (dihitung dalam batas 2 putaran).
 
 ### 5.6 Bersihkan
 
-Setelah push dan MR terverifikasi:
+Setelah push dan MR terverifikasi (mode `push-base`: setelah push base berhasil):
 - tanpa worktree: kembali ke branch asal user (`git switch <branch-asal>`), hapus branch lokal
   PR (`git branch -D <branch>`) karena sudah ada di remote;
 - dengan worktree: `git worktree remove <path>`, `git worktree prune`, `git branch -D <branch>`.
@@ -177,7 +212,9 @@ Kegagalan satu PR (masih ada temuan wajib setelah 2 putaran, test gagal, konflik
 Seperti rekan kerja mengabari lewat chat, maksimal ±12 baris:
 
 - Satu kalimat hasil, mis. "Beres: 3 MR siap Anda review, 1 tertahan karena test gagal."
-- Satu baris per MR: tautan + apa yang berubah dari sudut pengguna aplikasi.
+- Satu baris per MR: tautan + apa yang berubah dari sudut pengguna aplikasi. Mode `push-base`:
+  satu baris per PR yang sudah di-push (commit pendek + perubahannya), plus saran tinjauan yang
+  tidak diterapkan (pengganti deskripsi MR); push yang tertahan ditulis beserta perintahnya.
 - Bila ada MR bertumpuk: "Merge berurutan: !a → !b."
 - Bila ada yang tertahan atau belum bisa diverifikasi: satu baris alasannya + apa yang Anda
   perlu putuskan.

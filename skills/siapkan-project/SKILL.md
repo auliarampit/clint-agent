@@ -30,7 +30,8 @@ yang tidak memasang plugin tetap mendapat aturan yang sama lewat repo.
 4. Isi adapter: jalankan perintah verifikasi di setiap baris template dan tempel hasilnya.
    Jangan mengisi dari ingatan. Baris yang tidak berlaku ditulis `TIDAK ADA`.
 5. Isi `.claude/clint.json` dari template: base branch (`git remote show origin`), CLI MR
-   (`glab`/`gh` sesuai host remote), perintah lint/typecheck/test/e2e dari `package.json`,
+   (`glab`/`gh` sesuai host remote), `mr.mode` (`"mr"` default; tanya user bila tim biasa
+   push langsung ke base → `"push-base"`), perintah lint/typecheck/test/e2e dari `package.json`,
    `formatFile` dari formatter yang benar-benar dipakai project.
    `docs.feedback`: folder feedback/bug QA (cari `ls -d ../docs/qa/feedback docs/qa 2>/dev/null`
    atau tanya); `TIDAK ADA` bila project tidak punya.

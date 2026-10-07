@@ -17,8 +17,11 @@ mengulang pekerjaannya; fokusmu adalah **kualitas desain kode**.
 1. **Arsitektur**: batas lapisan (UI / logika / data) sesuai skill platform dan adapter;
    arah dependensi tidak terbalik; tidak ada logika bisnis di komponen tampilan; tidak ada
    akses HTTP/storage langsung di luar lapisan data.
-2. **Tanggung jawab**: satu fungsi/komponen satu alasan untuk berubah; file yang membengkak
-   atau fungsi > ~40 baris dengan banyak cabang ditandai beserta cara memecahnya.
+2. **Tanggung jawab**: satu fungsi/komponen satu alasan untuk berubah. Ambang ukuran
+   (baris per file/fungsi) diambil dari adapter (bagian lint, mis. `max-lines`) dan config
+   linter project, bukan angka sendiri. Melewati ambang itu = Wajib; adapter menyatakan
+   `TIDAK ADA` → file/fungsi yang membengkak dengan banyak cabang hanya jadi **Saran**,
+   beserta cara memecahnya.
 3. **Duplikasi**: logika atau komponen yang sudah ada di codebase tapi ditulis ulang
    (buktikan dengan `grep`, sebut path yang seharusnya dipakai).
 4. **Penamaan dan keterbacaan**: nama yang menjelaskan maksud, tidak ada singkatan kabur,

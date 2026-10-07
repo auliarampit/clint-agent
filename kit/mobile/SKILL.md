@@ -282,6 +282,9 @@ ke cabang default saat varian baru muncul.
 Umumkan tipe task sebelum lanjut:
 > "This is a **[feat|fix|refactor|chore]** task."
 
+> Berjalan sebagai **subagent** (mis. `pengembang` clint)? Pengumuman ini tidak sampai ke
+> user; tulis tipe dan tier di laporan akhir.
+
 ### B. Tier task (feat & fix saja)
 
 - **Tier 1 — perubahan di file yang sudah ada**, di feature yang foldernya sudah ada.
@@ -322,6 +325,11 @@ mengarang, atau menyelesaikannya diam-diam**:
 | Dua pendekatan valid dengan trade-off nyata | User punya konteks yang kamu tidak punya |
 
 Satu pertanyaan satu kalimat jauh lebih murah daripada satu implementasi yang salah.
+
+Berjalan sebagai **subagent** (mis. `pengembang` clint)? "Tanya" berarti **berhenti dan
+laporkan** pertanyaan ke pemanggil (situasi, opsi, rekomendasi, apa yang sudah dikerjakan),
+bukan memilih sendiri supaya pekerjaan tetap selesai. Pemanggil meneruskannya ke user dan
+melanjutkanmu dengan jawabannya.
 
 ---
 

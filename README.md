@@ -96,7 +96,8 @@ Dibuat oleh `siapkan-project`.
 ```jsonc
 {
   "baseBranch": "dev",
-  "mr": { "cli": "glab", "targetBranch": "dev" },     // glab (GitLab) / gh (GitHub)
+  "mr": { "cli": "glab", "targetBranch": "dev",      // glab (GitLab) / gh (GitHub)
+          "mode": "mr" },                             // "push-base": langsung push ke baseBranch, tanpa MR
   "autoReviewMinLines": 40,                           // "autoReview": false untuk mematikan
   "worktreeRoot": "../mobile-worktrees",
   "relatedRepos": [                                   // [] untuk monorepo

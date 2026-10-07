@@ -8,7 +8,7 @@ ctx=""
 [ -f "$DIR/.claude/rules/working-principles.md" ] || ctx="$(cat "$ROOT/kit/working-principles.md")"
 
 if [ -f "$DIR/.claude/clint.json" ]; then
-  ctx+=$'\n\nclint aktif (`.claude/clint.json`). Satu modul/banyak PR: `/clint:jalankan`.'
+  ctx+=$'\n\nclint aktif (`.claude/clint.json`). Pekerjaan apa pun, kecil sampai modul penuh: `/clint:jalankan`.'
 else
   ctx+=$'\n\nclint belum disiapkan di project ini (`/clint:siapkan-project`).'
 fi

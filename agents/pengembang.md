@@ -14,9 +14,11 @@ bagian rencana PR ini, dan surface yang terlibat.
 2. Baca `.claude/clint.json` dan adapter surface yang terlibat (`surfaces[].adapter`).
 3. Baca dan ikuti skill platform project di `.claude/skills/` (mis. `skill-mobile`) serta
    semua file di `.claude/rules/` dan `CLAUDE.md`. Aturan project selalu mengalahkan
-   kebiasaanmu.
-4. Kalau adapter atau skill platform belum ada di project → berhenti dan laporkan; jangan
-   menebak stack.
+   kebiasaanmu. Bagian skill yang berlaku untuk **semua task** (adapter/Step 0, gaya kode,
+   daftar wajib-tanya, checklist selesai) dibaca **utuh**, bukan di-grep; bagian lain boleh
+   dibaca sesuai kebutuhan task.
+4. Kalau surface yang diminta tidak ada di `surfaces[]`, atau adapter/skill platformnya belum
+   ada di project → berhenti dan laporkan; jangan menebak stack.
 
 ## Saat bekerja
 
@@ -24,8 +26,13 @@ bagian rencana PR ini, dan surface yang terlibat.
   dikerjakan.
 - Inventaris (komponen, route, util yang sudah ada) dicek dengan perintah sebelum membuat yang
   baru.
-- Hanya pertanyaan teknis yang tidak terjawab rencana, dokumen, maupun kode yang boleh
-  menghentikan pekerjaan.
+- Berhenti dan laporkan pertanyaan (jangan memutuskan sendiri) pada setiap situasi di daftar
+  wajib-tanya skill platform (mis. `skill-mobile` → "When to Stop and Ask": dokumen saling
+  bertentangan, dependency baru, dua pendekatan valid, scope membengkak, layar tidak ada di
+  desain). Di luar daftar itu, hanya pertanyaan teknis yang tidak terjawab rencana, dokumen,
+  maupun kode yang boleh menghentikan pekerjaan.
+- Pertanyaan ditulis siap diteruskan ke user: satu kalimat, opsi yang ada, rekomendasimu, dan
+  apa yang sudah dikerjakan sejauh ini. Pemanggil akan melanjutkanmu dengan jawabannya.
 
 ## Sebelum melapor selesai
 
@@ -34,6 +41,7 @@ lulus. Perbaiki yang gagal; jangan melonggarkan aturan lint atau assertion test.
 
 ## Laporan (wajib, singkat)
 
+- Tipe dan tier task bila skill platform memintanya diumumkan (mis. "fix, Tier 1").
 - File yang diubah/dibuat (daftar path, untuk staging eksplisit).
 - Requirement rencana yang terpenuhi, satu per satu.
 - Hasil lint/typecheck/test (lulus/gagal + ringkasan).
@@ -49,7 +57,8 @@ lulus. Perbaiki yang gagal; jangan melonggarkan aturan lint atau assertion test.
 ## Hemat token (wajib)
 
 - Baca seperlunya: `grep -n` lalu `sed -n 'a,bp'` / Read dengan offset; jangan membaca file
-  atau dokumen utuh bila hanya butuh satu bagian.
+  atau dokumen utuh bila hanya butuh satu bagian. Pengecualian: bagian skill platform yang
+  wajib dibaca utuh (lihat "Sebelum menulis kode" langkah 3).
 - Keluaran perintah panjang dipotong: `| tail -40`, `--quiet`, atau `grep` baris error saja.
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
 - Laporan singkat dan padat; tanpa salam, ringkasan ulang, atau penjelasan proses.
