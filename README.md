@@ -103,6 +103,9 @@ dengan 3 tindakan: (1) *Jalankan Skrip Shell* `bash ~/Desktop/clint/scripts/clin
 (2) *Dikte Teks* — bahasa Indonesia, berhenti setelah jeda, (3) *Jalankan Skrip Shell*
 `bash ~/Desktop/clint/scripts/clint-suara.sh "$1"` dengan input *Teks yang Didikte* sebagai argumen.
 
+**Avatar (opsional):** taruh gambar persegi di `~/.config/clint/avatar.jpg`; layar laporan menampilkannya.
+Gambar ini sengaja tidak disimpan di repo.
+
 Log dibersihkan otomatis: laporan lebih dari 3 hari dihapus, file teknis hanya disimpan bila gagal.
 
 Matikan suara per project: `"suara": false` di `.claude/clint.json`; sementara: `CLINT_SUARA=0`.

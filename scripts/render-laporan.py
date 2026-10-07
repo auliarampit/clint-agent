@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render laporan pagi gabungan (JSON dari /clint:cek semua) menjadi halaman HTML lokal.
 Pakai: render-laporan.py <laporan.json> <laporan.html>"""
-import json, sys, html, datetime
+import json, sys, html, datetime, base64, os
 
 src, dst = sys.argv[1], sys.argv[2]
 d = json.load(open(src, encoding="utf-8"))
@@ -28,6 +28,11 @@ def grup(kunci, judul, kelas):
     return (f'<section class="group {kelas}"><h2>{judul} <span class="count">{len(xs)}</span></h2>'
             f'<ul class="items">{"".join(butir(x) for x in xs)}</ul></section>')
 
+av_path = os.path.expanduser("~/.config/clint/avatar.jpg")  # opsional, milik pribadi, tidak di repo
+avatar = ""
+if os.path.exists(av_path):
+    b64 = base64.b64encode(open(av_path, "rb").read()).decode()
+    avatar = f'<img class="avatar" alt="clint" src="data:image/jpeg;base64,{b64}">'
 waktu = d.get("tanggal") or datetime.datetime.now().strftime("%Y-%m-%d %H.%M")
 pills = "".join(f'<span class="pill ok">{e(s)}</span>' for s in d.get("aman", [])) + \
         "".join(f'<span class="pill warn">{e(s)}</span>' for s in d.get("peringatan", []))
@@ -48,7 +53,7 @@ CSS = """
 h1,h2,h3{margin:0;text-wrap:balance}h1{font:700 clamp(30px,5vw,42px)/1.15 var(--f-display)}h1 em{font-style:normal;color:var(--dawn)}
 .eyebrow{font:500 11.5px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .lead{font-size:17px;margin:0;max-width:60ch}code{font-family:var(--f-mono);font-size:.88em}
-.hello{display:grid;gap:10px}.projects,.calm{display:flex;flex-wrap:wrap;gap:8px}
+.hello{display:grid;gap:10px}.top{display:flex;align-items:center;gap:12px}.avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--dawn)}.projects,.calm{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;gap:6px;font:500 12px var(--f-mono);padding:4px 10px;border-radius:999px}.chip small{opacity:.75}
 .chip.a{color:var(--chip-a);background:var(--chip-a-soft)}.chip.b{color:var(--chip-b);background:var(--chip-b-soft)}
 .speak{font:500 13px var(--f-body);color:var(--dawn);background:var(--dawn-soft);border:0;border-radius:999px;padding:6px 12px;cursor:pointer}
@@ -77,7 +82,7 @@ out = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name=
 <title>Sapaan pagi · {e(waktu)}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>{CSS}</style></head><body><main class="screen">
-<header class="hello"><span class="eyebrow">{e(waktu)}</span><h1>{e(judul)}</h1>
+<header class="hello"><div class="top">{avatar}<span class="eyebrow">clint · {e(waktu)}</span></div><h1>{e(judul)}</h1>
 <p class="lead">{e(d.get("lead"))}</p>
 <div class="projects">{"".join(chip(p.get("nama"), f' <small>{e(p.get("aktif"))}</small>' if p.get("aktif") else "") for p in proyek)}
 <button class="speak" id="speak" type="button" data-t="{e(d.get("kalimat"))}">▶ Bacakan</button></div></header>
