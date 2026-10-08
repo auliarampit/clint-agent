@@ -10,7 +10,7 @@
       "name": "clint",
       "description": "Alur PR otomatis (rencana → kerja → tinjau → uji → MR), prinsip kerja wajib, dan master skill per platform",
       "source": "./",
-      "version": "1.9.0"
+      "version": "1.9.1"
     }
   ]
 }

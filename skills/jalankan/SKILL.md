@@ -187,6 +187,9 @@ Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
   dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola.
 - **Verifikasi MR benar-benar ada** (`glab mr view` / `gh pr view`). CLI bisa gagal diam-diam
   (mis. 403). Kalau gagal, berikan user tautan "create merge request" dari keluaran push.
+- **Wajib, tanpa token:** bila PR berasal dari butir laporan `cek`, pindahkan butir itu ke "menunggu
+  review" supaya menu bar ikut diperbarui:
+  `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); python3 "$R/scripts/laporan-ubah.py" review "<ID/teks butir>" "MR !<n>" "<url MR>"`
 
 ### 5.6 Bersihkan
 
