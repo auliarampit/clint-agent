@@ -59,5 +59,9 @@ tinjauan berulang untuk perubahan yang sama.
 
 ## 5. Laporan singkat
 
+Setiap temuan kode ditulis dengan `path:baris`, cuplikan **sekarang**, dan **usulan**. Untuk MR orang
+lain, komentar *suggestion* di MR (`scripts/saran-mr.py`) hanya dipasang bila user memintanya.
+
+
 Putusan per peninjau, apa saja yang sudah diperbaiki, temuan wajib yang masih tersisa (bila
 batas putaran tercapai), dan saran yang tidak diterapkan.

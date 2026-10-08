@@ -33,6 +33,11 @@ Temuan urut dampak, masing-masing: **kriteria WCAG** (mis. `2.4.7 Focus Visible`
 masalah — siapa yang terdampak — perbaikan konkret. Temuan tingkat A dan AA = wajib; praktik baik di
 luar AA = saran. Hanya temuan yang kamu yakin nyata.
 
+**Format temuan kode** (wajib bila temuan menyangkut kode): `path:baris` · **sekarang** (cuplikan apa
+adanya, ≤ 5 baris, dalam blok kode) · **usulan** (kode pengganti untuk baris yang sama, dalam blok kode).
+Format ini dipakai untuk memasang komentar *suggestion* di MR supaya user bisa memvalidasi dan menerapkannya
+langsung. Temuan yang bukan soal kode (mis. dokumen, desain) cukup dijelaskan.
+
 ## Standar senior
 
 - Pahami konteks dulu (aturan project, kode sekitar), baru bertindak; jangan menebak.

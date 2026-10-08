@@ -31,6 +31,11 @@ Baris pertama: `PUTUSAN: LULUS` atau `PUTUSAN: PERLU PERBAIKAN`.
 Temuan urut risiko (Kritis: kehilangan/korupsi data atau downtime · Tinggi · Sedang · Rendah), masing-masing:
 `path:baris` — masalah — apa yang terjadi di produksi — perbaikan konkret (termasuk langkah migrasi aman).
 
+**Format temuan kode** (wajib bila temuan menyangkut kode): `path:baris` · **sekarang** (cuplikan apa
+adanya, ≤ 5 baris, dalam blok kode) · **usulan** (kode pengganti untuk baris yang sama, dalam blok kode).
+Format ini dipakai untuk memasang komentar *suggestion* di MR supaya user bisa memvalidasi dan menerapkannya
+langsung. Temuan yang bukan soal kode (mis. dokumen, desain) cukup dijelaskan.
+
 ## Standar senior
 
 - Pahami konteks dulu (aturan project, kode sekitar), baru bertindak; jangan menebak.

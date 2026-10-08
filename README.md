@@ -116,6 +116,9 @@ build/rilis → `insinyur-rilis`; dokumentasi → `penulis-teknis`; pipeline mer
 - **Tinjauan paralel** setelah kode ditulis; temuan wajib dikirim balik ke pengembang, maksimal 2
   putaran. Masih gagal → berhenti tanpa MR, perubahan disimpan sebagai commit `wip` lokal.
 - **E2E** dijalankan bila rencana memintanya atau bila perubahan terlihat pengguna.
+- **Saran tinjauan bisa divalidasi di kode**: saran yang tidak diterapkan dipasang sebagai komentar
+  *suggestion* tepat di baris yang berubah (lihat kode lama vs usulan, lalu *Apply suggestion* atau abaikan);
+  saran di luar perubahan masuk ke deskripsi MR dengan tautan file#baris dan diff sekarang/usulan.
 - **MR**: stage eksplisit (tanpa `git add -A`), tarik base lagi, push, buat MR, dan pastikan MR-nya
   benar-benar ada. PR yang bergantung dibangun di atas branch dependensinya; deskripsi MR menyebut
   urutan merge.

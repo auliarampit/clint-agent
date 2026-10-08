@@ -227,6 +227,13 @@ Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
 - Buat MR ke `mr.targetBranch` dengan `mr.cli` (`glab mr create` / `gh pr create`). Deskripsi:
   ringkasan, requirement yang dipenuhi (ID), cara verifikasi, hasil lint/typecheck/test/E2E,
   dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola.
+- **Saran tinjauan yang tidak diterapkan** (temuan berlabel saran/rendah) dipasang supaya user bisa
+  memvalidasi kodenya: tulis ke file sementara sebagai JSON
+  `[{"path","line","sekarang","usulan","alasan","agent"}]`, lalu setelah MR dibuat jalankan dari repo:
+  `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); python3 "$R/scripts/saran-mr.py" <nomor MR> <file.json>`
+  Saran pada baris yang berubah menjadi komentar *suggestion* di baris itu; sisanya dicetak sebagai blok
+  "Saran tinjauan" yang ditempel ke deskripsi MR (`glab mr update <n> --description` / `gh pr edit`).
+  Mode `push-base` (tanpa MR): cetak blok itu di laporan akhir.
 - **Verifikasi MR benar-benar ada** (`glab mr view` / `gh pr view`). CLI bisa gagal diam-diam
   (mis. 403). Kalau gagal, berikan user tautan "create merge request" dari keluaran push.
 - **Wajib, tanpa token:** bila PR berasal dari butir laporan `cek`, pindahkan butir itu ke "menunggu
