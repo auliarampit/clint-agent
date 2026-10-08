@@ -8,7 +8,9 @@
 Pakai (dari dalam repo project):
   saran-mr.py <nomor MR/PR> <saran.json> [--uji]
 saran.json: [{"path":"src/a.ts","line":42,"sekarang":"kode lama (1..n baris)","usulan":"kode baru",
-              "alasan":"kenapa","agent":"reviewer-senior"}]
+              "alasan":"kenapa","agent":"reviewer-senior","lintas":false}]
+  "lintas": true = perbaikan butuh perubahan di luar baris itu (mis. konstanta baru) → tidak dijadikan
+  suggestion (Apply akan merusak build), masuk ke deskripsi saja.
 --uji: tampilkan apa yang akan diposting, tanpa mengirim apa pun.
 """
 import json, re, subprocess, sys
@@ -57,7 +59,7 @@ def main():
     for s in saran:
         path, line = s["path"], int(s["line"])
         n = max(1, len((s.get("sekarang") or "").rstrip("\n").splitlines()))
-        if line in baris_berubah(base, head, path):
+        if not s.get("lintas") and line in baris_berubah(base, head, path):
             body = blok_saran(s, n)
             if github:
                 args = ["gh", "api", f"repos/{{owner}}/{{repo}}/pulls/{nomor}/comments", "-f", f"body={body}",

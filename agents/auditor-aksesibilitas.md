@@ -36,7 +36,9 @@ luar AA = saran. Hanya temuan yang kamu yakin nyata.
 **Format temuan kode** (wajib bila temuan menyangkut kode): `path:baris` · **sekarang** (cuplikan apa
 adanya, ≤ 5 baris, dalam blok kode) · **usulan** (kode pengganti untuk baris yang sama, dalam blok kode).
 Format ini dipakai untuk memasang komentar *suggestion* di MR supaya user bisa memvalidasi dan menerapkannya
-langsung. Temuan yang bukan soal kode (mis. dokumen, desain) cukup dijelaskan.
+langsung. **Usulan harus bisa diterapkan apa adanya pada baris itu saja** (tetap lulus build
+bila langsung di-Apply); bila perbaikan butuh perubahan di tempat lain (konstanta/impor/fungsi baru), tandai
+`lintas: true` agar dicatat di deskripsi, bukan sebagai suggestion. Temuan yang bukan soal kode (mis. dokumen, desain) cukup dijelaskan.
 
 ## Standar senior
 
