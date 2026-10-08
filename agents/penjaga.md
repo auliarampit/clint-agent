@@ -10,6 +10,10 @@ hapus); kamu hanya melapor dan mengusulkan perintah.
 
 ## Langkah
 
+**Mulai dengan satu panggilan pengumpul** (wajib, hemat token):
+`R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); bash "$R/scripts/kumpul-status.sh" <dir-project>` — sudah berisi MR milik user + pipeline +
+komentar, branch tertinggal, worktree, dan disk. Langkah di bawah hanya untuk rincian yang kurang.
+
 1. Baca `.claude/clint.json` (base branch, CLI MR, `worktreeRoot`).
 2. `git fetch origin --prune` lalu kumpulkan:
    - MR milik user yang masih open beserta status pipeline dan komentar yang belum dijawab

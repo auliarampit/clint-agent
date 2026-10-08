@@ -24,14 +24,15 @@ berlaku di semua project. Anda cukup **review dan merge**.
 2. [4 perintah](#4-perintah)
 3. [Cara kerja `jalankan`](#cara-kerja-jalankan)
 4. [Tim agent](#tim-agent)
-5. [Laporan pagi](#laporan-pagi)
-6. [Menu bar](#menu-bar)
-7. [Mode JARVIS](#mode-jarvis)
-8. [Otomatis tanpa perintah](#otomatis-tanpa-perintah)
-9. [Hemat token](#hemat-token)
-10. [Konfigurasi](#konfigurasi)
-11. [Struktur repo dan perawatan](#struktur-repo-dan-perawatan)
-12. [Peta jalan](#peta-jalan)
+5. [Platform: mobile, web, backend](#platform-mobile-web-backend)
+6. [Laporan pagi](#laporan-pagi)
+7. [Menu bar](#menu-bar)
+8. [Mode JARVIS](#mode-jarvis)
+9. [Otomatis tanpa perintah](#otomatis-tanpa-perintah)
+10. [Hemat token](#hemat-token)
+11. [Konfigurasi](#konfigurasi)
+12. [Struktur repo dan perawatan](#struktur-repo-dan-perawatan)
+13. [Peta jalan](#peta-jalan)
 
 ---
 
@@ -103,25 +104,43 @@ rekan   /clint:tinjau !123
 
 ![14 agent senior](docs/gambar/tim-agent.png)
 
-| Agent | Peran | Model |
-|---|---|---|
-| `perencana` | rencana per PR dari PRD, SAD, STD, API contract, prototype | Sonnet |
-| `pengembang` | menulis kode, lint, typecheck, test | Opus |
-| `peninjau` | sesuai rencana, dokumen, dan aturan project? | Sonnet |
-| `reviewer-senior` | clean code dan clean architecture | Opus |
-| `auditor-keamanan` | OWASP Mobile Top 10 + MASVS, Top 10 web, API Security Top 10 | Opus |
-| `penyelaras-desain` | selisih tampilan dengan prototype | Sonnet |
-| `penguji` | E2E happy path + error path | Sonnet |
-| `pemulih-pipeline` | memperbaiki CI yang gagal dari penyebabnya | Opus |
-| `pelacak-perubahan` | apa yang berubah di docs, design, `dev`, plus feedback QA yang masih open | Sonnet |
-| `auditor-aksesibilitas` | WCAG 2.2 AA: semantik, keyboard, fokus, label, kontras | Sonnet |
-| `auditor-performa` | Core Web Vitals, bundle, render, pengambilan data | Sonnet |
-| `auditor-database` | migrasi aman, integritas, transaksi, indeks, N+1 | Opus |
-| `auditor-kontrak-api` | implementasi vs API contract, perubahan yang merusak klien | Sonnet |
-| `penjaga` | MR, pipeline, branch, worktree, disk | Haiku |
+| Kelompok | Agent | Peran | Model |
+|---|---|---|---|
+| **Kerja** | `perencana` | rencana per PR dari PRD, SAD, STD, API contract, prototype | Sonnet |
+| | `pengembang` | menulis kode, lint, typecheck, test | Opus |
+| | `penguji` | E2E happy path + error path (mobile, web, API) | Sonnet |
+| | `pemulih-pipeline` | memperbaiki CI yang gagal dari penyebabnya | Opus |
+| **Tinjauan inti** (setiap PR) | `peninjau` | sesuai rencana, dokumen, dan aturan project? | Sonnet |
+| | `reviewer-senior` | clean code dan clean architecture | Opus |
+| **Tinjauan spesialis** (bila diff relevan) | `auditor-keamanan` | OWASP Mobile Top 10 + MASVS, Top 10 web, API Security Top 10 | Opus |
+| | `auditor-aksesibilitas` | WCAG 2.2 AA: semantik, keyboard, fokus, label, kontras | Sonnet |
+| | `auditor-performa` | Core Web Vitals, bundle, render, pengambilan data | Sonnet |
+| | `auditor-database` | migrasi aman, integritas, transaksi, indeks, N+1 | Opus |
+| | `auditor-kontrak-api` | implementasi vs API contract, perubahan yang merusak klien | Sonnet |
+| | `penyelaras-desain` | selisih tampilan dengan prototype | Sonnet |
+| **Pemantau** | `pelacak-perubahan` | apa yang berubah di docs, design, `dev`, plus feedback QA yang masih open | Sonnet |
+| | `penjaga` | MR, pipeline, branch, worktree, disk | Haiku |
 
 Semua agent bekerja dengan standar senior: pahami konteks dulu, solusi paling sederhana yang benar,
 setiap kesimpulan dibuktikan, dan berhenti bila keputusan di luar wewenangnya.
+
+## Platform: mobile, web, backend
+
+clint fullstack: setiap platform punya skill inti yang ringkas, referensi yang dibaca hanya bila task
+menyentuhnya, aturan test, dan adapter berisi fakta stack project. Agent yang sama bekerja di ketiganya;
+yang berbeda adalah skill dan auditor spesialis yang ikut meninjau.
+
+| | Mobile | Web | Backend |
+|---|---|---|---|
+| Pasang | `/clint:siapkan-project mobile` | `/clint:siapkan-project web` | `/clint:siapkan-project backend` |
+| Skill | `skill-mobile` | `skill-web` | `skill-backend` |
+| Referensi | (di dalam skill) | aksesibilitas, performa, keamanan, pola UI | kontrak API, data & migrasi, keamanan API, keandalan |
+| Aturan test | `mobile-e2e` | `web-e2e` | `backend-test` |
+| Adapter | `.claude/mobile-stack.md` | `.claude/web-stack.md` | `.claude/backend-stack.md` |
+| Auditor yang sering ikut | keamanan, aksesibilitas, performa, desain | aksesibilitas, performa, keamanan, desain | database, kontrak API, keamanan |
+
+Monorepo fullstack cukup satu `.claude/clint.json` dengan beberapa `surfaces` (mis. `apps/mobile`,
+`apps/admin`, `apps/api`); skill dan auditor dipilih per bagian kode yang berubah.
 
 ## Laporan pagi
 
@@ -224,6 +243,14 @@ Model tidak diturunkan; yang dijaga cara kerjanya:
 - tinjau otomatis hanya untuk ≥ 40 baris, sekali per perubahan;
 - setiap agent membaca seperlunya (`grep`, potongan baris), memotong keluaran panjang, laporan padat;
 - menu bar, suara, status sesi, dan pembaruan badge berjalan di Mac tanpa token.
+- pemantau (`pelacak-perubahan`, `penjaga`) mengumpulkan bahan dalam **satu panggilan skrip**
+  (`scripts/kumpul-perubahan.sh`, `scripts/kumpul-status.sh`) alih-alih puluhan putaran `git`/`grep`;
+- penguji menjalankan semua flow sekali, mengulang hanya yang gagal, dan tidak membuka potret layar kecuali
+  log teks tidak cukup.
+
+Gambaran dari pemakaian nyata (4 hari, tim mobile + monorepo): per PR, `pengembang` ≈ 1,1 dan semua
+peninjau ≈ 0,6 (setara USD harga API). Biaya terbesar justru datang dari agent umum tanpa aturan clint
+untuk E2E panjang; gunakan `/clint:jalankan` agar `penguji` dan aturannya yang dipakai.
 
 ## Konfigurasi
 
@@ -299,3 +326,4 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 1 | core + mobile, alur PR otomatis, laporan pagi, menu bar, mode JARVIS | selesai |
 | 2 | web: skill inti + referensi (aksesibilitas, performa, keamanan, pola UI), aturan E2E, adapter; auditor aksesibilitas dan performa | selesai |
 | 3 | backend: skill inti + referensi (kontrak API, data & migrasi, keamanan API, keandalan), aturan test, adapter; auditor database dan kontrak API | selesai |
+| 4 | sweeping token: skrip pengumpul untuk pemantau, aturan gambar untuk penguji | selesai |

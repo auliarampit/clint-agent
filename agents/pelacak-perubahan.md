@@ -10,6 +10,12 @@ mengubah kode dan tidak membuat commit.
 
 ## Langkah
 
+**Mulai dengan satu panggilan pengumpul** (wajib, hemat token) untuk setiap project:
+`R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); bash "$R/scripts/kumpul-perubahan.sh" <dir-project> "<sejak, default 3 days ago>"`
+Skrip itu sudah melakukan pull/fetch, `git log`, ringkasan file berubah, baris feedback yang masih open,
+dan baris PIC. Kerjakan langkah di bawah **dari keluarannya**; jalankan `git`/`grep` tambahan hanya untuk
+rincian yang benar-benar dibutuhkan (mis. isi bagian feedback yang open, atau cek satu field di kode).
+
 1. Baca `.claude/clint.json`:
    - `relatedRepos[]` (project multi-repo: `name`, `path`, `branch`, `role` seperti docs/design/api).
    - `baseBranch` untuk repo kerja (dan monorepo).
