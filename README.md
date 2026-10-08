@@ -76,6 +76,13 @@ Anda **tidak perlu memanggil agent**; perintah di atas yang menugaskan mereka.
 /clint:jalankan                                                        ← kerjakan temuan /clint:cek barusan
 ```
 
+Setiap `cek` dan `jalankan` ditutup dengan baris **Berikutnya**: satu perintah siap ketik untuk pekerjaan
+berikutnya (mis. `/clint:jalankan docs/plans/mob-10.md PR-2`), atau "Selesai semua pekerjaan." Baris yang
+sama muncul di layar laporan dan menu bar, dengan tombol salin.
+
+`cek` mencari pekerjaan (apa yang berubah dan perlu dikerjakan); `tinjau` memeriksa hasil pekerjaan (kualitas
+kode/MR).
+
 Rutinitas harian:
 
 ```

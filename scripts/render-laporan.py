@@ -79,6 +79,14 @@ navigator.clipboard.writeText(t).then(()=>{b.textContent='Tersalin';setTimeout((
 const sp=document.getElementById('speak');if(sp)sp.onclick=()=>{const u=new SpeechSynthesisUtterance(sp.dataset.t);u.lang='id-ID';speechSynthesis.cancel();speechSynthesis.speak(u)};
 """
 judul = d.get("judul") or d.get("kalimat") or "Selamat pagi."
+nx = (d.get("berikutnya") or "").strip()
+if nx.startswith("/"):
+    berikut = (f'<section class="group do"><h2>Berikutnya</h2><div class="cmd"><code>{e(nx)}</code>'
+               f'<button class="copy" type="button">Salin</button></div></section>')
+elif nx:
+    berikut = f'<section class="group"><h2>Berikutnya</h2><p class="lead">{e(nx)}</p></section>'
+else:
+    berikut = ""
 out = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sapaan pagi · {e(waktu)}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
@@ -90,5 +98,5 @@ out = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name=
 {kosong}{grup("gagal","Perlu perhatian","fail")}{grup("kerjakan","Perlu dikerjakan","do")}{grup("cek","Perlu Anda cek","check")}{grup("tunggu","Menunggu pihak lain","wait")}
 <div class="calm">{pills}</div>
 {f'<details><summary>Rincian per project</summary><div class="grid">{rincian}</div></details>' if rincian else ""}
-<div class="foot">Dibuat oleh clint</div></main><script>{JS}</script></body></html>"""
+{berikut}<div class="foot">Dibuat oleh clint</div></main><script>{JS}</script></body></html>"""
 open(dst, "w", encoding="utf-8").write(out)

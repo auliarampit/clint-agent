@@ -286,6 +286,15 @@ Seperti rekan kerja mengabari lewat chat, maksimal ±12 baris:
 
 Merge tetap oleh user.
 
+**Baris terakhir wajib: "Berikutnya"** — satu perintah siap ketik untuk pekerjaan berikutnya yang paling
+penting, lengkap dengan sumbernya, mis.:
+`Berikutnya: /clint:jalankan perbaiki BUG-092 tombol Verifikasi Customer (docs/qa/feedback/feedback-ui.md)`
+`Berikutnya: /clint:jalankan docs/plans/mob-10.md PR-2`
+Urutan memilih: PR berikutnya dari rencana yang sedang dikerjakan → butir *Perlu perhatian* → butir
+*Perlu dikerjakan* teratas di laporan terakhir (`~/Library/Logs/clint/terakhir.json`) → MR yang menunggu
+review (sebut "review dan merge !n" tanpa perintah). Tidak ada sama sekali → tulis **"Selesai semua
+pekerjaan."**
+
 ## Kabar suara (wajib, di akhir)
 
 Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) ke file kabar;

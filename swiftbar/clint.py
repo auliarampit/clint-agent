@@ -243,6 +243,14 @@ def render():
             o(f"Tidak ada yang perlu ditindaklanjuti. | color={ABU}")
             o("---")
 
+    nx = ((lap or {}).get("berikutnya") or "").strip()
+    if nx and not bekerja:
+        if nx.startswith("/"):
+            o(f"Berikutnya: {bersih(nx, 52)} | {aksi('salin', nx, 'project terkait')} sfimage=arrow.right.circle")
+        else:
+            o(f"{bersih(nx, 60)} | sfimage=checkmark.seal color={ABU}")
+        o("---")
+
     # ---- tombol cepat ----
     o(f"Buka laporan terakhir | {aksi('laporan')} sfimage=doc.text")
     try:

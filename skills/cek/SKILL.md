@@ -16,7 +16,7 @@ Argumen berupa **nama project lain** (mis. `/clint:cek toko-online`) → cari pa
    dampaknya ke kode, feedback/bug QA yang masih open untuk project ini (walau file-nya tidak
    berubah belakangan ini), MR (pipeline gagal, komentar baru, menunggu review), dan
    bersih-bersih/disk bila ada yang perlu.
-3. Langkah berikutnya berupa perintah `/clint:jalankan ...`. Jangan menyuruh user memanggil agent.
+3. Tutup dengan baris **Berikutnya** (lihat Gaya laporan). Jangan menyuruh user memanggil agent.
 
 ## Mode `semua` ("cek semua project")
 
@@ -37,7 +37,8 @@ Argumen berupa **nama project lain** (mis. `/clint:cek toko-online`) → cari pa
     "kerjakan":[{"teks":"<1 kalimat>","proyek":"<nama>","sumber":"<ID/MR>","perintah":"/clint:jalankan ..."}],
     "cek":[{"teks":"...","proyek":"...","sumber":"MR !123","url":"<tautan MR>"}], "tunggu":[...],
     "aman":["Pipeline aman di 2 project"], "peringatan":["Disk tinggal 18 GB"],
-    "rincian":[{"proyek":"<nama>","butir":["<1 baris>"]}]}
+    "rincian":[{"proyek":"<nama>","butir":["<1 baris>"]}],
+    "berikutnya":"/clint:jalankan … (atau \"Selesai semua pekerjaan.\")"}
    ```
    Butir mengikuti gaya laporan di bawah; kelompok kosong ditulis `[]`. `gagal` = pipeline/pekerjaan
    gagal (memberi ikon merah di menu bar); `url` diisi untuk butir MR. Salinan terakhir juga ditulis ke
@@ -56,7 +57,14 @@ Argumen berupa **nama project lain** (mis. `/clint:cek toko-online`) → cari pa
 - Lalu daftar pendek, satu baris per hal, bahasa sehari-hari, sebut nama layar/fitur:
   "Daftar produk belum bisa ditarik untuk dimuat ulang (feedback #8)."
 - Yang tidak perlu tindakan cukup satu baris penutup, mis. "Selain itu aman: MR dan pipeline bersih."
-- Akhiri dengan satu perintah siap ketik.
+- **Baris terakhir wajib: "Berikutnya"** — satu perintah siap ketik untuk pekerjaan berikutnya yang paling
+  penting, lengkap dengan sumbernya, mis.:
+  `Berikutnya: /clint:jalankan perbaiki BUG-092 tombol Verifikasi Customer (docs/qa/feedback/feedback-ui.md)`
+  `Berikutnya: /clint:jalankan docs/plans/mob-10.md PR-2`
+  Urutan memilih: PR berikutnya dari rencana yang sedang dikerjakan → butir *Perlu perhatian* → butir
+  *Perlu dikerjakan* teratas di laporan terakhir (`~/Library/Logs/clint/terakhir.json`) → MR yang menunggu
+  review (sebut "review dan merge !n" tanpa perintah). Tidak ada sama sekali → tulis **"Selesai semua
+  pekerjaan."**
 - Tanpa judul besar, tanpa tabel, tanpa hash commit/path kecuali benar-benar diperlukan.
   Maksimal ±10 baris.
 
