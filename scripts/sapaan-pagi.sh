@@ -16,11 +16,20 @@ kabar="${TMPDIR:-/tmp}/clint-kabar.txt"; rm -f "$kabar" "$json"
 if [ $# -gt 0 ]; then proyek="$(printf '%s\n' "$@")"; else proyek="$(bash "$root/scripts/proyek-aktif.sh" 3)"; fi
 [ -n "$proyek" ] || exit 0
 kerja="$(echo "$proyek" | head -1)"
-# Status untuk menu bar selama pemeriksaan berjalan.
+
+# Satu pemeriksaan pada satu waktu (tombol terklik dua kali, sapaan pagi + klik manual).
+kunci="$HOME/.config/clint/cek.lock"; mkdir -p "$HOME/.config/clint"
+if ! mkdir "$kunci" 2>/dev/null; then
+  if [ -n "$(find "$kunci" -maxdepth 0 -mmin -30 2>/dev/null)" ]; then
+    CLAUDE_PROJECT_DIR="$kerja" bash "$root/hooks/kabar.sh" "Pemeriksaan lain masih berjalan. Laporannya menyusul."; exit 0
+  fi
+  rm -rf "$kunci"; mkdir "$kunci"   # kunci basi (> 30 menit) dibuang
+fi
+# Status untuk menu bar (file sendiri; kerja.json milik jalankan tidak disentuh).
 n="$(echo "$proyek" | wc -l | tr -d ' ')"; daftar="$(echo "$proyek" | xargs -n1 basename | paste -sd, - | sed 's/,/, /g')"
 jq -n --arg n "$n" --arg d "$daftar" --arg m "$(date +%H.%M)" \
-  '{judul:("cek " + $n + " project"), mulai:$m, label:("cek " + $n), tahap:("memeriksa " + $d), catatan:"laporan terbuka begitu selesai"}' > "$log/kerja.json"
-trap 'rm -f "$log/kerja.json"' EXIT
+  '{judul:("cek " + $n + " project"), mulai:$m, label:("cek " + $n), tahap:("memeriksa " + $d), catatan:"laporan terbuka begitu selesai"}' > "$log/kerja-cek.json"
+trap 'rm -f "$log/kerja-cek.json"; rmdir "$kunci" 2>/dev/null' EXIT
 tambah=(--add-dir "$log"); while read -r p; do tambah+=(--add-dir "$p"); done <<< "$proyek"
 
 if [ "$uji" = 1 ]; then
@@ -29,21 +38,31 @@ else
   prompt="/clint:cek semua $(echo $proyek) --json $json --tanpa-layar"
 fi
 
-( cd "$kerja" && "$claude" -p "$prompt" "${tambah[@]}" \
-    --allowedTools Read Grep Glob Agent Task "Edit(~/Library/Logs/clint/**)" "Bash(git fetch:*)" "Bash(git pull:*)" \
-      "Bash(git log:*)" "Bash(git -C:*)" "Bash(git status:*)" "Bash(git rev-list:*)" \
-      "Bash(git worktree list:*)" "Bash(git branch:*)" "Bash(glab:*)" "Bash(gh:*)" \
-      "Bash(df:*)" "Bash(ls:*)" "Bash(grep:*)" "Bash(sed:*)" "Bash(jq:*)" "Bash(cat:*)" \
-      "Bash(head:*)" "Bash(tail:*)" "Bash(wc:*)" "Bash(printf:*)" "Bash(date:*)" "Bash(bash:*)" "Bash(find:*)" \
-    --disallowedTools "Bash(git push:*)" "Bash(git commit:*)" "Bash(git reset:*)" \
-    < /dev/null > "${json%.json}.log" 2>&1 )
+jalan() {
+  ( cd "$kerja" && "$claude" -p "$prompt" "${tambah[@]}" \
+      --allowedTools Read Grep Glob Agent Task "Edit(~/Library/Logs/clint/**)" "Bash(git fetch:*)" "Bash(git pull:*)" \
+        "Bash(git log:*)" "Bash(git -C:*)" "Bash(git status:*)" "Bash(git rev-list:*)" \
+        "Bash(git worktree list:*)" "Bash(git branch:*)" "Bash(glab:*)" "Bash(gh:*)" \
+        "Bash(df:*)" "Bash(ls:*)" "Bash(grep:*)" "Bash(sed:*)" "Bash(jq:*)" "Bash(cat:*)" \
+        "Bash(head:*)" "Bash(tail:*)" "Bash(wc:*)" "Bash(printf:*)" "Bash(date:*)" "Bash(bash:*)" "Bash(find:*)" \
+      --disallowedTools "Bash(git push:*)" "Bash(git commit:*)" "Bash(git reset:*)" \
+      < /dev/null > "${json%.json}.log" 2>&1 )
+}
+
+jalan
+# Login kedaluwarsa sering pulih sendiri setelah token disegarkan: coba sekali lagi.
+if [ ! -s "$json" ] && grep -qi "authenticate\|oauth\|login" "${json%.json}.log" 2>/dev/null; then
+  sleep 20; jalan
+fi
 
 if [ -s "$json" ] && python3 "$root/scripts/render-laporan.py" "$json" "$html"; then
   open "$html"
   [ -s "$kabar" ] || jq -r '.kalimat // empty' "$json" > "$kabar"
   cp "$json" "$log/terakhir.json"
   rm -f "${json%.json}.log" "$json"
+elif grep -qi "authenticate\|oauth\|login" "${json%.json}.log" 2>/dev/null; then
+  printf '%s' "Pemeriksaan gagal karena login Claude perlu diperbarui. Buka Claude Code sekali, lalu coba lagi." > "$kabar"
 else
-  printf '%s' "Sapaan pagi gagal membuat laporan. Lihat log clint." > "$kabar"
+  printf '%s' "Pemeriksaan gagal membuat laporan. Rinciannya ada di log clint." > "$kabar"
 fi
 CLAUDE_PROJECT_DIR="$kerja" bash "$root/hooks/kabar.sh"

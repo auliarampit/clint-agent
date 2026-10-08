@@ -146,7 +146,7 @@ GAMBAR.append(halaman("menu-bar", """
  <div style="display:grid;gap:18px;align-content:center">
   <div class="eyebrow">Menu bar Mac</div>
   <h2>Lihat agent bekerja tanpa membuka apa pun</h2>
-  <p class="sub" style="font-size:17px">Cincin avatar berputar selama agent bekerja, termasuk sesi di VS Code. Klik untuk melihat kemajuan, sesi, dan hal yang menunggu.</p>
+  <p class="sub" style="font-size:17px">Cincin oranye menyala selama agent bekerja, termasuk sesi di VS Code. Klik untuk melihat kemajuan, sesi, dan hal yang menunggu.</p>
   <div class="states">
    <div><span class="ic"><span class="logo s">c</span></span><b>3</b><small>hal menunggu</small></div>
    <div><span class="ic spin"><span class="logo s">c</span></span><b>PR-2/4</b><small>agent bekerja</small></div>

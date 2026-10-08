@@ -103,7 +103,7 @@ def baca():
         except Exception:
             lap = None
     kerja = None
-    for fn in ("kerja.json", "kerja.txt"):
+    for fn in ("kerja.json", "kerja-cek.json", "kerja.txt"):   # jalankan diutamakan, lalu cek
         k = os.path.join(LOG, fn)
         if os.path.exists(k) and time.time() - os.path.getmtime(k) < 3 * 3600:
             try:
@@ -259,7 +259,8 @@ def render():
     diam, bisu = os.path.exists(os.path.join(CFG, "diam")), os.path.exists(os.path.join(CFG, "bisu-sampai"))
     o("Pengaturan | sfimage=gearshape")
     o(f"--Suara: {'mati' if diam else 'aktif ✓'} | {aksi('suara')}")
-    o(f"--Sapaan pagi: 08.00, Sen–Jum | {aksi('sapaan')}")
+    sp = sapaan_cfg()
+    o(f"--Sapaan pagi: {sp['jam']:02d}.{sp['menit']:02d} Sen–Jum {'✓' if sp['aktif'] else '(mati)'} | {aksi('sapaan-mati' if sp['aktif'] else 'sapaan-nyala')}")
     o(f"--{'Nyalakan kabar lagi' if bisu else 'Bisukan sampai besok'} | {aksi('bunyikan' if bisu else 'bisu')}")
 
     # Status MR dicek tiap 15 menit di latar (glab/gh, tanpa token).
@@ -280,7 +281,7 @@ def judul(badge, frame=None):
 
 def tanda():
     """Sidik perubahan file sumber; menu dirender ulang hanya bila berubah (atau tiap 30 detik)."""
-    fs = [os.path.join(LOG, f) for f in ("terakhir.json", "kerja.json", "kerja.txt")] + \
+    fs = [os.path.join(LOG, f) for f in ("terakhir.json", "kerja.json", "kerja-cek.json", "kerja.txt")] + \
          [os.path.join(CFG, f) for f in ("diam", "bisu-sampai")]
     sd = os.path.join(CFG, "sesi")
     if os.path.isdir(sd):
@@ -288,20 +289,53 @@ def tanda():
     return tuple((f, os.path.getmtime(f)) for f in fs if os.path.exists(f))
 
 
-frames = [b64(os.path.join(CFG, "putar", f"{i}.png")) for i in range(8)]
-frames = frames if all(frames) else None
-if "--sekali" in sys.argv:            # untuk uji: cetak satu kali lalu keluar
-    b, teks, badge = render(); print(judul(badge)); print("---"); print(teks); sys.exit(0)
+# Saat bekerja ikon memakai cincin diam (bingkai 0). Animasi tidak dipakai: setiap bingkai mengirim ulang
+# seluruh menu dan membuat menu yang sedang dibuka berkedip serta tidak bisa diklik.
+cincin = b64(os.path.join(CFG, "putar", "0.png"))
 
-terakhir_tanda, terakhir_render, keluaran_lalu, i = None, 0, None, 0
+
+def sapaan_cfg():
+    try:
+        c = json.load(open(os.path.join(CFG, "sapaan.json"), encoding="utf-8"))
+    except Exception:
+        c = {}
+    return {"aktif": c.get("aktif", True), "jam": int(c.get("jam", 8)), "menit": int(c.get("menit", 0)),
+            "sampai": int(c.get("sampai", 13))}
+
+
+def sapaan_pagi():
+    """Jadwal sapaan pagi dijalankan dari sini (SwiftBar punya izin folder Desktop; launchd tidak).
+    Senin–Jumat, mulai jam yang diatur sampai sebelum jam `sampai`, sekali per hari. Laptop tidur →
+    jalan saat bangun selama masih di rentang itu."""
+    c = sapaan_cfg(); now = datetime.datetime.now()
+    if not c["aktif"] or now.weekday() > 4 or (now.hour, now.minute) < (c["jam"], c["menit"]) or now.hour >= c["sampai"]:
+        return
+    tanda_hari = os.path.join(CFG, f"sapaan-{now:%Y-%m-%d}")
+    if os.path.exists(tanda_hari):
+        return
+    for f in os.listdir(CFG):            # bersihkan penanda hari lain
+        if f.startswith("sapaan-20") and f != os.path.basename(tanda_hari):
+            os.remove(os.path.join(CFG, f))
+    open(tanda_hari, "w").close()
+    subprocess.Popen(["bash", os.path.join(ROOT, "scripts/sapaan-pagi.sh")],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
+if "--sekali" in sys.argv:            # untuk uji: cetak satu kali lalu keluar
+    b, teks, badge = render(); print(judul(badge, cincin if b else None)); print("---"); print(teks); sys.exit(0)
+
+terakhir_tanda, terakhir_render, keluaran_lalu, cek_sapaan = None, 0, None, 0
 while True:
+    if time.time() - cek_sapaan > 60:
+        cek_sapaan = time.time()
+        try:
+            sapaan_pagi()
+        except Exception:
+            pass
     t = tanda()
     if t != terakhir_tanda or time.time() - terakhir_render > 30:
         bekerja, teks, badge = render(); terakhir_tanda, terakhir_render = t, time.time()
-    if bekerja and frames:
-        keluaran = judul(badge, frames[i % 8]) + "\n---\n" + teks; i += 1; jeda = 0.35
-    else:
-        keluaran = judul(badge) + "\n---\n" + teks; jeda = 1
-    if keluaran != keluaran_lalu:
-        sys.stdout.write("~~~\n" + keluaran + "\n"); sys.stdout.flush(); keluaran_lalu = keluaran
-    time.sleep(jeda)
+        keluaran = judul(badge, cincin if bekerja else None) + "\n---\n" + teks
+        if keluaran != keluaran_lalu:      # kirim hanya bila berubah: menu yang terbuka tidak berkedip
+            sys.stdout.write("~~~\n" + keluaran + "\n"); sys.stdout.flush(); keluaran_lalu = keluaran
+    time.sleep(1)

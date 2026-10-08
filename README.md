@@ -129,7 +129,8 @@ setiap kesimpulan dibuktikan, dan berhenti bila keputusan di luar wewenangnya.
 
 Senin–Jumat jam 08.00, clint memeriksa **semua project aktif** (punya `.claude/clint.json` dan dibuka di
 Claude Code 3 hari terakhir) dalam satu sesi, mode baca saja. Begitu siap, layar laporan terbuka,
-kalimat inti dibacakan, dan notifikasi muncul bersamaan. Laptop tidur → jalan saat bangun.
+kalimat inti dibacakan, dan notifikasi muncul bersamaan. Jadwalnya dijalankan oleh menu bar (SwiftBar),
+sekali per hari sebelum jam 13.00: laptop tidur jam 08.00 → jalan saat dibuka.
 
 - Butir dikelompokkan per tindakan: *Perlu perhatian*, *Perlu dikerjakan*, *Perlu Anda cek*,
   *Menunggu pihak lain*.
@@ -138,7 +139,7 @@ kalimat inti dibacakan, dan notifikasi muncul bersamaan. Laptop tidur → jalan 
   `docs.pic` di `.claude/clint.json` (mis. sprint tracker). Butir milik rekan cukup disebut jumlahnya.
 
 ```bash
-scripts/pasang-sapaan.sh 8 0          # jadwal Senin–Jumat 08.00
+scripts/pasang-sapaan.sh 8 0          # jadwal Senin–Jumat 08.00 (juga lewat menu bar → Pengaturan)
 scripts/pasang-sapaan.sh --cabut      # matikan
 scripts/sapaan-pagi.sh --uji          # uji layar + suara dengan data contoh
 scripts/proyek-aktif.sh 3             # project yang dianggap aktif
@@ -156,7 +157,7 @@ Ikon clint di menu bar Mac (lewat SwiftBar) menampilkan kondisi kerja sepanjang 
 | Ikon | Arti |
 |---|---|
 | angka | jumlah hal yang menunggu |
-| cincin berputar + label | agent sedang bekerja, mis. `PR-2/4` |
+| cincin oranye + label | agent sedang bekerja, mis. `PR-2/4` |
 | `✓` | semua aman |
 | `!` | ada yang gagal |
 
@@ -175,7 +176,7 @@ mkdir -p ~/.config/clint/swiftbar && ln -sf ~/Desktop/clint/swiftbar/clint.py ~/
 defaults write com.ameba.SwiftBar PluginDirectory -string "$HOME/.config/clint/swiftbar" && open -a SwiftBar
 ```
 
-Avatar dan animasi cincin (opsional): taruh gambar persegi di `~/.config/clint/avatar.jpg`, lalu
+Avatar dan ikon cincin (opsional): taruh gambar persegi di `~/.config/clint/avatar.jpg`, lalu
 `python3 scripts/buat-ikon.py` (butuh Pillow). Gambar pribadi ini sengaja tidak disimpan di repo.
 Setelah file plugin diubah, jalankan ulang SwiftBar.
 

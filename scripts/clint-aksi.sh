@@ -19,7 +19,8 @@ case "$1" in
   suara)  if [ -f "$cfg/diam" ]; then rm -f "$cfg/diam"; kabar "Suara aktif lagi."; else touch "$cfg/diam"; diam "Suara dimatikan. Kabar hanya lewat notifikasi."; fi ;;
   bisu)   date -v+1d +%F > "$cfg/bisu-sampai"; CLINT_PAKSA=1 diam "Dibisukan sampai besok pagi." ;;
   bunyikan) rm -f "$cfg/bisu-sampai"; kabar "Kabar dinyalakan lagi." ;;
-  sapaan) diam "Sapaan pagi Senin sampai Jumat jam 08.00. Ubah lewat scripts/pasang-sapaan.sh." ;;
+  sapaan-mati)  jq -n '{aktif:false}' > "$cfg/sapaan.json"; diam "Sapaan pagi dimatikan." ;;
+  sapaan-nyala) jq -n '{aktif:true}' > "$cfg/sapaan.json"; diam "Sapaan pagi dinyalakan, Senin sampai Jumat jam 08.00." ;;
   vscode) if [ -n "$2" ]; then open -a "Visual Studio Code" "$2"; else open -a "Visual Studio Code"; fi ;;
   buka)   open "$2" ;;
   selesai) python3 "$root/scripts/laporan-ubah.py" selesai "$2"; diam "Ditandai selesai." ;;
