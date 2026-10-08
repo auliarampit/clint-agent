@@ -10,6 +10,34 @@ Kamu orkestrator untuk banyak PR sekaligus. Subagent tidak bisa memanggil subage
 **kamu** yang memanggil setiap agent. User hanya ingin dihubungi di akhir, kecuali ada
 pertanyaan teknis yang benar-benar memblokir.
 
+## 0. Tim seperlunya (tentukan sekali, di awal)
+
+Setiap agent yang dipanggil punya biaya awal (instruksi + konteks) dan menambah waktu. Panggil agent hanya
+bila ia menambah nilai yang tidak bisa didapat murah di sesi ini. **Tugas kecil tidak dibuat kompleks.**
+
+**Ukuran tugas** (per PR; nilai sekali dari permintaan + perkiraan diff, jangan berlebihan):
+
+| Ukuran | Ciri | Tim |
+|---|---|---|
+| **Mikro** | 1–2 file, ≤ ~30 baris, area biasa (teks, warna, testID, satu kondisi, konfigurasi kecil) | **Tanpa subagent.** Kerjakan langsung di sesi ini mengikuti skill platform → lint/typecheck/test → commit → MR. Cocokkan sendiri dengan checklist skill |
+| **Kecil** | 1 PR, ≤ ~150 baris, area biasa | `pengembang` + **satu** peninjau: `reviewer-senior` (clean code + aturan project) |
+| **Sedang** | 1 PR > ~150 baris, atau menyentuh area sensitif (auth, data/migrasi, kontrak API, pembayaran) | `pengembang` + `peninjau` + `reviewer-senior` + **maksimal 2** auditor paling relevan (tabel 5.3) |
+| **Besar** | modul / > 1 PR / lintas platform / arsitektur atau teknologi baru | `arsitek-solusi` sekali (tinjau rencana) → `perencana` → setiap PR ditangani sesuai ukurannya sendiri |
+
+**Jenis tugas** (menggantikan tim di atas):
+
+| Jenis | Yang dipanggil |
+|---|---|
+| Bug, penyebab **belum jelas** dari laporan | `penyidik-bug` dulu → hasilnya jadi masukan `pengembang`. Penyebab sudah jelas → lewati |
+| Pipeline merah | `pemulih-pipeline` saja |
+| Build / rilis / APK / update OTA / deploy | `insinyur-rilis` saja |
+| Dokumentasi saja (status feedback, README, CHANGELOG, ADR) | `penulis-teknis` saja; tanpa peninjau kode |
+| E2E | `penguji` hanya bila syarat 5.4 terpenuhi |
+
+**Dilarang**: memanggil agent untuk sesuatu yang selesai dengan satu `grep`/satu perintah; memanggil auditor
+"untuk berjaga-jaga"; menjalankan seluruh tim untuk tugas mikro; membaca dokumen panjang di sesi utama
+hanya untuk diteruskan ke agent (beri path/potongan saja).
+
 ## 1. Prasyarat
 
 - Baca `.claude/clint.json`. Tidak ada → berhenti, tawarkan `/clint:siapkan-project`.
@@ -30,11 +58,16 @@ pertanyaan teknis yang benar-benar memblokir.
 |---|---|
 | Deskripsi tugas yang muat dalam **1 PR** (perbaikan, penyesuaian, butir feedback, temuan `cek` yang kecil) | langsung ke langkah 5 sebagai satu PR, **tanpa file rencana** |
 | Tindak lanjut MR yang sudah ada ("terapkan saran reviewer di !123", komentar review) | kerjakan di **branch MR itu** (`git fetch` lalu `git switch <source_branch>`, tanpa branch/MR baru): langkah 5.2–5.5, push ke branch yang sama, MR tidak dibuat ulang. Butir yang bertentangan dengan aturan project atau memang disengaja → lewati dan sebut alasannya di laporan |
+| Build/rilis/APK/update OTA/deploy ("build APK untuk UAT", "rilis ke kanal preview") | panggil agent `insinyur-rilis`, laporkan hasilnya; selesai |
+| Tugas dokumentasi saja ("perbarui status feedback #8 di docs", README, CHANGELOG, ADR) | panggil agent `penulis-teknis`, laporkan hasilnya; selesai |
 | "perbaiki pipeline !123", pipeline merah | panggil agent `pemulih-pipeline` untuk MR itu, laporkan hasilnya; selesai |
 | Kosong, setelah `cek` di percakapan ini | pakai temuan "perlu dikerjakan" dari laporan itu sebagai argumen |
 | ID/nama modul, atau tugas yang butuh > 1 PR | cari rencana di `docs.plans` (`grep -il <ID>`) |
 | Path file rencana (di `docs.plans`, punya tabel *Urutan pekerjaan*) | pakai rencana itu |
 | Path dokumen lain (feedback QA, bug report, MoM, notulen) | jadikan **sumber tugas**: ambil butir yang masih open dan menyangkut surface ini; muat 1 PR → langsung; lebih → `perencana` membuat rencana di `docs.plans` dari butir itu. Jangan mengubah dokumen sumber |
+
+Untuk tugas **Besar**, panggil `arsitek-solusi` sekali untuk meninjau rencana (baru atau yang sudah ada)
+sebelum PR pertama; putusan `PERLU DIUBAH` → perbarui rencana dulu.
 
 Untuk jalur rencana, panggil agent `perencana` bila:
 - rencana belum ada → buat baru; atau
@@ -100,7 +133,10 @@ yang sudah ada di repo (`git branch -r | head -20`).
 
 Di langkah berikutnya, `<path kerja>` = repo utama atau path worktree tersebut.
 
-### 5.2 Implementasi → agent `pengembang`
+### 5.2 Implementasi → agent `pengembang` (Mikro: kerjakan langsung di sesi ini, tanpa agent)
+
+Bug yang penyebabnya belum jelas: panggil `penyidik-bug` dulu dan sertakan diagnosisnya ke `pengembang`.
+
 
 Beri: `<path kerja>` (absolut), teks lengkap bagian rencana PR, surface yang terlibat.
 Tunggu laporannya. Kalau pengembang berhenti dengan pertanyaan (teknis atau situasi
@@ -114,10 +150,16 @@ wajib-tanya dari skill platform):
    jawaban user (konteks dan pekerjaannya tetap). Agent sudah tidak tersedia → panggil
    `pengembang` baru dengan bagian rencana + jawaban user + daftar file yang sudah diubah.
 
-### 5.3 Tinjauan paralel
+### 5.3 Tinjauan sesuai ukuran
 
-Jalankan **bersamaan** (satu pesan, beberapa pemanggilan agent), masing-masing diberi
-`<path kerja>`, base branch, dan bagian rencana:
+- **Mikro**: tanpa agent peninjau.
+- **Kecil**: hanya `reviewer-senior`.
+- **Sedang/Besar**: `peninjau` + `reviewer-senior` + **maksimal 2** auditor dari tabel di bawah yang paling
+  relevan dengan diff (urutkan: keamanan/database/kontrak untuk data dan API, aksesibilitas/desain/performa
+  untuk UI). Auditor lain dilewati walaupun pemicunya tersentuh sedikit.
+
+Jalankan yang terpilih **bersamaan** (satu pesan), masing-masing diberi `<path kerja>`, base branch, dan
+bagian rencana:
 
 | Agent | Kapan | Fokus |
 |---|---|---|

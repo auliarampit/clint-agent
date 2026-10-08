@@ -2,7 +2,7 @@
 
 ![clint — tim agent Claude Code yang mengerjakan tiket sampai jadi MR](docs/gambar/sampul.png)
 
-**clint** adalah plugin Claude Code berisi 14 agent senior yang bekerja sebagai satu tim: membaca
+**clint** adalah plugin Claude Code berisi 18 agent senior yang bekerja sebagai satu tim: membaca
 dokumen, merencanakan, menulis kode, meninjau berlapis, menguji, sampai membuat MR. Dipasang sekali,
 berlaku di semua project. Anda cukup **review dan merge**.
 
@@ -86,6 +86,19 @@ rekan   /clint:tinjau !123
 
 ## Cara kerja `jalankan`
 
+**Tim seperlunya.** Di awal, `jalankan` menilai ukuran dan jenis tugas sekali, lalu hanya memanggil agent
+yang menambah nilai. Tugas kecil tidak dibuat kompleks:
+
+| Ukuran | Ciri | Tim |
+|---|---|---|
+| Mikro | 1–2 file, ≤ ~30 baris, area biasa | tanpa subagent; dikerjakan langsung, lalu lint/test dan MR |
+| Kecil | 1 PR, ≤ ~150 baris | `pengembang` + `reviewer-senior` |
+| Sedang | PR besar atau area sensitif | + `peninjau` + maksimal 2 auditor paling relevan |
+| Besar | modul, > 1 PR, lintas platform | `arsitek-solusi` sekali → `perencana` → tiap PR sesuai ukurannya |
+
+Jenis tugas khusus memanggil satu spesialis saja: bug yang penyebabnya belum jelas → `penyidik-bug` dulu;
+build/rilis → `insinyur-rilis`; dokumentasi → `penulis-teknis`; pipeline merah → `pemulih-pipeline`.
+
 ![Alur /clint:jalankan](docs/gambar/alur-jalankan.png)
 
 - **Tarik terbaru dulu**: `dev`, docs, dan design, supaya rencana dan kode memakai acuan terbaru.
@@ -102,7 +115,7 @@ rekan   /clint:tinjau !123
 
 ## Tim agent
 
-![14 agent senior](docs/gambar/tim-agent.png)
+![18 agent senior](docs/gambar/tim-agent.png)
 
 | Kelompok | Agent | Peran | Model |
 |---|---|---|---|
@@ -110,6 +123,10 @@ rekan   /clint:tinjau !123
 | | `pengembang` | menulis kode, lint, typecheck, test | Opus |
 | | `penguji` | E2E happy path + error path (mobile, web, API) | Sonnet |
 | | `pemulih-pipeline` | memperbaiki CI yang gagal dari penyebabnya | Opus |
+| | `penyidik-bug` | akar masalah bug sebelum diperbaiki (hanya bila penyebab belum jelas) | Opus |
+| | `insinyur-rilis` | build, APK/IPA untuk UAT, update OTA, versi, changelog, kesiapan deploy | Sonnet |
+| | `penulis-teknis` | status feedback/bug di docs, README, CHANGELOG, ADR | Sonnet |
+| **Arsitektur** (tugas Besar saja) | `arsitek-solusi` | tinjau rencana modul besar, keputusan lintas platform, ADR | Opus |
 | **Tinjauan inti** (setiap PR) | `peninjau` | sesuai rencana, dokumen, dan aturan project? | Sonnet |
 | | `reviewer-senior` | clean code dan clean architecture | Opus |
 | **Tinjauan spesialis** (bila diff relevan) | `auditor-keamanan` | OWASP Mobile Top 10 + MASVS, Top 10 web, API Security Top 10 | Opus |
@@ -294,7 +311,7 @@ Konfigurasi pribadi (tidak di repo mana pun):
 ```
 clint/
   README.md
-  agents/            14 agent
+  agents/            18 agent
   skills/            cek · jalankan · tinjau · siapkan-project
   hooks/             prinsip kerja, format, tinjau otomatis, kabar, status sesi
   scripts/           sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
@@ -327,3 +344,4 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 2 | web: skill inti + referensi (aksesibilitas, performa, keamanan, pola UI), aturan E2E, adapter; auditor aksesibilitas dan performa | selesai |
 | 3 | backend: skill inti + referensi (kontrak API, data & migrasi, keamanan API, keandalan), aturan test, adapter; auditor database dan kontrak API | selesai |
 | 4 | sweeping token: skrip pengumpul untuk pemantau, aturan gambar untuk penguji | selesai |
+| 5 | tim lengkap 18 agent (penyidik bug, insinyur rilis, penulis teknis, arsitek solusi) + aturan tim seperlunya | selesai |

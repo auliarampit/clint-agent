@@ -14,7 +14,14 @@ argument-hint: [branch | !nomor-MR] [--saja]
 - **Mode hanya-tinjau** bila argumen `--saja`, atau MR milik orang lain
   (`glab mr view` / `gh pr view` → author bukan user). Mode ini tidak mengubah apa pun.
 
-## 2. Tinjauan paralel
+## 2. Tinjauan sesuai ukuran diff (hemat token)
+
+- ≤ ~30 baris di area biasa: **tanpa agent**; periksa sendiri dengan checklist skill platform.
+- ≤ ~150 baris di area biasa: hanya `reviewer-senior`.
+- Lebih besar, atau menyentuh auth/data/migrasi/kontrak/pembayaran: daftar di bawah, dengan **maksimal 2**
+  auditor yang paling relevan. Review MR orang lain (`--saja`) boleh memakai daftar lengkap yang relevan.
+
+## 2b. Tinjauan paralel
 
 Jalankan bersamaan, dalam satu pesan:
 

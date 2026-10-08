@@ -64,7 +64,7 @@ GAMBAR.append(halaman("sampul", """
   </div>
  </div>
 </div>
-<div class="foot"><span>14 agent senior · mobile, web & backend · menu bar & suara tanpa token</span><span>github.com/auliarampit/clint-agent</span></div>
+<div class="foot"><span>18 agent senior · mobile, web & backend · menu bar & suara tanpa token</span><span>github.com/auliarampit/clint-agent</span></div>
 """, css="""
 .cmd{font:500 15px var(--fm);padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--muted)}
 .cmd.hl{border-color:var(--dawn);color:var(--dawn2);background:var(--dawn-soft)}
@@ -125,17 +125,21 @@ agen = [("perencana", "Memecah modul jadi rencana per PR dari PRD, SAD, STD, API
         ("auditor-performa", "Core Web Vitals, bundle, render", "sonnet"),
         ("auditor-database", "Migrasi aman, integritas, indeks, N+1", "opus"),
         ("auditor-kontrak-api", "Implementasi vs API contract", "sonnet"),
+        ("penyidik-bug", "Akar masalah bug sebelum diperbaiki", "opus"),
+        ("insinyur-rilis", "Build, APK/OTA, versi, changelog, deploy", "sonnet"),
+        ("penulis-teknis", "Docs, status feedback, CHANGELOG, ADR", "sonnet"),
+        ("arsitek-solusi", "Rencana modul besar, keputusan lintas platform", "opus"),
         ("penjaga", "MR, pipeline, branch, worktree, disk", "haiku")]
 kartu = "".join(f'<div class="ag card"><div class="t"><b>{n}</b><span class="pill {m}">{m.capitalize()}</span></div><p>{d}</p></div>' for n, d, m in agen)
 GAMBAR.append(halaman("tim-agent", f"""
 <div class="eyebrow">Tim di balik layar</div>
-<h2>14 agent senior, dipanggil otomatis</h2>
-<p class="sub">Anda tidak memanggil agent. Perintah clint yang menugaskan mereka, dengan model yang sesuai bebannya.</p>
+<h2>18 agent senior, dipanggil seperlunya</h2>
+<p class="sub">Anda tidak memanggil agent. clint memilih yang dibutuhkan sesuai ukuran tugas; tugas mikro tanpa agent sama sekali.</p>
 <div class="grid">{kartu}</div>
 <div class="legend"><span><span class="pill opus">Opus</span> menulis dan menilai kode</span><span><span class="pill sonnet">Sonnet</span> membaca, meninjau, menguji</span><span><span class="pill haiku">Haiku</span> mengumpulkan status</span></div>
-""", css=""".legend{display:flex;gap:28px;margin-top:26px;color:var(--muted);font-size:15px}.legend .pill{margin-right:8px}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:30px}
-.ag{padding:14px;display:grid;gap:8px;align-content:start;min-height:150px}
+""", w=1280, h=800, css=""".legend{display:flex;gap:28px;margin-top:26px;color:var(--muted);font-size:15px}.legend .pill{margin-right:8px}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:24px}
+.ag{padding:12px 14px;display:grid;gap:6px;align-content:start;min-height:118px}
 .ag .t{display:flex;flex-direction:column;gap:7px;align-items:flex-start}.ag b{font:700 14px var(--fd);overflow-wrap:anywhere}
 .ag p{color:var(--muted);font-size:13px;line-height:1.4}
 """))
