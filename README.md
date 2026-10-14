@@ -115,7 +115,11 @@ build/rilis → `insinyur-rilis`; dokumentasi → `penulis-teknis`; pipeline mer
   jalan bersamaan. Perubahan Anda yang belum di-commit tidak pernah disentuh.
 - **Tinjauan paralel** setelah kode ditulis; temuan wajib dikirim balik ke pengembang, maksimal 2
   putaran. Masih gagal → berhenti tanpa MR, perubahan disimpan sebagai commit `wip` lokal.
-- **E2E** dijalankan bila rencana memintanya atau bila perubahan terlihat pengguna.
+- **E2E** dijalankan bila rencana memintanya atau bila perubahan terlihat pengguna. Project Expo dengan
+  **Pratinjau E2E** di adapter menguji sebelum MR lewat EAS Update ke channel khusus simulator (tanpa
+  build native lokal, QA tidak ikut menerima). Status E2E wajib tertulis (lulus / tidak perlu /
+  tertunda); **tertunda → MR dibuat Draft** (mode `push-base`: tidak di-push ke base) dan muncul di
+  `cek` sampai `/clint:jalankan e2e !<n>` lulus.
 - **Saran tinjauan langsung diterapkan**: saran di kode yang diubah PR ikut diperbaiki pengembang, lewat
   lint/test dan tinjauan ulang, lalu di-commit terpisah (`refactor: terapkan saran tinjauan`) supaya mudah
   diperiksa dan di-revert. Saran luar cakupan masuk deskripsi MR dengan tautan file#baris dan diff

@@ -26,6 +26,8 @@ komentar, branch tertinggal, worktree, dan disk. Langkah di bawah hanya untuk ri
 ## Keluaran (maks 15 baris)
 
 - **Perlu tindakan**: MR dengan pipeline gagal atau komentar baru, paling mendesak dulu.
+  MR **Draft** juga masuk sini (biasanya E2E tertunda): sebut alasannya dari deskripsi dan
+  perintah lanjutannya, mis. `/clint:jalankan e2e !<n>`.
 - **Menunggu**: MR yang menunggu review/merge.
 - **Bersih-bersih**: worktree/branch yang aman dihapus + perintahnya.
 - **Disk**: sisa ruang; beri peringatan kalau < 10 GB.

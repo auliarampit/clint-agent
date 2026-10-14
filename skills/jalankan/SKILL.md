@@ -205,7 +205,19 @@ dan sebut alasannya di laporan. Perangkat/simulator tidak tersedia → laporkan 
 jangan dianggap lulus.
 
 Beri: `<path kerja>`, fitur, sumber test case. Flow gagal karena bug produk → kembali ke
-langkah 5.2 dengan temuan itu (dihitung dalam batas 2 putaran).
+langkah 5.2 dengan temuan itu (dihitung dalam batas 2 putaran). Adapter mengisi **Pratinjau
+E2E** → `penguji` menguji lewat EAS Update ke channel khusus simulator, bukan build lokal; satu
+channel E2E dipakai satu PR pada satu waktu, jadi E2E antar-PR dijalankan berurutan.
+
+**Status E2E wajib tertulis** untuk setiap PR: `lulus`, `tidak perlu — <alasan>`, atau
+`tertunda — <alasan + langkah>`. Tidak boleh kosong. **Gerbang siap-dev:** status `tertunda`
+berarti PR belum siap masuk base branch:
+- mode `"mr"` → MR dibuat sebagai **Draft** (`glab mr create --draft` / `gh pr create --draft`),
+  deskripsi memuat `E2E: tertunda — <alasan>` dan langkahnya;
+- mode `"push-base"` → jangan push ke base branch; push ke branch PR itu saja dan laporkan.
+Lanjutannya `/clint:jalankan e2e !<n>`: jalankan 5.4 di branch MR itu; lulus → perbarui deskripsi
+dan tandai siap (`glab mr update <n> --ready` / `gh pr ready <n>`), atau push ke base untuk
+`push-base`.
 
 ### 5.5 Commit, push, MR
 

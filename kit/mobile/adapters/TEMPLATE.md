@@ -201,6 +201,23 @@ flow pertama dan mengusulkan baris baru bila menemukan jebakan lain.
 |---|---|
 | `{mis. login gagal diam-diam di simulator}` | `{mis. jalankan bundler dengan env API yang benar}` |
 
+**Pratinjau E2E** (Expo + EAS Update) — menguji perubahan **sebelum MR** di simulator tanpa build
+native lokal (berat di disk) dan tanpa mengirim apa pun ke QA. Simulator memakai build khusus
+dengan channel yang **tidak dipakai build QA**; update di-publish ke branch EAS per fitur lalu
+channel itu diarahkan ke sana. Bukan Expo / tidak ada → `TIDAK ADA` (penguji memakai cara lama).
+
+| Hal | Nilai |
+|---|---|
+| Profil build simulator | `{mis. e2e-simulator (extends preview-simulator, channel e2e) / TIDAK ADA}` |
+| Channel E2E (tidak dipakai QA) | `{mis. e2e}` |
+| Channel QA (dilarang di-publish dari sini) | `{mis. preview}` |
+| Publish update | `{mis. bunx eas-cli@X update --branch e2e-<fitur> --platform ios --environment <env> --message "<judul>"}` |
+| Arahkan channel | `{mis. bunx eas-cli@X channel:edit e2e --branch e2e-<fitur>}` |
+| Cek fingerprint | `{mis. fingerprint lokal vs runtime build terakhir profil itu; beda = perlu build ulang}` |
+| Muat di simulator | `{mis. launch → tunggu unduhan → terminate → launch lagi (update dipakai di cold start kedua)}` |
+| Bersihkan | `{mis. bunx eas-cli@X branch:delete e2e-<fitur> setelah MR merge}` |
+| Persiapan sekali | `{mis. channel:create e2e + build profil simulator (kuota EAS) + pasang di simulator}` |
+
 ## 12. Dokumen & proses
 
 Verifikasi: `ls docs/ apps/docs/ 2>/dev/null`

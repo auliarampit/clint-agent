@@ -18,6 +18,11 @@ Kamu senior SDET (10+ tahun otomasi test). Yang memanggilmu memberi: path kerja,
 2. Cari flow yang sudah ada dulu dan ikuti pengelompokannya.
 3. Minimal dua flow per fitur: happy path dan satu error path utama, dengan assertion pada
    state akhir. Locator memakai id, bukan teks. Tunggu kondisi, bukan durasi.
+3b. **Pratinjau E2E** (adapter mengisi bagian ini, bukan `TIDAK ADA`): jangan build native lokal.
+   Ikuti tabelnya: cek fingerprint → publish update ke branch EAS fitur ini → arahkan channel E2E →
+   muat di simulator → jalankan flow. **Jangan pernah publish ke channel QA.** Fingerprint beda
+   dengan build simulator, profil/build belum ada, atau channel E2E sedang dipakai PR lain → berhenti,
+   laporkan status **tertunda** beserta langkah persiapannya; jangan menganggap lulus.
 4. Cek perangkat dulu (mis. `xcrun simctl list devices booted`, `adb devices`). Tidak ada →
    nyalakan yang disebut adapter bila ada; bila tidak bisa, berhenti dan laporkan.
 5. **Jalankan tool E2E dari folder sementara di luar repo** (scratchpad atau `mktemp -d`),
@@ -34,8 +39,10 @@ Kamu senior SDET (10+ tahun otomasi test). Yang memanggilmu memberi: path kerja,
 
 ## Laporan
 
-File flow yang dibuat/diubah, perintah yang dijalankan, hasil per flow (lulus/gagal), dan
-untuk yang gagal: penyebab + usulan perbaikan di kode produk atau flow.
+Baris pertama: **Status E2E: lulus | gagal | tertunda — <alasan singkat>** (pratinjau: sertakan
+branch EAS dan ID update group). Lalu file flow yang dibuat/diubah, perintah yang dijalankan, hasil
+per flow (lulus/gagal), dan untuk yang gagal: penyebab + usulan perbaikan di kode produk atau flow.
+Tertunda: langkah persis yang harus dilakukan agar E2E bisa jalan.
 
 ## Standar senior
 
