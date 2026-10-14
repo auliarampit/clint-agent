@@ -46,7 +46,8 @@ Input dari kamu ke setiap peninjau (hemat token):
 ## 3. Perbaiki otomatis (kecuali mode hanya-tinjau)
 
 - Kumpulkan temuan **wajib**: PERLU PERBAIKAN (termasuk dari `reviewer-senior`), ADA CELAH
-  tingkat Sedang ke atas, dan selisih desain.
+  tingkat Sedang ke atas, dan selisih desain; ditambah temuan **Saran/Rendah** di kode yang berubah
+  (kecuali yang ditandai luar cakupan atau bertentangan dengan aturan project).
 - Kirim semuanya dalam satu daftar ke agent `pengembang` untuk diperbaiki di tempat yang sama
   (repo utama; worktree hanya bila working tree user sedang dipakai untuk hal lain). Jangan commit.
 - Tinjau ulang **hanya** dengan peninjau yang tadi memberi temuan. Maksimal 2 putaran.

@@ -6,12 +6,14 @@
   cuplikan kode sekarang, usulan dalam bentuk diff, alasan, dan agent sumbernya.
 
 Pakai (dari dalam repo project):
-  saran-mr.py <nomor MR/PR> <saran.json> [--uji]
+  saran-mr.py <nomor MR/PR> <saran.json> [--uji] [--deskripsi]
 saran.json: [{"path":"src/a.ts","line":42,"sekarang":"kode lama (1..n baris)","usulan":"kode baru",
               "alasan":"kenapa","agent":"reviewer-senior","lintas":false}]
   "lintas": true = perbaikan butuh perubahan di luar baris itu (mis. konstanta baru) → tidak dijadikan
   suggestion (Apply akan merusak build), masuk ke deskripsi saja.
 --uji: tampilkan apa yang akan diposting, tanpa mengirim apa pun.
+--deskripsi: tanpa komentar suggestion; semua saran dicetak sebagai blok deskripsi (dipakai jalankan untuk
+  saran luar cakupan, karena saran di kode PR sudah diterapkan sebelum MR).
 """
 import json, re, subprocess, sys
 
@@ -39,6 +41,7 @@ def main():
     if len(sys.argv) < 3:
         print(__doc__); sys.exit(1)
     nomor, berkas, uji = sys.argv[1].lstrip("!#"), sys.argv[2], "--uji" in sys.argv
+    hanya_deskripsi = "--deskripsi" in sys.argv
     saran = json.load(open(berkas, encoding="utf-8"))
     github = "github.com" in sh("git", "remote", "get-url", "origin").stdout
 
@@ -59,7 +62,7 @@ def main():
     for s in saran:
         path, line = s["path"], int(s["line"])
         n = max(1, len((s.get("sekarang") or "").rstrip("\n").splitlines()))
-        if not s.get("lintas") and line in baris_berubah(base, head, path):
+        if not hanya_deskripsi and not s.get("lintas") and line in baris_berubah(base, head, path):
             body = blok_saran(s, n)
             if github:
                 args = ["gh", "api", f"repos/{{owner}}/{{repo}}/pulls/{nomor}/comments", "-f", f"body={body}",

@@ -181,11 +181,17 @@ Input dari orkestrator ke setiap peninjau (hemat token):
   memverifikasi temuan itu saja, bukan meninjau dari awal.
 
 Gabungkan temuan yang bersifat wajib (PERLU PERBAIKAN, ADA CELAH tingkat Sedang ke atas,
-selisih desain) dan kirim kembali ke `pengembang` dalam satu daftar (SendMessage ke agent yang
-sama bila masih ada). Setelah diperbaiki, jalankan ulang **hanya** peninjau yang tadinya
+selisih desain) **dan temuan Saran/Rendah di kode yang diubah PR** (kecuali yang ditandai luar
+cakupan), lalu kirim kembali ke `pengembang` dalam satu daftar (SendMessage ke agent yang
+sama bila masih ada). Butir saran yang bertentangan dengan aturan project → lewati dan sebut
+alasannya. Setelah diperbaiki, jalankan ulang **hanya** peninjau yang tadinya
 memberi temuan. **Maksimal 2 putaran perbaikan.** Masih ada temuan wajib setelah itu →
-berhenti, laporkan ke user, jangan buat MR. Temuan berlabel Saran/Rendah dicantumkan di
-deskripsi MR, tidak menahan alur.
+berhenti, laporkan ke user, jangan buat MR. Saran tidak pernah menahan alur: saran yang masih
+tersisa setelah batas putaran, dan saran luar cakupan, dicantumkan di deskripsi MR.
+
+Hasil perbaikan saran di-commit **terpisah** dari commit utama (mis. `refactor: terapkan saran
+tinjauan`, ikuti gaya commit repo) supaya mudah diperiksa di tab Commits MR dan bisa di-revert
+sendiri. Bila perbaikan wajib dan saran menyentuh baris yang sama, satukan di commit utama.
 
 ### 5.4 E2E → agent `penguji`
 
@@ -219,7 +225,7 @@ Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
   jangan force, dan minta user menjalankan `git push origin <baseBranch>` di laporan.
 - Tugas besar (> 1 PR) atau menyentuh pekerjaan orang lain → konfirmasi ke user sekali sebelum
   push pertama.
-- Lewati langkah MR di bawah; temuan Saran/Rendah masuk laporan akhir. Di 5.6 hapus branch
+- Lewati langkah MR di bawah; saran yang tidak diterapkan masuk laporan akhir. Di 5.6 hapus branch
   lokal PR setelah push.
 
 **`"mr"`**:
@@ -227,13 +233,14 @@ Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
 - Buat MR ke `mr.targetBranch` dengan `mr.cli` (`glab mr create` / `gh pr create`). Deskripsi:
   ringkasan, requirement yang dipenuhi (ID), cara verifikasi, hasil lint/typecheck/test/E2E,
   dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola.
-- **Saran tinjauan yang tidak diterapkan** (temuan berlabel saran/rendah) dipasang supaya user bisa
-  memvalidasi kodenya: tulis ke file sementara sebagai JSON
+- **Saran tinjauan yang tidak diterapkan** (luar cakupan, atau tersisa setelah batas putaran) dicatat
+  supaya user bisa memvalidasinya: tulis ke file sementara sebagai JSON
   `[{"path","line","sekarang","usulan","alasan","agent"}]`, lalu setelah MR dibuat jalankan dari repo:
-  `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); python3 "$R/scripts/saran-mr.py" <nomor MR> <file.json>`
-  Saran pada baris yang berubah menjadi komentar *suggestion* di baris itu; sisanya dicetak sebagai blok
-  "Saran tinjauan" yang ditempel ke deskripsi MR (`glab mr update <n> --description` / `gh pr edit`).
-  Mode `push-base` (tanpa MR): cetak blok itu di laporan akhir.
+  `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); python3 "$R/scripts/saran-mr.py" <nomor MR> <file.json> --deskripsi`
+  Hasilnya blok "Saran tinjauan" (tautan file#baris + diff) yang ditempel ke deskripsi MR
+  (`glab mr update <n> --description` / `gh pr edit`). Tanpa komentar *suggestion*: Apply di MR membuat
+  commit per saran, saling bentrok, dan tidak melewati lint/test. Menerapkannya nanti:
+  `/clint:jalankan terapkan saran di !<n>`. Mode `push-base` (tanpa MR): cetak blok itu di laporan akhir.
 - **Verifikasi MR benar-benar ada** (`glab mr view` / `gh pr view`). CLI bisa gagal diam-diam
   (mis. 403). Kalau gagal, berikan user tautan "create merge request" dari keluaran push.
 - **Wajib, tanpa token:** bila PR berasal dari butir laporan `cek`, pindahkan butir itu ke "menunggu

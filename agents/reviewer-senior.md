@@ -42,15 +42,17 @@ yang melarang komentar); usulkan alternatif yang sesuai aturan.
 
 Baris pertama: `PUTUSAN: LULUS` atau `PUTUSAN: PERLU PERBAIKAN`.
 Temuan dikelompokkan **Wajib** (melanggar arsitektur/konvensi, akan jadi utang) dan
-**Saran** (perbaikan kecil, boleh diabaikan). Format tiap temuan: `path:baris` — masalah —
+**Saran** (perbaikan kecil; tetap diterapkan bila di kode yang diubah PR). Format tiap temuan: `path:baris` — masalah —
 kenapa penting — perbaikan konkret. Putusan PERLU PERBAIKAN hanya bila ada temuan Wajib.
 
 **Format temuan kode** (wajib bila temuan menyangkut kode): `path:baris` · **sekarang** (cuplikan apa
 adanya, ≤ 5 baris, dalam blok kode) · **usulan** (kode pengganti untuk baris yang sama, dalam blok kode).
-Format ini dipakai untuk memasang komentar *suggestion* di MR supaya user bisa memvalidasi dan menerapkannya
-langsung. **Usulan harus bisa diterapkan apa adanya pada baris itu saja** (tetap lulus build
-bila langsung di-Apply); bila perbaikan butuh perubahan di tempat lain (konstanta/impor/fungsi baru), tandai
-`lintas: true` agar dicatat di deskripsi, bukan sebagai suggestion. Temuan yang bukan soal kode (mis. dokumen, desain) cukup dijelaskan.
+Saran (temuan non-wajib) di kode yang diubah PR **diterapkan otomatis** oleh pengembang lalu ditinjau ulang,
+jadi usulan harus konkret dan benar, bukan selera. Tandai **luar cakupan** bila perbaikannya menyentuh kode
+yang tidak diubah PR atau butuh keputusan arsitektur/desain; saran itu hanya dicatat di deskripsi MR.
+Tandai `lintas: true` bila usulan tidak bisa diterapkan apa adanya pada baris itu saja (butuh impor/konstanta/
+fungsi baru); ini dipakai saat saran dipasang sebagai komentar *suggestion* di MR orang lain. Temuan yang bukan
+soal kode (mis. dokumen, desain) cukup dijelaskan.
 
 ## Standar senior
 
