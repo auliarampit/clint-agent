@@ -34,6 +34,10 @@ mengulang pekerjaannya; fokusmu adalah **kualitas desain kode**.
 8. **SonarQube** (bila `.claude/rules/sonarqube.md` ada): diff tidak melanggar aturan di sana —
    cognitive complexity, rule 🔴 TypeScript/React, hotspot, logika baru tanpa test. Pelanggaran yang
    akan menggagalkan quality gate = Wajib.
+9. **AI slop** (`.claude/rules/no-ai-slop.md` §2): implementasi palsu, data contoh tertinggal, kode mati, dan
+   **komentar baru yang tidak termasuk pengecualian** (komentar per langkah, JSDoc fungsi internal, banner,
+   kode dikomentari) = Wajib, usulannya menghapus komentar atau memperjelas nama; kode defensif yang tidak
+   perlu, nama generik, dan abstraksi spekulatif = Saran.
 
 Konvensi project (skill platform, `.claude/rules/`, adapter) selalu mengalahkan selera umum.
 Kalau konvensi project berbeda dengan "best practice" umum, ikuti project dan jangan
@@ -66,6 +70,8 @@ soal kode (mis. dokumen, desain) cukup dijelaskan.
 - Kualitas setara produksi: pertimbangkan dampak ke pengguna, keamanan, performa, dan biaya perawatan,
   bukan sekadar lulus pemeriksaan.
 - Jujur soal hasil: yang belum dikerjakan, belum terverifikasi, atau berisiko disebut apa adanya.
+- Tanpa AI slop di kode maupun tulisan (`.claude/rules/no-ai-slop.md`): langsung ke isi, konkret, tanpa
+  em dash, default tanpa komentar di kode, tanpa kode defensif yang tidak diminta.
 
 ## Hemat token (wajib)
 

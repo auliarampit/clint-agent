@@ -3,7 +3,7 @@
 
 - Saran pada baris yang berubah di MR → komentar *suggestion* di baris itu (bisa "Apply suggestion").
 - Saran lain → bagian "Saran tinjauan" untuk deskripsi MR (dicetak ke stdout): tautan file#baris,
-  cuplikan kode sekarang, usulan dalam bentuk diff, alasan, dan agent sumbernya.
+  cuplikan kode sekarang, usulan dalam bentuk diff, dan alasannya.
 
 Pakai (dari dalam repo project):
   mr-suggestions.py <nomor MR/PR> <saran.json> [--uji] [--deskripsi]
@@ -33,7 +33,7 @@ def baris_berubah(base, head, path):
 
 
 def blok_saran(s, n):
-    return (f"**Saran {s.get('agent', 'reviewer')}:** {s.get('alasan', '')}\n\n"
+    return (f"**Saran:** {s.get('alasan', '')}\n\n"
             f"```suggestion:-0+{n - 1}\n{s.get('usulan', '').rstrip()}\n```")
 
 
@@ -87,12 +87,12 @@ def main():
                 continue
         diff = "\n".join(["-" + x for x in (s.get("sekarang") or "").rstrip("\n").splitlines()] +
                          ["+" + x for x in (s.get("usulan") or "").rstrip("\n").splitlines()])
-        deskripsi.append(f"- **[{path}:{line}]({blob(path, line)})** — {s.get('alasan', '')} "
-                         f"_({s.get('agent', 'reviewer')})_\n\n  ```diff\n  " + diff.replace("\n", "\n  ") + "\n  ```")
+        deskripsi.append(f"- **[{path}:{line}]({blob(path, line)})**: {s.get('alasan', '')}"
+                         f"\n\n  ```diff\n  " + diff.replace("\n", "\n  ") + "\n  ```")
 
     print(f"{terpasang} saran dipasang di baris kode; {len(deskripsi)} saran untuk deskripsi.", file=sys.stderr)
     if deskripsi:
-        print("<details>\n<summary>Saran tinjauan (tidak menahan MR) — " + str(len(deskripsi)) +
+        print("<details>\n<summary>Saran tinjauan (tidak menahan MR): " + str(len(deskripsi)) +
               "</summary>\n\n" + "\n\n".join(deskripsi) + "\n\n</details>")
 
 

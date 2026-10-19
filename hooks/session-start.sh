@@ -12,6 +12,7 @@ fi
 # Project yang sudah menyalin prinsip kerja ke .claude/rules/ memuatnya sendiri; jangan dobel.
 ctx=""
 [ -f "$DIR/.claude/rules/working-principles.md" ] || ctx="$(cat "$ROOT/kit/working-principles.md")"
+[ -f "$DIR/.claude/rules/no-ai-slop.md" ] || ctx+=$'\n\n'"$(cat "$ROOT/kit/no-ai-slop.md")"
 
 lang="$(jq -r '.language // "en"' "$CFG/user.json" 2>/dev/null)"; [ -n "$lang" ] || lang="en"
 [ "$lang" = "id" ] && nama="Bahasa Indonesia" || nama="English"

@@ -10,6 +10,7 @@ Master ada di `${CLAUDE_PLUGIN_ROOT}/kit/`:
 
 ```
 kit/working-principles.md         → .claude/rules/working-principles.md
+kit/no-ai-slop.md                 → .claude/rules/no-ai-slop.md       (selalu)
 kit/sonarqube.md                  → .claude/rules/sonarqube.md       (bila project memakai SonarQube)
 kit/clint.TEMPLATE.json           → .claude/clint.json              (diisi)
 kit/mobile/SKILL.md               → .claude/skills/skill-mobile/SKILL.md
@@ -69,8 +70,8 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    `relatedRepos`: repo git lain di folder induk yang menjadi sumber kerja (mis. `docs`,
    `designs`, `api`); cek dengan `ls ..` lalu `git -C ../<nama> rev-parse` dan tanyakan perannya
    bila tidak jelas dari nama. Monorepo tanpa repo pendamping → `[]`.
-6. Tambahkan rujukan ke `CLAUDE.md` project (buat kalau belum ada): prinsip kerja, skill
-   platform, adapter, dan `sonarqube.md` bila disalin.
+6. Tambahkan rujukan ke `CLAUDE.md` project (buat kalau belum ada): prinsip kerja, `no-ai-slop.md`,
+   skill platform, adapter, dan `sonarqube.md` bila disalin.
 7. Belum ada `~/.config/clint/user.json` → tanya bahasa pribadi user sekali (English / Bahasa
    Indonesia) dan tulis `{"name": [], "language": "<en|id>"}`.
 8. Tampilkan ringkasan file yang dibuat. **Jangan commit**; user yang memutuskan.
@@ -99,7 +100,7 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
 3. Bandingkan setiap file salinan di project dengan masternya (`diff`). Laporkan yang berbeda.
    Perbedaan di project bisa jadi perbaikan yang belum naik ke master. Tanya per file: tarik
    dari master, naikkan ke master, atau biarkan.
-4. File master yang belum ada di project (mis. `sonarqube.md`, field `docs.language`, `ciOnMr`,
+4. File master yang belum ada di project (mis. `sonarqube.md`, `no-ai-slop.md`, field `docs.language`, `ciOnMr`,
    `surfaces[].testRelated`) → tawarkan
    untuk ditambahkan.
 

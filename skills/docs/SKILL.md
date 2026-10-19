@@ -1,6 +1,6 @@
 ---
 name: docs
-description: Pekerjaan dokumen tanpa mengubah kode — memperbarui status butir feedback/bug di dokumen QA, README, CHANGELOG, ADR, catatan rencana, dan dokumentasi API agar sinkron dengan kode dan keputusan. Pakai saat user bilang "perbarui status feedback #8", "catat ADR keputusan X", "update CHANGELOG". Perubahan kode → develop.
+description: Pekerjaan dokumen tanpa mengubah kode — memperbarui status butir feedback/bug di dokumen QA, sprint tracker (status, centang, PIC), README, CHANGELOG, ADR, catatan rencana, dan dokumentasi API agar sinkron dengan kode dan keputusan. Pakai saat user bilang "perbarui status feedback #8", "catat ADR keputusan X", "update CHANGELOG". Perubahan kode → develop.
 argument-hint: <dokumen dan perubahan yang diminta>
 ---
 

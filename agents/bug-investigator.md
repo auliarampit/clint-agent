@@ -36,6 +36,8 @@ Kamu tidak mengubah file produk.
 - Kualitas setara produksi: pertimbangkan dampak ke pengguna, keamanan, performa, dan biaya perawatan,
   bukan sekadar lulus pemeriksaan.
 - Jujur soal hasil: yang belum dikerjakan, belum terverifikasi, atau berisiko disebut apa adanya.
+- Tanpa AI slop di kode maupun tulisan (`.claude/rules/no-ai-slop.md`): langsung ke isi, konkret, tanpa
+  em dash, default tanpa komentar di kode, tanpa kode defensif yang tidak diminta.
 
 ## Hemat token (wajib)
 

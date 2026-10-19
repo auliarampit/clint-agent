@@ -102,7 +102,7 @@ Dari kolom *Bergantung*:
 - PR yang semua dependensinya sudah merged → base `origin/<baseBranch>`.
 - PR yang dependensinya ikut dikerjakan di run ini atau MR-nya masih open → base = **branch
   dependensi** (bertumpuk). MR tetap ke `mr.targetBranch`, deskripsi menyebut
-  "Bergantung pada !X — merge setelahnya".
+  "Bergantung pada !X, merge setelahnya".
 - Gelombang 1 = PR tanpa dependensi yang belum selesai; gelombang berikutnya = PR yang
   dependensinya selesai di gelombang sebelumnya. Dalam satu gelombang, jalankan paralel sampai
   batas paralelisme.
@@ -133,7 +133,7 @@ Untuk PR paralel, panggil agent-agent sejenis dalam satu pesan. Langkah per PR:
   Pasang dependensi di worktree bila dibutuhkan untuk lint/test (perintah install dari adapter).
 
 `<base>` = `origin/<baseBranch>`, kecuali PR ini bergantung pada PR yang belum merged: base =
-branch PR dependensi itu, dan deskripsi MR menyebut "Bergantung pada !X — merge setelahnya".
+branch PR dependensi itu, dan deskripsi MR menyebut "Bergantung pada !X, merge setelahnya".
 Nama branch diambil dari kolom *Branch* rencana bila ada; tanpa kolom itu, ikuti pola branch
 yang sudah ada di repo (`git branch -r | head -20`).
 
@@ -215,11 +215,11 @@ langkah 5.2 dengan temuan itu (dihitung dalam batas 2 putaran). Adapter mengisi 
 E2E** → `e2e-tester` menguji lewat EAS Update ke channel khusus simulator, bukan build lokal; satu
 channel E2E dipakai satu PR pada satu waktu, jadi E2E antar-PR dijalankan berurutan.
 
-**Status E2E wajib tertulis** untuk setiap PR: `lulus`, `tidak perlu — <alasan>`, atau
-`tertunda — <alasan + langkah>`. Tidak boleh kosong. **Gerbang siap-dev:** status `tertunda`
+**Status E2E wajib tertulis** untuk setiap PR: `lulus`, `tidak perlu: <alasan>`, atau
+`tertunda: <alasan + langkah>`. Tidak boleh kosong. **Gerbang siap-dev:** status `tertunda`
 berarti PR belum siap masuk base branch:
 - mode `"mr"` → MR dibuat sebagai **Draft** (`glab mr create --draft` / `gh pr create --draft`),
-  deskripsi memuat `E2E: tertunda — <alasan>` dan langkahnya;
+  deskripsi memuat `E2E: tertunda, <alasan>` dan langkahnya;
 - mode `"push-base"` → jangan push ke base branch; push ke branch PR itu saja dan laporkan.
 Lanjutannya `/clint:test e2e !<n>` (skill `test`).
 
@@ -249,7 +249,8 @@ Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
 - `git push -u origin <branch>`.
 - Buat MR ke `mr.targetBranch` dengan `mr.cli` (`glab mr create` / `gh pr create`). Deskripsi:
   ringkasan, requirement yang dipenuhi (ID), cara verifikasi, hasil lint/typecheck/test/E2E,
-  dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola.
+  dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola. Tanpa AI slop
+  (`no-ai-slop.md`): tanpa nama agent, jumlah putaran tinjauan, atau kalimat pujian.
 - **Saran tinjauan yang tidak diterapkan** (luar cakupan, atau tersisa setelah batas putaran) dicatat
   supaya user bisa memvalidasinya: tulis ke file sementara sebagai JSON
   `[{"path","line","sekarang","usulan","alasan","agent"}]`, lalu setelah MR dibuat jalankan dari repo:
@@ -274,7 +275,7 @@ Setelah push dan MR terverifikasi (mode `push-base`: setelah push base berhasil)
 Kegagalan satu PR (masih ada temuan wajib setelah 2 putaran, test gagal, konflik rebase):
 
 - jangan buat MR untuk PR itu;
-- commit lokal semua perubahannya (stage eksplisit) dengan pesan `wip(<PR>): tertahan — <alasan>`,
+- commit lokal semua perubahannya (stage eksplisit) dengan pesan `wip(<PR>): tertahan, <alasan>`,
   **jangan push**; tanpa worktree, kembali ke branch asal user. Branch/worktree itu disebut di
   laporan untuk diperiksa user. (Working tree bersih = hook tinjau otomatis tidak terpicu ulang.)
 - PR yang bergantung padanya **dilewati**; PR lain tetap jalan.

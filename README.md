@@ -13,6 +13,7 @@ yang sedang di-enhance.
 - **Lolos SonarQube sejak ditulis.** Standar quality gate Badr ikut diterapkan saat kode ditulis dan ditinjau.
 - **Mobile, web, dan backend.** Skill platform yang portabel: konvensi inti + adapter fakta stack per project.
 - **Dua bahasa.** Jawaban dan laporan dalam Bahasa Indonesia atau English, sesuai setelan masing-masing orang.
+- **Tanpa AI slop.** Kode, commit, MR, dan laporan ditulis seperti engineer senior, bukan terasa buatan mesin.
 - **Hemat token.** Agent hanya dipanggil bila menambah nilai; menu bar, suara, dan status tidak memakai token.
 
 ---
@@ -22,22 +23,24 @@ yang sedang di-enhance.
 1. [Mulai cepat](#mulai-cepat)
 2. [Tujuh perintah](#tujuh-perintah)
 3. [Bingung pakai yang mana?](#bingung-pakai-yang-mana)
-4. [Panduan per peran](#panduan-per-peran)
-5. [Bahasa](#bahasa)
-6. [Standar SonarQube](#standar-sonarqube)
-7. [Cara kerja `develop`](#cara-kerja-develop)
-8. [Tim agent](#tim-agent)
-9. [Platform: mobile, web, backend](#platform-mobile-web-backend)
-10. [Laporan pagi](#laporan-pagi)
-11. [Menu bar](#menu-bar)
-12. [Mode JARVIS](#mode-jarvis)
-13. [Otomatis tanpa perintah](#otomatis-tanpa-perintah)
-14. [Hemat token](#hemat-token)
-15. [Konfigurasi](#konfigurasi)
-16. [Pindah dari clint v1](#pindah-dari-clint-v1)
-17. [Tanya jawab](#tanya-jawab)
-18. [Struktur repo dan perawatan](#struktur-repo-dan-perawatan)
-19. [Peta jalan](#peta-jalan)
+4. [Contoh lengkap per perintah](#contoh-lengkap-per-perintah)
+5. [Panduan per peran](#panduan-per-peran)
+6. [Bahasa](#bahasa)
+7. [Standar SonarQube](#standar-sonarqube)
+8. [Tanpa AI slop](#tanpa-ai-slop)
+9. [Cara kerja `develop`](#cara-kerja-develop)
+10. [Tim agent](#tim-agent)
+11. [Platform: mobile, web, backend](#platform-mobile-web-backend)
+12. [Laporan pagi](#laporan-pagi)
+13. [Menu bar](#menu-bar)
+14. [Mode JARVIS](#mode-jarvis)
+15. [Otomatis tanpa perintah](#otomatis-tanpa-perintah)
+16. [Hemat token](#hemat-token)
+17. [Konfigurasi](#konfigurasi)
+18. [Pindah dari clint v1](#pindah-dari-clint-v1)
+19. [Tanya jawab](#tanya-jawab)
+20. [Struktur repo dan perawatan](#struktur-repo-dan-perawatan)
+21. [Peta jalan](#peta-jalan)
 
 ---
 
@@ -78,7 +81,7 @@ Tidak ada yang di-commit otomatis; periksa dulu hasilnya.
 
 | Perintah | Untuk | Contoh |
 |---|---|---|
-| `/clint:status` | Kondisi kerja: update docs/design dan dampaknya ke kode, feedback QA yang masih open, MR, pipeline, branch, disk | `/clint:status`, `/clint:status all` |
+| `/clint:status` | Kondisi kerja: update docs/design dan dampaknya ke kode, feedback QA yang masih open, MR, pipeline, branch, disk. Juga **sisa tugas sprint** | `/clint:status`, `/clint:status all`, `/clint:status sprint` |
 | `/clint:develop` | Mengerjakan **kode** apa pun sampai jadi MR, dari perbaikan kecil sampai modul penuh | `/clint:develop MOB-10` |
 | `/clint:review` | Meninjau kode. Milik sendiri: ditinjau lalu diperbaiki. MR rekan: hanya temuan, tanpa mengubah kode | `/clint:review !123` |
 | `/clint:test` | Menguji tanpa mengubah kode produk: menulis dan menjalankan E2E, menyelesaikan E2E yang tertunda | `/clint:test e2e !123` |
@@ -120,6 +123,109 @@ Beberapa contoh yang sering tertukar:
 
 `status` **mencari** pekerjaan, `review` **memeriksa** hasil pekerjaan, `develop` **mengerjakan**.
 
+## Contoh lengkap per perintah
+
+Semua contoh bisa diketik apa adanya. Bagian setelah nama perintah boleh kalimat biasa; clint memahami
+maksudnya. Kolom "Atau cukup bilang" menunjukkan kalimat tanpa perintah yang hasilnya sama.
+
+### `/clint:status`: kondisi kerja dan sisa tugas sprint
+
+| Ketik | Hasilnya | Atau cukup bilang |
+|---|---|---|
+| `/clint:status` | Update docs/design dan dampaknya ke kode, feedback QA yang masih open, MR, pipeline, branch, disk di project ini | "ada update apa hari ini?" |
+| `/clint:status all` | Semua project aktif sekaligus, satu layar laporan (sama dengan laporan pagi) | "cek semua project" |
+| `/clint:status toko-online` | Kondisi project lain tanpa pindah folder | "gimana kondisi project toko online?" |
+| `/clint:status since 1 minggu` | Perubahan seminggu terakhir, bukan hanya 3 hari | "apa saja yang berubah minggu ini?" |
+| `/clint:status sprint` | Sisa tugas **sprint yang sedang berjalan** (dipilih dari tanggal sprint), dikelompokkan: terblokir/bug → sedang dikerjakan/QA → belum mulai | "sprint saat ini yang belum selesai apa?" |
+| `/clint:status sprint saya` | Sama, hanya butir yang PIC-nya Anda | "tugas saya di sprint ini yang belum apa?" |
+| `/clint:status sprint 3` | Sisa tugas Sprint 3 | "sisa tugas sprint 3 apa saja?" |
+| `/clint:status sprint 1 2 3 4` | Sisa tugas beberapa sprint, dijawab per sprint | "sprint 1 sampai 4 yang belum selesai apa?" |
+| `/clint:status sprint Hafizh` | Butir sprint berjalan milik rekan tertentu | "Hafizh masih pegang apa di sprint ini?" |
+
+Mode sprint membaca sprint tracker di `docs.pic` (`.claude/clint.json`), misalnya `docs/sprints/s09.md`. Mode ini
+hanya membaca dan tidak memanggil agent, jadi cepat dan murah. Status dibaca dari kolom tabel (⬜ 🔄 🧪 🐞 🚫 ✅,
+atau kata seperti Open/In Progress/Done) dan checklist `- [ ]`. Project belum mengisi `docs.pic` → clint
+menanyakan letak sprint tracker-nya. Mengubah isi tracker (centang, status, PIC) lewat `/clint:docs`.
+
+### `/clint:develop`: mengerjakan kode sampai MR
+
+| Ketik | Hasilnya |
+|---|---|
+| `/clint:develop perbaiki tombol simpan di layar profil tidak aktif` | Tugas kecil, langsung 1 PR dan 1 MR, tanpa file rencana |
+| `/clint:develop perbaiki FB-MOB-008` | Satu butir feedback/bug, dicari di dokumen QA |
+| `/clint:develop MOB-10` | Modul baru: rencana per PR dibuat dari PRD/SAD/API contract, lalu dikerjakan maksimal 3 PR per run |
+| `/clint:develop docs/plans/mob-10.md` | Lanjutkan rencana; PR yang sudah merged dilewati |
+| `/clint:develop docs/plans/mob-10.md PR-4..PR-6` | Hanya PR tertentu |
+| `/clint:develop ../docs/qa/feedback/feedback-fitur-mobile.md` | Semua butir feedback yang masih open di file itu |
+| `/clint:develop terapkan saran reviewer di !123` | Tindak lanjut MR; push ke MR yang sama |
+| `/clint:develop perbaiki pipeline !123` | CI merah (lint, test, build, quality gate SonarQube) |
+| `/clint:develop` (tanpa argumen, setelah `status`) | Kerjakan temuan "perlu dikerjakan" dari laporan `status` barusan |
+
+Modul besar dikerjakan bertahap. Setelah 3 PR, baris *Berikutnya* berisi perintah lanjutannya; ketik `/clear`
+dulu, lalu tempel perintah itu.
+
+### `/clint:review`: memeriksa kode
+
+| Ketik | Hasilnya |
+|---|---|
+| `/clint:review` | Perubahan Anda yang belum di-commit + commit branch ini: ditinjau lalu langsung diperbaiki |
+| `/clint:review !123` | MR milik rekan: hanya temuan dengan baris kode dan usulan, kode tidak diubah |
+| `/clint:review feat/checkout-ulang` | Branch tertentu terhadap base branch |
+| `/clint:review !123 --only` | Hanya temuan, walaupun MR milik Anda sendiri |
+
+### `/clint:test`: menguji tanpa mengubah kode produk
+
+| Ketik | Hasilnya |
+|---|---|
+| `/clint:test login` | Tulis dan jalankan E2E fitur login (happy path + error utama); flow-nya jadi MR |
+| `/clint:test e2e !123` | Selesaikan E2E yang tertunda di MR !123; lulus → MR ditandai siap |
+
+Bug yang ditemukan dilaporkan dengan langkah reproduksi; perbaikannya lewat `/clint:develop`.
+
+### `/clint:docs`: dokumen tanpa kode
+
+| Ketik | Hasilnya |
+|---|---|
+| `/clint:docs tandai FB-MOB-008 diperbaiki di !130` | Status butir feedback diperbarui dengan rujukan MR |
+| `/clint:docs tandai MOD-AD-04 kolom QA selesai di sprint 9` | Sprint tracker diperbarui |
+| `/clint:docs catat ADR: pembayaran memakai Midtrans Snap` | ADR baru dengan alasan dan alternatif yang ditolak |
+| `/clint:docs perbarui CHANGELOG untuk rilis 1.4.0` | CHANGELOG dari MR/commit sejak rilis terakhir |
+
+### `/clint:release`: build dan rilis
+
+| Ketik | Hasilnya |
+|---|---|
+| `/clint:release build APK UAT Android` | Build dimulai, tautan/ID build dilaporkan (tidak ditunggu sampai selesai) |
+| `/clint:release update OTA ke kanal preview` | Update over-the-air ke kanal yang disebut |
+| `/clint:release siap deploy backend ke staging?` | Cek kesiapan: migrasi, variabel lingkungan, rencana mundur |
+| `/clint:release naikkan versi 1.4.0 dan catatan rilis` | Versi + catatan rilis untuk manusia, bukan daftar commit |
+
+Rilis yang berdampak ke orang lain (kanal QA, store, produksi) hanya dijalankan bila Anda menyebutnya jelas.
+
+### `/clint:setup`: memasang dan merawat clint
+
+| Ketik | Hasilnya |
+|---|---|
+| `/clint:setup mobile` | Pasang clint di project mobile (juga `web`, `backend`, atau `mobile web backend`) |
+| `/clint:setup sync` | Samakan salinan di project dengan versi clint terbaru; isi field baru; rapikan adapter yang membengkak |
+| `/clint:setup language id` | Jawaban dan laporan dalam Bahasa Indonesia (`en` untuk English) |
+
+### Pertanyaan sehari-hari
+
+| Pertanyaan | Perintah |
+|---|---|
+| "Hari ini saya ngerjain apa?" | `/clint:status` |
+| "Sprint ini masih sisa apa?" / "Sprint 3 yang belum apa?" | `/clint:status sprint` / `/clint:status sprint 3` |
+| "Tugas saya di sprint ini?" | `/clint:status sprint saya` |
+| "Ada MR yang nunggu saya review?" | `/clint:status` |
+| "Kenapa pipeline MR ini merah?" | `/clint:develop perbaiki pipeline !123` |
+| "Kodingan saya sudah layak MR belum?" | `/clint:review` |
+| "Tolong review MR teman saya" | `/clint:review !124` |
+| "Fitur X sudah bisa diuji?" | `/clint:test X` |
+| "Bug ini sudah beres, tolong update dokumen QA" | `/clint:docs tandai <ID> diperbaiki di !<n>` |
+| "Butuh APK buat UAT" | `/clint:release build APK UAT Android` |
+| "Saya mau jawaban bahasa Indonesia" | `/clint:setup language id` |
+
 ## Panduan per peran
 
 clint tidak menanyakan peran Anda dan tidak membatasi apa pun: semua orang boleh memakai semua
@@ -141,6 +247,7 @@ rilis    /clint:release build APK UAT Android
 
 ```
 /clint:status                          → MR yang siap diuji, feedback yang masih open
+/clint:status sprint saya              → butir QA saya yang belum selesai di sprint ini
 /clint:test login                      → tulis dan jalankan E2E fitur login, hasilnya jadi MR
 /clint:test e2e !123                   → selesaikan E2E yang tertunda di MR !123
 /clint:docs tandai FB-MOB-008 diverifikasi tanggal 20 Okt
@@ -153,12 +260,16 @@ Bug yang ditemukan dilaporkan; perbaikannya lewat `/clint:develop` oleh develope
 
 ```
 /clint:status                                 → apa yang berubah di docs, design, dan kode; butir milik Anda
+/clint:status sprint                          → sisa tugas sprint berjalan, per status dan PIC
+/clint:status sprint 1 2 3                    → sisa tugas beberapa sprint
+/clint:docs tandai MOD-AD-04 kolom QA selesai di sprint 9
 /clint:docs catat ADR: pembayaran memakai Midtrans Snap
 /clint:docs perbarui CHANGELOG untuk rilis 1.4.0
 /clint:review !123                            → apakah implementasi sesuai PRD/API contract
 ```
 
-Penulisan dokumen requirement (BRD, PRD, SAD, API contract, STD) dan pelacakan sprint sedang dikembangkan.
+Penulisan dokumen requirement (BRD, PRD, SAD, API contract, STD) dan pembaruan sprint tracker otomatis
+dari git/MR sedang dikembangkan.
 Lihat [Peta jalan](#peta-jalan).
 
 ### Designer
@@ -222,6 +333,26 @@ Cara clint menegakkannya:
 
 `// NOSONAR`, menonaktifkan rule, atau menambah exclusion untuk meloloskan gate **dilarang** tanpa
 persetujuan Anda.
+
+## Tanpa AI slop
+
+Hasil clint harus terasa ditulis engineer senior di tim, bukan mesin. Aturannya ada di `kit/no-ai-slop.md`,
+selalu disalin ke `.claude/rules/no-ai-slop.md` saat `setup`, dan disuntikkan otomatis ke sesi bila project
+belum punya salinannya. Berlaku untuk kode, komentar, commit, deskripsi MR, laporan, dokumen, dan teks UI.
+
+| Tulisan | Kode |
+|---|---|
+| Langsung ke isi: tanpa "Tentu!", "Berikut adalah...", "Semoga membantu" | **Default tanpa komentar.** Kecuali satu baris untuk jalan pintas bug library, aturan bisnis ber-ID, atau angka dari pihak luar |
+| Kata konkret dan angka, bukan *robust, seamless, comprehensive, leverage* | Tanpa try/catch, cek null, atau fallback yang tidak diminta |
+| Tanpa em dash (—); tebal, butir, dan judul seperlunya | Tanpa abstraksi, opsi, atau parameter untuk kebutuhan yang belum ada |
+| Jujur: yang belum diuji ditulis belum diuji | Tanpa implementasi palsu, data contoh tertinggal, atau kode mati |
+| Commit dan MR tanpa nama agent atau "dibuat oleh AI" | Nama mengikuti pola codebase, bukan `data2`/`helper` |
+| Teks UI spesifik ("Nomor HP harus 10–13 digit"), bukan "Oops! 😅" | Pesan error menyebut apa yang gagal |
+
+`code-reviewer` memeriksa sisi kode: implementasi palsu, data contoh tertinggal, kode mati, dan **komentar baru
+yang tidak perlu** (komentar per langkah, JSDoc fungsi internal, banner, kode dikomentari) adalah temuan
+**Wajib**; kode defensif berlebih, nama generik, dan abstraksi spekulatif adalah **Saran** (tetap diterapkan
+otomatis di kode yang diubah PR). Komentar lama di luar lingkup PR tidak disentuh.
 
 ## Cara kerja `develop`
 
@@ -411,7 +542,7 @@ tanpa perintah; ia hanya mengabari dan menyiapkan perintahnya.
 
 | Kapan | Efek |
 |---|---|
-| sesi dimulai | 4 prinsip kerja dan setelan bahasa dimuat (prinsip kerja tidak dobel bila project sudah punya salinannya) |
+| sesi dimulai | 4 prinsip kerja, aturan anti AI slop, dan setelan bahasa dimuat (tidak dobel bila project sudah punya salinannya) |
 | file diedit | formatter project dijalankan pada file itu, termasuk di worktree |
 | sesi selesai dengan ≥ 40 baris kode belum ditinjau | `/clint:review` jalan sendiri: tinjau + perbaiki, sekali per perubahan |
 | perintah selesai | kalimat inti dibacakan + notifikasi Mac |
