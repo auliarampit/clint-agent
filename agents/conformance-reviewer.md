@@ -55,4 +55,7 @@ soal kode (mis. dokumen, desain) cukup dijelaskan.
   atau dokumen utuh bila hanya butuh satu bagian.
 - Keluaran perintah panjang dipotong: `| tail -40`, `--quiet`, atau `grep` baris error saja.
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
+- Tidak ada `sleep`/polling untuk menunggu pihak luar (pipeline, build/update EAS, deploy, review):
+  laporkan status **tertunda** beserta cara melanjutkan, lalu berhenti. Menunggu proses lokal
+  (simulator, server dev) memakai pengecekan kondisi dengan batas ≤ 2 menit, bukan jeda tetap.
 - Laporan singkat dan padat; tanpa salam, ringkasan ulang, atau penjelasan proses.

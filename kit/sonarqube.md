@@ -62,9 +62,10 @@ diingat):
 
 - Setiap logika baru (service, hook, util, use case, handler, validasi) punya test; UI murni dan wrapper
   native dicakup E2E.
-- Ukur, jangan mengklaim: jalankan perintah test project dengan coverage (`test` di `surfaces[]`, atau
-  varian coverage di `package.json`) dan laporkan angka untuk **file yang diubah PR**. Tidak bisa diukur
-  lokal → tulis "coverage belum terukur", jangan "≥ 80%".
+- Ukur, jangan mengklaim. Sonar berjalan di pipeline MR (`sonar` di `ciOnMr`) → coverage diukur di sana;
+  lokal cukup memastikan setiap logika baru punya test, dan laporan menulis "coverage diukur pipeline".
+  Sonar tidak berjalan di MR → jalankan test dengan coverage lokal dan laporkan angka untuk **file yang
+  diubah PR**. Tidak bisa diukur → tulis "coverage belum terukur", jangan "≥ 80%".
 - Path yang dikecualikan Sonar (`sonar.exclusions` dan `sonar.coverage.exclusions` di
   `sonar-project.properties`) tidak perlu dikejar coverage-nya.
 

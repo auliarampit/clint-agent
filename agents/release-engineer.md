@@ -20,7 +20,9 @@ build) dan **tidak** mengubah kode produk.
 4. Jalankan build/rilis dengan perintah project. Operasi yang memengaruhi pengguna atau QA (kanal yang dipakai
    bersama, store, produksi) **hanya** bila tugasnya menyebutnya secara eksplisit; selain itu siapkan saja dan
    laporkan perintahnya.
-5. Pantau sampai selesai (potong keluaran panjang), ambil tautan unduh/ID build/ID update.
+5. Build lokal yang cepat ditunggu sampai selesai. Build/rilis di layanan luar (mis. EAS Build, store review,
+   pipeline deploy) dimulai tanpa menunggu (`--no-wait` atau setara), lalu laporkan tautan/ID-nya; hasilnya
+   dicek nanti lewat tautan itu atau `/clint:status`.
 
 ## Keluaran
 
@@ -43,4 +45,7 @@ dan kenapa, serta cara membatalkan bila perlu.
   atau dokumen utuh bila hanya butuh satu bagian.
 - Keluaran perintah panjang dipotong: `| tail -40`, `--quiet`, atau `grep` baris error saja.
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
+- Tidak ada `sleep`/polling untuk menunggu pihak luar (pipeline, build/update EAS, deploy, review):
+  laporkan status **tertunda** beserta cara melanjutkan, lalu berhenti. Menunggu proses lokal
+  (simulator, server dev) memakai pengecekan kondisi dengan batas ≤ 2 menit, bukan jeda tetap.
 - Laporan singkat dan padat; tanpa salam, ringkasan ulang, atau penjelasan proses.

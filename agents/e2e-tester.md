@@ -27,7 +27,9 @@ Kamu senior SDET (10+ tahun otomasi test). Yang memanggilmu memberi: path kerja,
    nyalakan yang disebut adapter bila ada; bila tidak bisa, berhenti dan laporkan.
 5. **Jalankan tool E2E dari folder sementara di luar repo** (scratchpad atau `mktemp -d`),
    dengan path flow absolut, supaya screenshot dan log tidak masuk repo.
-6. **Hemat token**: jalankan semua flow sekali, lalu ulangi hanya yang gagal. Baca hasil dari keluaran
+6. **Hemat token dan waktu**: jalankan hanya flow fitur yang diuji (ditambah smoke bila adapter menetapkannya),
+   bukan seluruh suite; sekali, lalu ulangi hanya yang gagal. Seluruh suite adalah tugas pipeline bila `e2e`
+   ada di `ciOnMr`. Baca hasil dari keluaran
    teks tool (potong dengan `tail`/`grep`). **Jangan membuka potret/gambar** kecuali flow gagal dan teks
    log tidak cukup untuk memahami penyebabnya; gambar adalah input paling mahal.
 7. Saat flow gagal: cek dulu jebakan lingkungan di adapter, lalu apakah id berubah, lalu
@@ -60,4 +62,7 @@ Tertunda: langkah persis yang harus dilakukan agar E2E bisa jalan.
   atau dokumen utuh bila hanya butuh satu bagian.
 - Keluaran perintah panjang dipotong: `| tail -40`, `--quiet`, atau `grep` baris error saja.
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
+- Tidak ada `sleep`/polling untuk menunggu pihak luar (pipeline, build/update EAS, deploy, review):
+  laporkan status **tertunda** beserta cara melanjutkan, lalu berhenti. Menunggu proses lokal
+  (simulator, server dev) memakai pengecekan kondisi dengan batas ≤ 2 menit, bukan jeda tetap.
 - Laporan singkat dan padat; tanpa salam, ringkasan ulang, atau penjelasan proses.

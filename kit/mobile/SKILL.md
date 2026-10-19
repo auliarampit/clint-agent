@@ -51,6 +51,10 @@ description: >
 cat .claude/mobile-stack.md
 ```
 
+**Adapter lebih dari 300 baris** (`wc -l .claude/mobile-stack.md`) → jangan `cat` utuh: baca ringkasan placeholder
+dan daftar bagian (`grep -n '^## ' .claude/mobile-stack.md`), lalu hanya bagian yang dibutuhkan task. Sebut di
+laporan bahwa adapter perlu dirapikan (`/clint:setup sync`).
+
 File itu berisi fakta yang **tidak bisa** diturunkan dari konvensi: app mana yang ada,
 router apa, state manager apa, di mana wrapper HTTP, nama subfolder feature, toolchain
 lint, path dokumen.
@@ -901,6 +905,20 @@ penggabungan string — atau dipindah ke berkas data (JSON) bila sebenarnya kont
 ---
 
 ## Step 11 — Testing
+
+### Cek lokal vs pipeline (berlaku untuk setiap `{testCmd}` di skill ini)
+
+Lokal hanya cek **cepat** yang terkait perubahan; yang dijalankan CI pada MR (`ciOnMr` di
+`.claude/clint.json`) tidak diulang lokal.
+
+| Cek | Lokal | Pipeline |
+|---|---|---|
+| format + lint file yang diubah, typecheck | selalu | ya |
+| test **terkait perubahan** (`surfaces[].testRelated` + file yang diubah; tanpa itu: test yang ditambah/diubah dan test di folder modul yang disentuh) | selalu | — |
+| suite test penuh, coverage, SonarQube, build | hanya bila **tidak** ada di `ciOnMr` | bila ada di `ciOnMr` |
+
+Refactor lintas banyak modul: suite penuh sekali di akhir (perilaku harus identik). Setelah push, jangan
+menunggu atau memantau pipeline; hasilnya muncul di `/clint:status`.
 
 ### Coverage
 

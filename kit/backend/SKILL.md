@@ -29,6 +29,10 @@ Notasi `{...}` = ambil dari adapter. Referensi ada di `.claude/skills/skill-back
 cat .claude/backend-stack.md
 ```
 
+**Adapter lebih dari 300 baris** (`wc -l .claude/backend-stack.md`) → jangan `cat` utuh: baca ringkasan placeholder
+dan daftar bagian (`grep -n '^## ' .claude/backend-stack.md`), lalu hanya bagian yang dibutuhkan task. Sebut di
+laporan bahwa adapter perlu dirapikan (`/clint:setup sync`).
+
 Tidak ada → **berhenti**, tawarkan `/clint:setup backend`. Bertentangan dengan filesystem →
 filesystem menang; sebutkan bahwa adapter perlu diperbarui. Monorepo → pastikan service mana yang disentuh.
 
@@ -126,6 +130,20 @@ Yang wajib di semua bentuk:
 
 Setiap panggilan keluar punya timeout; retry hanya untuk operasi idempoten dengan backoff. Job dan
 consumer event idempoten (aman dijalankan dua kali). Detail di `references/reliability.md`.
+
+## Cek lokal vs pipeline (berlaku untuk setiap `{testCmd}` di skill ini)
+
+Lokal hanya cek **cepat** yang terkait perubahan; yang dijalankan CI pada MR (`ciOnMr` di
+`.claude/clint.json`) tidak diulang lokal.
+
+| Cek | Lokal | Pipeline |
+|---|---|---|
+| format + lint file yang diubah, typecheck | selalu | ya |
+| test **terkait perubahan** (`surfaces[].testRelated` + file yang diubah; tanpa itu: test yang ditambah/diubah dan test di folder modul yang disentuh) | selalu | — |
+| suite test penuh, coverage, SonarQube, build | hanya bila **tidak** ada di `ciOnMr` | bila ada di `ciOnMr` |
+
+Refactor lintas banyak modul: suite penuh sekali di akhir (perilaku harus identik). Setelah push, jangan
+menunggu atau memantau pipeline; hasilnya muncul di `/clint:status`.
 
 ## Step 10 — Selesai berarti
 

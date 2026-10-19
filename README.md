@@ -432,13 +432,34 @@ Model tidak diturunkan; yang dijaga cara kerjanya:
 - review otomatis hanya untuk ≥ 40 baris, sekali per perubahan;
 - pemantau (`change-tracker`, `status-reporter`) mengumpulkan bahan dalam **satu panggilan skrip**
   (`scripts/collect-changes.sh`, `scripts/collect-status.sh`) alih-alih puluhan putaran `git`/`grep`;
-- `e2e-tester` menjalankan semua flow sekali, mengulang hanya yang gagal, dan tidak membuka potret layar
-  kecuali log teks tidak cukup;
+- **lokal cepat, pipeline penuh**: lokal hanya lint, typecheck, dan test yang terkait perubahan; suite penuh,
+  coverage, SonarQube, dan build yang sudah dijalankan CI pada MR (`ciOnMr`) tidak diulang lokal;
+- **tidak menunggu pihak luar**: tidak ada `sleep`/polling untuk pipeline, build EAS, atau deploy; agent
+  melapor "tertunda" dan hasilnya muncul di `/clint:status`;
+- **adapter ramping**: maksimal 300 baris / 25 KB, karena dibaca di setiap tugas; catatan keputusan per modul
+  disimpan di ADR atau rencana (`/clint:setup sync` memperingatkan adapter yang membengkak);
+- **maksimal 3 PR per run** dan laporan agent ringkas, supaya konteks sesi tidak membengkak;
+- `e2e-tester` hanya menjalankan flow fitur yang diuji (ditambah smoke), mengulang hanya yang gagal, dan tidak
+  membuka potret layar kecuali log teks tidak cukup;
 - menu bar, suara, status sesi, dan pembaruan badge berjalan di Mac tanpa token.
 
 Gambaran dari pemakaian nyata (4 hari, tim mobile + monorepo): per PR, `developer` ≈ 1,1 dan semua
 peninjau ≈ 0,6 (setara USD harga API). Biaya terbesar justru datang dari agent umum tanpa aturan clint
 untuk E2E panjang; gunakan `/clint:develop` atau `/clint:test` agar `e2e-tester` dan aturannya yang dipakai.
+
+### Kebiasaan yang paling menghemat
+
+Bagian ini tidak bisa dipaksakan oleh clint, karena yang mengatur sesi adalah Anda. Dari pengukuran 14 hari
+(5–19 Okt 2026), kebiasaan ini menyumbang sekitar sepertiga biaya:
+
+| Kebiasaan | Kenapa |
+|---|---|
+| **Satu tugas per sesi**, `/clear` sebelum tugas berikutnya | Setiap request mengirim ulang seluruh percakapan. Sesi yang mengerjakan 3 area atau lebih memakan 52% biaya; request dengan konteks > 200k memakan 32% |
+| **Setelah istirahat > 1 jam, mulai sesi baru** (`/clint:status`), jangan melanjutkan sesi besar | Cache sudah kedaluwarsa, jadi seluruh percakapan ditulis ulang dengan harga 2× |
+| Ikuti baris *Berikutnya* | Bila menyebut "sesi baru", ketik `/clear` dulu |
+
+Ukur ulang kapan saja dengan script laporan token di turborepo
+(`apps/docs/99-ai-dlc/token/ai-usage-report.py --role dev --person <nama> --all-projects`).
 
 ## Konfigurasi
 
@@ -452,6 +473,7 @@ Dibuat oleh `/clint:setup` dan di-commit untuk seluruh tim:
   "mr": { "cli": "glab", "targetBranch": "dev",      // glab (GitLab) / gh (GitHub)
           "mode": "mr" },                             // "push-base": langsung push ke baseBranch, tanpa MR
   "autoReviewMinLines": 40,                           // "autoReview": false untuk mematikan
+  "ciOnMr": ["lint", "typecheck", "test", "sonar"], // cek yang dijalankan CI pada MR; tidak diulang lokal
   "worktreeRoot": "../mobile-worktrees",
   "relatedRepos": [                                   // [] untuk monorepo
     { "name": "docs",    "path": "../docs",    "branch": "main", "role": "docs" },
@@ -465,7 +487,8 @@ Dibuat oleh `/clint:setup` dan di-commit untuk seluruh tim:
   "surfaces": [
     { "name": "mobile", "root": ".", "adapter": ".claude/mobile-stack.md",
       "lint": "bun run lint", "typecheck": "bun run typecheck", "test": "bun run test",
-      "e2e": "bun run test:e2e", "formatFile": "bunx prettier --write" }
+      "e2e": "bun run test:e2e", "formatFile": "bunx prettier --write",
+      "testRelated": "bunx jest --findRelatedTests" }   // test untuk file yang berubah
   ]
 }
 ```

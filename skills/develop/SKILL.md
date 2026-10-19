@@ -89,6 +89,8 @@ Ambil tabel **Urutan pekerjaan** (PR · Branch · Isi · Menutup · Bergantung �
 ## 3. Pilih PR yang dikerjakan
 
 - Pilihan dari argumen (`PR-2,PR-4`, `PR-2..PR-5`); tanpa pilihan → semua PR yang belum selesai.
+- **Maksimal 3 PR per run** (paralel maupun berurutan), supaya konteks sesi tidak membengkak. PR lain
+  ditulis di baris *Berikutnya* untuk dikerjakan di sesi baru.
 - PR dianggap **selesai** bila branch-nya sudah punya MR merged; **sedang jalan** bila MR-nya
   open (lewati dan sebut di laporan). Cek dengan `glab mr list --source-branch <b> --all` /
   `gh pr list --head <b> --state all`.
@@ -226,7 +228,8 @@ Lanjutannya `/clint:test e2e !<n>` (skill `test`).
 - `git -C <path kerja> status` lalu **stage eksplisit** per path dari laporan `developer`/`e2e-tester`.
   Jangan `git add -A` / `commit -a`. Pastikan tidak ada screenshot, log, atau output build.
 - Pesan commit mengikuti gaya `git log --oneline -15` repo.
-- Tarik base sekali lagi sebelum push; rebase kalau tertinggal, lalu jalankan ulang lint/test.
+- Tarik base sekali lagi sebelum push; rebase kalau tertinggal, lalu ulangi **cek cepat** saja (lint,
+  typecheck, test terkait). Setelah push, jangan menunggu pipeline; hasilnya muncul di `/clint:status`.
 
 Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
 
@@ -296,8 +299,9 @@ Tindak lanjut yang tidak menghasilkan MR baru (mis. perbaikan di MR yang sama) �
 - Jangan membaca dokumen/rencana utuh di sesi utama; cukup tabel *Urutan pekerjaan* dan potongan
   bagian tiap PR (`grep -n` + `sed -n`). Agent yang butuh detail membacanya sendiri.
 - Teruskan ke setiap agent hanya potongan yang relevan untuk PR-nya.
-- Simpan laporan agent seperlunya (putusan + daftar file + temuan); jangan menyalin ulang
-  laporan panjang ke pesan berikutnya.
+- Minta setiap agent melapor ringkas (±25 baris). Simpan hanya putusan, daftar file, dan temuan wajib;
+  jangan menyalin ulang laporan panjang ke pesan berikutnya.
+- Tidak ada `sleep`/polling untuk pipeline, build, atau pihak luar lain (lihat aturan agent).
 
 ## 6. Laporan akhir (satu pesan, singkat dan manusiawi)
 
@@ -318,6 +322,8 @@ Merge tetap oleh user.
 penting, lengkap dengan sumbernya, mis.:
 `Berikutnya: /clint:develop perbaiki BUG-092 tombol Verifikasi Customer (docs/qa/feedback/feedback-ui.md)`
 `Berikutnya: /clint:develop docs/plans/mob-10.md PR-2`
+Run mengerjakan 3 PR atau lebih, atau masih ada PR tersisa dari batas per run → awali dengan sesi baru:
+`Berikutnya (sesi baru, ketik /clear dulu): /clint:develop docs/plans/mob-10.md PR-4..PR-6`
 Urutan memilih: PR berikutnya dari rencana yang sedang dikerjakan → butir *Perlu perhatian* → butir
 *Perlu dikerjakan* teratas di laporan terakhir (`~/Library/Logs/clint/terakhir.json`) → MR yang menunggu
 review (sebut "review dan merge !n" tanpa perintah). Tidak ada sama sekali → tulis **"Selesai semua

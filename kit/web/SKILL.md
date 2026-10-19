@@ -31,6 +31,10 @@ Notasi `{...}` = ambil dari adapter (`{appRoot}`, `{featuresRoot}`, `{lintCmd}`,
 cat .claude/web-stack.md
 ```
 
+**Adapter lebih dari 300 baris** (`wc -l .claude/web-stack.md`) → jangan `cat` utuh: baca ringkasan placeholder
+dan daftar bagian (`grep -n '^## ' .claude/web-stack.md`), lalu hanya bagian yang dibutuhkan task. Sebut di
+laporan bahwa adapter perlu dirapikan (`/clint:setup sync`).
+
 - Tidak ada → **berhenti**. Tawarkan `/clint:setup web` (atau salin
   `kit/web/adapters/TEMPLATE.md` dari clint). Jangan menebak stack dari nama folder.
 - Bertentangan dengan filesystem → **filesystem menang**; sebutkan bahwa adapter perlu diperbarui.
@@ -137,6 +141,20 @@ project; tidak ada string keras. Format tanggal, angka, dan mata uang lewat util
 
 **Penanda test** (adapter §11): elemen interaktif dan elemen yang di-assert punya penanda test dengan
 format project. Jangan mengganti nama penanda yang sudah ada tanpa memperbarui test-nya.
+
+## Cek lokal vs pipeline (berlaku untuk setiap `{testCmd}` di skill ini)
+
+Lokal hanya cek **cepat** yang terkait perubahan; yang dijalankan CI pada MR (`ciOnMr` di
+`.claude/clint.json`) tidak diulang lokal.
+
+| Cek | Lokal | Pipeline |
+|---|---|---|
+| format + lint file yang diubah, typecheck | selalu | ya |
+| test **terkait perubahan** (`surfaces[].testRelated` + file yang diubah; tanpa itu: test yang ditambah/diubah dan test di folder modul yang disentuh) | selalu | — |
+| suite test penuh, coverage, SonarQube, build | hanya bila **tidak** ada di `ciOnMr` | bila ada di `ciOnMr` |
+
+Refactor lintas banyak modul: suite penuh sekali di akhir (perilaku harus identik). Setelah push, jangan
+menunggu atau memantau pipeline; hasilnya muncul di `/clint:status`.
 
 ## Step 9 — Selesai berarti
 

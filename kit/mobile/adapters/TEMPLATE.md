@@ -4,6 +4,9 @@
 > `skill-mobile` membaca file ini di Step 0 dan berhenti kalau tidak ada.
 > Isi sekali saat fork (~10 menit). Kalau ada yang berubah, update di sini —
 > **jangan** mengedit SKILL.md.
+>
+> **Batas: ≤ 300 baris / 25 KB.** Adapter berisi fakta stack, bukan jurnal. Catatan keputusan per modul,
+> riwayat perbaikan, dan log selisih desain ditulis di ADR atau file rencana; adapter cukup menautkannya.
 
 Terakhir diverifikasi: `{YYYY-MM-DD}` oleh `{nama}`
 

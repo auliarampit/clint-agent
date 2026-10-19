@@ -6,6 +6,7 @@
     "mode": "mr"
   },
   "autoReviewMinLines": 40,
+  "ciOnMr": ["{cek yang dijalankan CI pada MR: lint, typecheck, test, sonar, build, e2e}"],
   "worktreeRoot": "../{nama-repo}-worktrees",
   "relatedRepos": [
     {
@@ -37,6 +38,7 @@
       "lint": "bun run lint",
       "typecheck": "bun run typecheck",
       "test": "bun run test",
+      "testRelated": "{mis. bunx jest --findRelatedTests / bunx vitest related --run / TIDAK ADA}",
       "e2e": "bun run test:e2e",
       "formatFile": "bunx prettier --write"
     }

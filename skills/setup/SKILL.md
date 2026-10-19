@@ -56,6 +56,10 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    (`glab`/`gh` sesuai host remote), `mr.mode` (`"mr"` default; tanya user bila tim biasa
    push langsung ke base → `"push-base"`), perintah lint/typecheck/test/e2e dari `package.json`,
    `formatFile` dari formatter yang benar-benar dipakai project.
+   `ciOnMr`: cek yang benar-benar dijalankan CI pada MR (baca `.gitlab-ci.yml`/`ci/*.yml`/`.github/workflows/*`:
+   job dan `rules`-nya); job yang hanya jalan terjadwal/di branch utama tidak dihitung. `surfaces[].testRelated`:
+   perintah test untuk file yang berubah dari test runner project (jest `--findRelatedTests`, vitest `related --run`),
+   `TIDAK ADA` bila runner tidak mendukung.
    `docs.language`: bahasa dokumen yang sudah ada di `docs.requirements` (`id` atau `en`); belum ada
    dokumen → `en`. Sebutkan nilainya di ringkasan supaya user bisa mengubahnya.
    `docs.feedback`: folder feedback/bug QA (cari `ls -d ../docs/qa/feedback docs/qa 2>/dev/null`
@@ -89,10 +93,14 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    Cari juga rujukan nama lama di file project (`grep -rnE "clint:(jalankan|cek|tinjau|siapkan-project)|referensi/" .claude CLAUDE.md`)
    dan tawarkan penggantinya: `jalankan` → `develop`, `cek` → `status`, `tinjau` → `review`,
    `siapkan-project` → `setup`.
-2. Bandingkan setiap file salinan di project dengan masternya (`diff`). Laporkan yang berbeda.
+2. **Ukuran adapter**: `wc -l -c .claude/*-stack.md`. Lebih dari 300 baris / 25 KB → tunjukkan bagian yang
+   berupa jurnal (catatan keputusan per modul, riwayat, log selisih) dan tawarkan memindahkannya ke ADR atau
+   file rencana dengan tautan dari adapter. Pindahkan hanya bagian yang disetujui user.
+3. Bandingkan setiap file salinan di project dengan masternya (`diff`). Laporkan yang berbeda.
    Perbedaan di project bisa jadi perbaikan yang belum naik ke master. Tanya per file: tarik
    dari master, naikkan ke master, atau biarkan.
-3. File master yang belum ada di project (mis. `sonarqube.md`, field `docs.language`) → tawarkan
+4. File master yang belum ada di project (mis. `sonarqube.md`, field `docs.language`, `ciOnMr`,
+   `surfaces[].testRelated`) → tawarkan
    untuk ditambahkan.
 
 ## Mode `language <en|id>`

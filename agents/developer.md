@@ -36,11 +36,14 @@ bagian rencana PR ini, dan surface yang terlibat.
 
 ## Sebelum melapor selesai
 
-Jalankan dari root surface: `lint`, `typecheck`, dan `test` sesuai `surfaces[]`. Semua harus
-lulus. Perbaiki yang gagal; jangan melonggarkan aturan lint atau assertion test.
+Ikuti aturan **cek lokal vs pipeline** di skill platform: dari root surface jalankan `lint` dan `typecheck`,
+lalu test **terkait perubahan** (`surfaces[].testRelated` + file yang diubah). Suite penuh, coverage, Sonar,
+dan build hanya dijalankan lokal bila tidak ada di `ciOnMr`. Semua yang dijalankan harus lulus; perbaiki
+yang gagal, jangan melonggarkan aturan lint atau assertion test.
 
 Project memakai SonarQube (`.claude/rules/sonarqube.md` ada) → periksa diff terhadap aturan itu
-(cognitive complexity, rule 🔴, hotspot) dan ukur coverage file yang diubah.
+(cognitive complexity, rule 🔴, hotspot) dan pastikan setiap logika baru punya test. Coverage diukur
+pipeline bila `sonar` ada di `ciOnMr`; selain itu ukur coverage file yang diubah.
 
 ## Laporan (wajib, singkat)
 
@@ -48,7 +51,7 @@ Project memakai SonarQube (`.claude/rules/sonarqube.md` ada) → periksa diff te
 - File yang diubah/dibuat (daftar path, untuk staging eksplisit).
 - Requirement rencana yang terpenuhi, satu per satu.
 - Hasil lint/typecheck/test (lulus/gagal + ringkasan).
-- SonarQube (bila berlaku): coverage file yang diubah (angka atau "belum terukur") dan pelanggaran
+- SonarQube (bila berlaku): coverage file yang diubah (angka, "diukur pipeline", atau "belum terukur") dan pelanggaran
   yang sengaja dibiarkan beserta alasannya.
 - Yang belum dikerjakan atau di luar lingkup, apa adanya.
 
@@ -69,4 +72,7 @@ Project memakai SonarQube (`.claude/rules/sonarqube.md` ada) → periksa diff te
   wajib dibaca utuh (lihat "Sebelum menulis kode" langkah 3).
 - Keluaran perintah panjang dipotong: `| tail -40`, `--quiet`, atau `grep` baris error saja.
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
+- Tidak ada `sleep`/polling untuk menunggu pihak luar (pipeline, build/update EAS, deploy, review):
+  laporkan status **tertunda** beserta cara melanjutkan, lalu berhenti. Menunggu proses lokal
+  (simulator, server dev) memakai pengecekan kondisi dengan batas ≤ 2 menit, bukan jeda tetap.
 - Laporan singkat dan padat; tanpa salam, ringkasan ulang, atau penjelasan proses.

@@ -3,6 +3,8 @@
 > Simpan sebagai `.claude/web-stack.md`. `skill-web` membacanya di Step 0 dan berhenti bila tidak ada.
 > Setiap baris punya **perintah verifikasi**: jalankan, tempel hasilnya, jangan mengisi dari ingatan.
 > Baris yang tidak berlaku ditulis `TIDAK ADA`.
+> **Batas: ≤ 300 baris / 25 KB.** Adapter berisi fakta stack, bukan jurnal. Catatan keputusan per modul,
+> riwayat perbaikan, dan log selisih desain ditulis di ADR atau file rencana; adapter cukup menautkannya.
 
 Terakhir diverifikasi: `{YYYY-MM-DD}` oleh `{nama}`
 
