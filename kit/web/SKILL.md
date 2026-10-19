@@ -5,7 +5,7 @@ description: >
   pages, routes, layouts, components, forms, tables, data fetching, state, styling, i18n,
   accessibility, performance, or tests. Stack-agnostic: reads the project's own stack facts from
   `.claude/web-stack.md` and verifies inventory against the filesystem instead of assuming a
-  framework, router, styling system, or folder layout. Deeper guidance lives in `referensi/` and
+  framework, router, styling system, or folder layout. Deeper guidance lives in `references/` and
   is read only when the task touches that topic. Do NOT trigger for: backend, mobile apps, or
   docs-only changes.
 ---
@@ -31,7 +31,7 @@ Notasi `{...}` = ambil dari adapter (`{appRoot}`, `{featuresRoot}`, `{lintCmd}`,
 cat .claude/web-stack.md
 ```
 
-- Tidak ada → **berhenti**. Tawarkan `/clint:siapkan-project web` (atau salin
+- Tidak ada → **berhenti**. Tawarkan `/clint:setup web` (atau salin
   `kit/web/adapters/TEMPLATE.md` dari clint). Jangan menebak stack dari nama folder.
 - Bertentangan dengan filesystem → **filesystem menang**; sebutkan bahwa adapter perlu diperbarui.
 - Monorepo dengan beberapa app web → pastikan app mana yang disentuh task ini (adapter §1).
@@ -49,10 +49,10 @@ Referensi yang dibaca **hanya bila task menyentuhnya**:
 
 | Task menyentuh | Baca |
 |---|---|
-| elemen interaktif, form, dialog, navigasi, warna | `.claude/skills/skill-web/referensi/aksesibilitas.md` |
-| daftar besar, gambar, data fetching, bundle, render ulang | `.claude/skills/skill-web/referensi/performa.md` |
-| input pengguna yang dirender, auth, token, URL eksternal, upload | `.claude/skills/skill-web/referensi/keamanan.md` |
-| form, tabel, paginasi, filter, dialog, toast, upload, wizard | `.claude/skills/skill-web/referensi/pola.md` |
+| elemen interaktif, form, dialog, navigasi, warna | `.claude/skills/skill-web/references/accessibility.md` |
+| halaman/route baru, daftar besar, gambar, font, data fetching, bundle, skrip pihak ketiga, render ulang | `.claude/skills/skill-web/references/performance.md` (**selalu** untuk halaman/route baru) |
+| input pengguna yang dirender, auth, token, URL eksternal, upload | `.claude/skills/skill-web/references/security.md` |
+| form, tabel, paginasi, filter, dialog, toast, upload, wizard | `.claude/skills/skill-web/references/patterns.md` |
 
 ## Step 2 — Baca sebelum menulis (seperlunya)
 
@@ -148,7 +148,8 @@ Semua lulus, lalu periksa:
 
 - [ ] Setiap poin permintaan/requirement terpenuhi; tidak ada tambahan di luar scope.
 - [ ] Empat keadaan data (loading/error/kosong/berisi) tertangani di layar yang disentuh.
-- [ ] Bisa dioperasikan dengan keyboard, fokus terlihat, label lengkap (`.claude/skills/skill-web/referensi/aksesibilitas.md`).
+- [ ] Bisa dioperasikan dengan keyboard, fokus terlihat, label lengkap (`.claude/skills/skill-web/references/accessibility.md`).
+- [ ] `references/performance.md` dipenuhi; halaman/route baru, perubahan pemuatan, atau dependensi baru diukur di build produksi profil mobile (angka sebelum/sesudah, atau "belum terukur").
 - [ ] Tidak ada teks keras, warna acak, style inline statis, `fetch` langsung di komponen.
 - [ ] Test baru menguji perilaku, bukan detail implementasi; bug fix punya test yang tadinya gagal.
 - [ ] Yang belum dikerjakan atau belum terverifikasi dilaporkan apa adanya.

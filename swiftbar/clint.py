@@ -7,7 +7,7 @@
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
 """Menu bar clint (SwiftBar, streamable). Membaca file lokal saja, tanpa jaringan dan tanpa token:
-~/Library/Logs/clint/terakhir.json (laporan), kerja.json (kemajuan jalankan), ~/.config/clint/sesi/
+~/Library/Logs/clint/terakhir.json (laporan), kerja.json (kemajuan develop), ~/.config/clint/sesi/
 (sesi Claude Code). Saat agent bekerja, cincin avatar berputar."""
 import base64, datetime, io, json, os, subprocess, sys, time
 
@@ -15,7 +15,7 @@ HOME = os.path.expanduser("~")
 ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 LOG = os.path.join(HOME, "Library/Logs/clint")
 CFG = os.path.join(HOME, ".config/clint")
-AKSI = os.path.join(ROOT, "scripts/clint-aksi.sh")
+AKSI = os.path.join(ROOT, "scripts/clint-action.sh")
 ORANYE, HIJAU, MERAH, KUNING, ABU = "#F0954A", "#3DBB7E", "#E55B5B", "#D9A93A", "#8A94A3"
 
 
@@ -103,7 +103,7 @@ def baca():
         except Exception:
             lap = None
     kerja = None
-    for fn in ("kerja.json", "kerja-cek.json", "kerja.txt"):   # jalankan diutamakan, lalu cek
+    for fn in ("kerja.json", "kerja-cek.json", "kerja.txt"):   # develop diutamakan, lalu status
         k = os.path.join(LOG, fn)
         if os.path.exists(k) and time.time() - os.path.getmtime(k) < 3 * 3600:
             try:
@@ -254,7 +254,7 @@ def render():
     # ---- tombol cepat ----
     o(f"Buka laporan terakhir | {aksi('laporan')} sfimage=doc.text")
     try:
-        aktif_p = [x for x in subprocess.run(["bash", os.path.join(ROOT, "scripts/proyek-aktif.sh"), "3"],
+        aktif_p = [x for x in subprocess.run(["bash", os.path.join(ROOT, "scripts/active-projects.sh"), "3"],
                                              capture_output=True, text=True, timeout=10).stdout.split("\n") if x.strip()]
     except Exception:
         aktif_p = []
@@ -275,7 +275,7 @@ def render():
     cap = os.path.join(CFG, "mr-dicek")
     if lap is not None and (not os.path.exists(cap) or time.time() - os.path.getmtime(cap) > 900):
         open(cap, "w").close()
-        subprocess.Popen(["python3", os.path.join(ROOT, "scripts/laporan-ubah.py"), "periksa-mr"],
+        subprocess.Popen(["python3", os.path.join(ROOT, "scripts/update-report.py"), "periksa-mr"],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     return bekerja, "\n".join(out), badge
 
@@ -325,7 +325,7 @@ def sapaan_pagi():
         if f.startswith("sapaan-20") and f != os.path.basename(tanda_hari):
             os.remove(os.path.join(CFG, f))
     open(tanda_hari, "w").close()
-    subprocess.Popen(["bash", os.path.join(ROOT, "scripts/sapaan-pagi.sh")],
+    subprocess.Popen(["bash", os.path.join(ROOT, "scripts/morning-greeting.sh")],
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
 

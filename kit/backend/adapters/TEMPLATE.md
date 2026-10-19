@@ -114,6 +114,8 @@ Verifikasi: `ls {modulesRoot}; find {modulesRoot}/<modul-contoh> -maxdepth 2` (p
 | Integrasi: database test (container/instans test) + perintah | |
 | Factory/fixture data | |
 | Test kontrak | ya/TIDAK ADA |
+| Pengukuran performa (APM, log timing, load test mis. k6/Artillery + perintah) | ya/TIDAK ADA |
+| Target performa khusus project | hanya bila lebih ketat dari `references/performance.md` / TIDAK ADA |
 
 ## 12. Dokumen
 

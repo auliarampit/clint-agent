@@ -8,6 +8,8 @@ description: >
   patterns, shared-component extraction, clean code, and testing. Stack-agnostic: reads
   the project's own stack facts from `.claude/mobile-stack.md` and verifies inventory
   against the filesystem rather than assuming a library, router, or folder layout.
+  Deeper guidance (strict performance budgets, accessibility, security, recurring
+  patterns) lives in `references/` and is read only when the task touches that topic.
   Do NOT trigger for: backend, web frontends, or docs-only changes.
 ---
 
@@ -55,7 +57,7 @@ lint, path dokumen.
 
 **Kalau file itu tidak ada → berhenti.** Jangan menebak stack dari nama folder. Bilang ke
 user: adapter belum ada, dan tawarkan mengisinya dari template
-(`/clint:siapkan-project`, atau salin `kit/mobile/adapters/TEMPLATE.md` dari clint). Mengisinya ~10 menit; menebaknya bisa
+(`/clint:setup`, atau salin `kit/mobile/adapters/TEMPLATE.md` dari clint). Mengisinya ~10 menit; menebaknya bisa
 menghasilkan refactor arsitektur yang salah.
 
 **Kalau adapter ada tapi bertentangan dengan filesystem** (menyebut folder yang sudah
@@ -282,7 +284,7 @@ ke cabang default saat varian baru muncul.
 Umumkan tipe task sebelum lanjut:
 > "This is a **[feat|fix|refactor|chore]** task."
 
-> Berjalan sebagai **subagent** (mis. `pengembang` clint)? Pengumuman ini tidak sampai ke
+> Berjalan sebagai **subagent** (mis. `developer` clint)? Pengumuman ini tidak sampai ke
 > user; tulis tipe dan tier di laporan akhir.
 
 ### B. Tier task (feat & fix saja)
@@ -326,7 +328,7 @@ mengarang, atau menyelesaikannya diam-diam**:
 
 Satu pertanyaan satu kalimat jauh lebih murah daripada satu implementasi yang salah.
 
-Berjalan sebagai **subagent** (mis. `pengembang` clint)? "Tanya" berarti **berhenti dan
+Berjalan sebagai **subagent** (mis. `developer` clint)? "Tanya" berarti **berhenti dan
 laporkan** pertanyaan ke pemanggil (situasi, opsi, rekomendasi, apa yang sudah dikerjakan),
 bukan memilih sendiri supaya pekerjaan tetap selesai. Pemanggil meneruskannya ke user dan
 melanjutkanmu dengan jawabannya.
@@ -739,99 +741,14 @@ handler-nya supaya app tetap jalan. Baca handler yang ada dulu untuk mencocokkan
 
 ---
 
-## Step 8.5 — Pola feature yang berulang
+## Step 8.5 — Referensi: dibaca hanya bila task menyentuhnya
 
-Pola berikut portable lintas project; nama library-nya ambil dari adapter.
-
-### Pagination / infinite scroll
-Query bertingkat halaman + list yang memanggil halaman berikutnya saat mendekati ujung.
-Selalu sertakan `keyExtractor` dengan id stabil, footer loading, dan `testID` pada list.
-
-### Pull-to-refresh
-Sambungkan `refreshControl` ke `refetch` + flag `isRefetching` dari query, bukan ke state
-manual.
-
-### Empty state
-**Selalu** tampilkan setelah loading selesai dan data kosong — jangan pernah meninggalkan
-layar kosong tanpa penjelasan. Beri `testID` sendiri. Berlaku juga saat "kosong" datang
-dari respons yang **sukses** (200 dengan array/objek kosong), bukan cuma dari error atau
-404 — jangan biarkan hasil kosong lolos begitu saja ke cabang "berhasil dimuat" tanpa
-pengecekan panjang/isi eksplisit. Kalau ada lebih dari satu sumber data untuk halaman yang
-sama (mis. jaringan dan salinan luring), cek kekosongan di **setiap** sumber, bukan cuma
-yang paling sering dipakai.
-
-### Skeleton / loading state
-Skeleton saat load pertama; spinner refresh saat pull-to-refresh. **Jangan** memakai dialog
-loading yang memblokir untuk data list — dialog blocking hanya untuk mutation (submit, hapus).
-
-> Semua pembacaan dan mutation yang menunggu jaringan **wajib** punya indikator: skeleton,
-> spinner inline, atau tombol dengan state disabled/loading. Tidak boleh ada request in-flight
-> yang tidak terlihat user.
-
-### Wizard multi-langkah
-State ada di hook, **bukan** di parameter navigasi. Langkah dirender kondisional — jangan
-bernavigasi antar langkah. Panggil navigasi hanya saat wizard selesai atau dibatalkan.
-Bersihkan draft wizard saat sesi berakhir supaya data user sebelumnya tidak bocor.
-
-### Optimistic UI
-Untuk mutation yang butuh umpan balik instan: batalkan query terkait, simpan snapshot
-sebelumnya, tulis optimistis, rollback di `onError`, invalidate di `onSettled`.
-
-### Tap ganda pada aksi async yang bisa disusul
-
-Saat sebuah handler async (panggilan native seperti `Linking`, atau efek samping lain di
-luar manajer server-state project) bisa dipicu lagi sebelum panggilan sebelumnya selesai —
-dua tap cepat ke item berbeda — dan hasilnya menyetel state UI (membuka modal, menyetel
-pesan error) di blok `catch`/`then`, **jangan asumsikan urutan settle promise sama dengan
-urutan tap user**. Promise dari tap pertama bisa selesai belakangan dan menimpa state yang
-seharusnya milik tap kedua. Jaga dengan penghitung permintaan:
-
-```tsx
-const latestRequestId = useRef(0);
-
-async function open(item: Item) {
-  const requestId = (latestRequestId.current += 1);
-  try {
-    await doSomethingAsync(item);
-  } catch {
-    if (requestId === latestRequestId.current) {
-      setFallback(item); // hanya tap TERAKHIR yang boleh menang
-    }
-  }
-}
-```
-
-Manajer server-state modern (adapter §4/§5) biasanya sudah menangani ini sendiri untuk
-query/mutation lewat library-nya (permintaan terbaru otomatis menang) — pola di atas untuk
-efek samping async di **luar** lapisan itu, yang menyetel state lokal langsung dari hasil
-promise.
-
----
-
-### Daftar — FlatList untuk data, `map` hanya untuk grup tetap kecil
-
-| Kasus | Pakai |
+| Task menyentuh | Baca |
 |---|---|
-| Data dari API, hasil pencarian, konten yang panjangnya ditentukan data | `FlatList` / `SectionList` — **list-nya menjadi scroll container layar**. Konten lain masuk `ListHeaderComponent` / `ListFooterComponent`, keadaan kosong masuk `ListEmptyComponent` |
-| Grup kecil yang panjangnya ditetapkan desain (±10 butir ke bawah, mis. 6 tile menu, baris jadwal harian) di dalam kartu atau di layar yang juga berisi konten lain | `map` di dalam `ScrollView` |
-
-- **Jangan menaruh `FlatList` di dalam `ScrollView` searah.** Virtualisasi mati dan React
-  Native memperingatkan nested VirtualizedList — kalau layar punya konten lain, jadikan
-  konten itu header/footer list.
-- `keyExtractor` dan `renderItem` didefinisikan bernama (Step 0c.5); `keyExtractor` boleh di
-  level modul.
-- Header yang berisi input teks dioper sebagai elemen dari komponen yang didefinisikan di
-  level modul, **bukan** komponen inline — kalau tidak, input kehilangan fokus setiap render.
-- Item yang dibingkai sebagai satu kartu di dalam `FlatList` menggambar tepinya sendiri
-  (atas untuk item pertama, bawah untuk item terakhir), karena list tidak punya pembungkus
-  kartu.
-
-### Bottom sheet
-
-Pakai library bottom sheet yang ditunjuk adapter §7. **Jangan merakit sheet sendiri** dari
-`Modal` + scrim `Pressable` + animasi manual: swipe-to-close, keyboard, safe area, dan
-aksesibilitas hampir selalu tertinggal. Kalau adapter belum menunjuk library, tanya user
-sebelum menambah dependency.
+| daftar, scroll, gambar, animasi, startup, data fetching, dependensi baru, layar yang sering dirender | `.claude/skills/skill-mobile/references/performance.md` (**selalu** untuk Tier 2/3) |
+| elemen interaktif, form, dialog/sheet, navigasi, warna, teks | `.claude/skills/skill-mobile/references/accessibility.md` |
+| auth, token, penyimpanan lokal, deep link, WebView, izin, log, konfigurasi build | `.claude/skills/skill-mobile/references/security.md` |
+| paginasi, pull-to-refresh, empty/loading state, wizard, optimistic UI, tap ganda, daftar, bottom sheet | `.claude/skills/skill-mobile/references/patterns.md` |
 
 ---
 
@@ -1085,7 +1002,10 @@ Scope = nama feature. Commit per unit logis, bukan sekali di akhir.
 - [ ] Kondisi kompleks diekstrak ke variabel bernama
 - [ ] Tidak ada arrow function inline di prop JSX — handler bernama di atas `return`
 - [ ] Tidak ada ternary JSX multi-baris; daftar kosong lewat `ListEmptyComponent`
-- [ ] Daftar berbasis data memakai `FlatList`/`SectionList` sebagai scroll container
+- [ ] Daftar berbasis data memakai komponen virtualisasi (adapter §7) sebagai scroll container
+- [ ] `references/performance.md` dipenuhi; alur yang menyentuh daftar/startup/animasi diukur di release build (angka sebelum/sesudah, atau "belum terukur")
+- [ ] `references/accessibility.md` dipenuhi untuk elemen yang berubah (label, role, target sentuh, skala huruf)
+- [ ] `references/security.md` dipenuhi bila menyentuh token, storage, deep link, WebView, atau log
 - [ ] Bottom sheet memakai library yang ditunjuk adapter, bukan `Modal` rakitan
 - [ ] `{formatCmd}` + `{lintCmd}` + typecheck dijalankan sebelum commit, bukan menunggu hook
 - [ ] Tidak ada logika bisnis di UI — hanya di layer logic/data

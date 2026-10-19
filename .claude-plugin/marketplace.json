@@ -8,9 +8,9 @@
   "plugins": [
     {
       "name": "clint",
-      "description": "Alur PR otomatis (rencana → kerja → tinjau → uji → MR), prinsip kerja wajib, dan master skill per platform",
+      "description": "Tim agent Badr untuk siklus kerja project: status, develop sampai MR, review berlapis, test, docs, dan release; standar SonarQube, prinsip kerja wajib, dan master skill mobile/web/backend",
       "source": "./",
-      "version": "1.15.0"
+      "version": "2.0.0"
     }
   ]
 }

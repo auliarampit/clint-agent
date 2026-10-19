@@ -5,7 +5,7 @@ description: >
   endpoints, modules, domain logic, database schema and migrations, queries, auth and permissions,
   background jobs, integrations, events, caching, or tests. Stack-agnostic: reads the project's own
   stack facts from `.claude/backend-stack.md` and verifies inventory against the filesystem instead of
-  assuming a runtime, framework, ORM, or database. Deeper guidance lives in `referensi/` and is read
+  assuming a runtime, framework, ORM, or database. Deeper guidance lives in `references/` and is read
   only when the task touches that topic. Do NOT trigger for: web or mobile frontends, or docs-only changes.
 ---
 
@@ -19,7 +19,7 @@ description: >
 > project. Nama framework, ORM, database, broker, dan path ada di adapter. Kesimpulan "endpoint/tabel/
 > modul belum ada" wajib dibuktikan dengan perintah sebelum membuat yang baru.
 
-Notasi `{...}` = ambil dari adapter. Referensi ada di `.claude/skills/skill-backend/referensi/`.
+Notasi `{...}` = ambil dari adapter. Referensi ada di `.claude/skills/skill-backend/references/`.
 
 ---
 
@@ -29,7 +29,7 @@ Notasi `{...}` = ambil dari adapter. Referensi ada di `.claude/skills/skill-back
 cat .claude/backend-stack.md
 ```
 
-Tidak ada → **berhenti**, tawarkan `/clint:siapkan-project backend`. Bertentangan dengan filesystem →
+Tidak ada → **berhenti**, tawarkan `/clint:setup backend`. Bertentangan dengan filesystem →
 filesystem menang; sebutkan bahwa adapter perlu diperbarui. Monorepo → pastikan service mana yang disentuh.
 
 ## Step 1 — Klasifikasi task
@@ -38,16 +38,17 @@ filesystem menang; sebutkan bahwa adapter perlu diperbarui. Monorepo → pastika
 |---|---|
 | **Kecil** (pesan error, validasi tambahan, field opsional) | Step 0, 3, 5, lalu Step 10 |
 | **Endpoint/fitur** | Semua langkah |
-| **Skema/migrasi** | Wajib `referensi/data.md`; Step 6 diperlakukan sebagai titik risiko tertinggi |
+| **Skema/migrasi** | Wajib `references/data.md`; Step 6 diperlakukan sebagai titik risiko tertinggi |
 | **Perbaikan bug** | Reproduksi dengan test yang gagal dulu → perbaiki → Step 10 |
 | **Refactor** | Test yang ada lulus sebelum dan sesudah; kontrak API tidak berubah |
 
 | Task menyentuh | Baca |
 |---|---|
-| endpoint baru/berubah, bentuk respons, error, paginasi | `referensi/kontrak-api.md` |
-| skema, migrasi, query, transaksi, indeks | `referensi/data.md` |
-| auth, izin, input, upload, rate limit, data pribadi | `referensi/keamanan-api.md` |
-| panggilan layanan luar, job, event, cache, logging | `referensi/keandalan.md` |
+| endpoint baru/berubah, bentuk respons, error, paginasi | `references/api-contract.md` |
+| skema, migrasi, query, transaksi, indeks | `references/data.md` |
+| auth, izin, input, upload, rate limit, data pribadi | `references/api-security.md` |
+| panggilan layanan luar, job, event, cache, logging | `references/reliability.md` |
+| endpoint baru, query, endpoint di jalur panas, job, ekspor/impor, dependensi baru | `references/performance.md` (**selalu** untuk endpoint baru) |
 
 ## Step 2 — Kontrak dulu, kode kemudian
 
@@ -124,7 +125,7 @@ Yang wajib di semua bentuk:
 ## Step 9 — Integrasi, job, event
 
 Setiap panggilan keluar punya timeout; retry hanya untuk operasi idempoten dengan backoff. Job dan
-consumer event idempoten (aman dijalankan dua kali). Detail di `referensi/keandalan.md`.
+consumer event idempoten (aman dijalankan dua kali). Detail di `references/reliability.md`.
 
 ## Step 10 — Selesai berarti
 
@@ -137,6 +138,7 @@ consumer event idempoten (aman dijalankan dua kali). Detail di `referensi/keanda
 - [ ] Migrasi bisa dijalankan pada data yang ada; transaksi dan indeks sesuai kebutuhan query.
 - [ ] Test: aturan bisnis (unit) + endpoint/repository (integrasi, adapter §11) + kasus error utama.
 - [ ] Tidak ada rahasia/data pribadi di log; panggilan keluar punya timeout.
+- [ ] `references/performance.md` dipenuhi: tanpa N+1, query di tabel besar memakai indeks, kerja lambat di job; latensi/rencana query diukur (angka, atau "belum terukur").
 - [ ] Yang belum dikerjakan atau belum terverifikasi dilaporkan apa adanya.
 
 ---

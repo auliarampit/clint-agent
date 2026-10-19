@@ -8,19 +8,21 @@ kit/
   working-principles.md          ← 4 aturan prioritas, copy apa adanya, WAJIB
   mobile/
     SKILL.md                     ← copy apa adanya, JANGAN diedit per project
+    references/                  ← performance, accessibility, security, patterns (dibaca bila task menyentuhnya)
     mobile-e2e.md                ← copy apa adanya
-  adapters/
-    TEMPLATE.md                  ← isi saat setup project baru (~10 menit)
+    adapters/
+      TEMPLATE.md                ← isi saat setup project baru (~10 menit)
 ```
 
 ## Cara pakai di project baru
 
 ```bash
-# Cara otomatis: /clint:siapkan-project mobile
+# Cara otomatis: /clint:setup mobile
 # Cara manual:
 KIT=~/Desktop/clint/kit
-mkdir -p .claude/skills/skill-mobile .claude/rules
+mkdir -p .claude/skills/skill-mobile/references .claude/rules
 cp "$KIT/mobile/SKILL.md"               .claude/skills/skill-mobile/
+cp "$KIT"/mobile/references/*.md        .claude/skills/skill-mobile/references/
 cp "$KIT/working-principles.md"         .claude/rules/
 cp "$KIT/mobile/mobile-e2e.md"          .claude/rules/
 cp "$KIT/mobile/adapters/TEMPLATE.md"   .claude/mobile-stack.md

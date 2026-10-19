@@ -22,6 +22,7 @@
     }
   ],
   "docs": {
+    "language": "{en / id — bahasa dokumen project; default en}",
     "plans": "{path rencana PR / TIDAK ADA}",
     "requirements": "{path PRD/SAD/STD/API contract / TIDAK ADA}",
     "design": "{path prototype desain / TIDAK ADA}",

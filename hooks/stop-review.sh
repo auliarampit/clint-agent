@@ -32,5 +32,5 @@ if [ "$lines" -ge "$last_lines" ]; then delta=$(( lines - last_lines )); else de
 [ "$delta" -ge "$min" ] || exit 0
 
 self="$(cd "$(dirname "$0")" && pwd)/stop-review.sh"
-jq -n --arg r "Ada $lines baris perubahan kode yang belum ditinjau. Jalankan skill /clint:tinjau (tanpa argumen) untuk meninjau dan memperbaikinya, lalu tandai dengan: bash \"$self\" --tandai" \
+jq -n --arg r "Ada $lines baris perubahan kode yang belum ditinjau. Jalankan skill /clint:review (tanpa argumen) untuk meninjau dan memperbaikinya, lalu tandai dengan: bash \"$self\" --tandai" \
   '{decision: "block", reason: $r}'

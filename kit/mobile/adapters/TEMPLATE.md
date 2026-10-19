@@ -191,10 +191,13 @@ Verifikasi: `grep -n "coverageThreshold" {appRoot}/jest.config.js; ls -d {appRoo
 | E2E tool | `{Maestro / Detox / Appium / TIDAK ADA}` |
 | Lokasi flow E2E | `{path}` |
 | Locator E2E | `{testID / accessibilityLabel}` |
+| Alat ukur performa | `{mis. React DevTools Profiler, Perf Monitor, Flashlight, Android Studio Profiler, Xcode Instruments / TIDAK ADA}` |
+| Perangkat acuan performa | `{mis. Android RAM 4 GB kelas menengah + iPhone 12 / TIDAK ADA → default references/performance.md}` |
+| Target performa khusus project | `{hanya bila lebih ketat dari references/performance.md / TIDAK ADA}` |
 
 **Jebakan lingkungan E2E** — masalah yang terbukti bukan bug produk tapi tampak seperti bug
 (env API terkunci, launcher dev client, izin per platform, bundler dingin). Satu baris per
-jebakan: gejala → pencegahan. Kosong → `TIDAK ADA`. `penguji` menyiapkan pencegahannya sebelum
+jebakan: gejala → pencegahan. Kosong → `TIDAK ADA`. `e2e-tester` menyiapkan pencegahannya sebelum
 flow pertama dan mengusulkan baris baru bila menemukan jebakan lain.
 
 | Gejala | Pencegahan |
@@ -204,7 +207,7 @@ flow pertama dan mengusulkan baris baru bila menemukan jebakan lain.
 **Pratinjau E2E** (Expo + EAS Update) — menguji perubahan **sebelum MR** di simulator tanpa build
 native lokal (berat di disk) dan tanpa mengirim apa pun ke QA. Simulator memakai build khusus
 dengan channel yang **tidak dipakai build QA**; update di-publish ke branch EAS per fitur lalu
-channel itu diarahkan ke sana. Bukan Expo / tidak ada → `TIDAK ADA` (penguji memakai cara lama).
+channel itu diarahkan ke sana. Bukan Expo / tidak ada → `TIDAK ADA` (`e2e-tester` memakai cara lama).
 
 | Hal | Nilai |
 |---|---|

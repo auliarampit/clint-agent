@@ -6,7 +6,7 @@ semua project web; fakta stack tiap project ada di adapter.
 ```
 web/
   SKILL.md              → .claude/skills/skill-web/SKILL.md      (konvensi inti, jangan diedit per project)
-  referensi/            → .claude/skills/skill-web/referensi/    (dibaca hanya bila task menyentuhnya)
+  references/            → .claude/skills/skill-web/references/    (dibaca hanya bila task menyentuhnya)
     aksesibilitas.md    WCAG 2.2 AA
     performa.md         Core Web Vitals dan bundle
     keamanan.md         keamanan sisi klien (OWASP)
@@ -15,7 +15,7 @@ web/
   adapters/TEMPLATE.md  → .claude/web-stack.md                   (diisi per project)
 ```
 
-Pasang otomatis: `/clint:siapkan-project web`.
+Pasang otomatis: `/clint:setup web`.
 
 ## Prinsip yang sama dengan kit mobile
 
@@ -25,7 +25,7 @@ Pasang otomatis: `/clint:siapkan-project web`.
   idealnya tanpa hasil.
 - **Larangan berbentuk konsistensi, bukan pilihan library.** "Satu mekanisme server state; yang dipakai
   project ini ada di adapter §4", bukan "pakai library X".
-- **Hemat token.** Inti skill ringkas; pengetahuan mendalam dipisah ke `referensi/` dan hanya dibaca
+- **Hemat token.** Inti skill ringkas; pengetahuan mendalam dipisah ke `references/` dan hanya dibaca
   bila relevan.
 
 Adapter yang sudah terisi milik project tetap tinggal di project masing-masing, tidak disimpan di kit.

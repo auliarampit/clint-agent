@@ -127,7 +127,8 @@ Satu formatter saja; formatter yang **tidak** dipakai: …
 | Format penanda test | |
 | Fixture login / seed data | |
 | Pemeriksa aksesibilitas otomatis | ya/TIDAK ADA |
-| Analisis bundle / audit performa | ya/TIDAK ADA |
+| Analisis bundle / audit performa (alat + perintah) | ya/TIDAK ADA |
+| Target performa khusus project | hanya bila lebih ketat dari `references/performance.md` / TIDAK ADA |
 
 ## 12. Dokumen & desain
 
