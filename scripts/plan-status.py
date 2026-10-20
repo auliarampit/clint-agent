@@ -104,8 +104,11 @@ def claims(repo, slug, own):
             continue
         if os.path.splitext(os.path.basename(k.get("rencana") or ""))[0] != slug:
             continue
+        c = {"self": sid == own, "tahap": k.get("tahap") or "", "path": k.get("path") or ""}
         for p in k.get("prs") or []:
-            out[p] = {"self": sid == own, "tahap": k.get("tahap") or "", "path": k.get("path") or ""}
+            out[p] = c
+        if k.get("tugas") == "status-pr":
+            out["status-pr"] = c
     return out
 
 
@@ -153,7 +156,7 @@ def evaluate(plan, repo, cfg, own, overrides):
         if p["id"] in overrides:
             st, note = overrides[p["id"]][0], overrides[p["id"]][1] or note
         p.update(state=st, note=note, mr=mr, claim=held_by.get(p["id"]))
-    return {"path": os.path.relpath(plan, repo), "slug": slug, "prs": prs}
+    return {"path": os.path.relpath(plan, repo), "slug": slug, "prs": prs, "status_claim": held_by.get("status-pr")}
 
 
 def plan_steps(r):
@@ -194,7 +197,10 @@ def plan_steps(r):
         steps.append(f"[urutan, setelah {','.join(need)}] {cmd([p['id'] for p in wave])}" + (f" · lintas: {lintas}" if lintas else ""))
         assumed |= {p["id"] for p in wave}
         rest = [p for p in rest if p not in wave]
-    if unknown:
+    sc = r.get("status_claim")
+    if unknown and sc and not sc["self"]:
+        info.append(f"Sedang dikerjakan sesi lain: catat Status PR ({sc['tahap'] or 'berjalan'})")
+    elif unknown:
         steps.insert(0, f"[catat status] {len(unknown)} PR tanpa bukti (push-base tanpa trailer Plan:) · "
                         f"/clint:docs perbarui Status PR di {r['path']} dari git log")
     for p in prs.values():
@@ -291,6 +297,9 @@ def main():
             print("  Berikutnya:")
             for s in r["steps"]:
                 print(f"    {s}")
+        elif r["done"] < len(r["prs"]):
+            print("  Berikutnya: tidak ada tugas baru untuk sesi ini" +
+                  ("; sisanya sedang dikerjakan sesi lain." if any("sesi lain" in i for i in r["info"]) else "."))
         print()
     if finished and len(plans) > 1:
         print("Selesai semua: " + ", ".join(finished))

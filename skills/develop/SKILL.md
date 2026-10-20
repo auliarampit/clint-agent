@@ -382,7 +382,10 @@ Cara menyusun (tanpa menebak):
 3. Lalu butir *Perlu dikerjakan* milik project ini saja di laporan `status` (`~/Library/Logs/clint/terakhir.json`,
    ambil hanya butir yang `proyek`-nya project ini; cocokkan `dir` di `proyek[]`). Butir project lain **tidak
    pernah** masuk *Berikutnya*.
-4. Tidak ada langkah → "Menunggu review: !n" bila ada, selain itu **"Selesai semua pekerjaan."**
+4. Langkah yang sedang dikerjakan sesi lain (klaim di `~/Library/Logs/clint/kerja/`, ditandai skrip "Sedang
+   dikerjakan sesi lain") **tidak pernah** ditulis sebagai langkah siap ketik, hanya sebagai baris info.
+5. Tidak ada langkah → "Menunggu review: !n" bila ada; sisanya dipegang sesi lain → **"Tidak ada tugas baru untuk
+   sesi ini; sisanya sedang dikerjakan sesi lain."**; selain itu **"Tugas hari ini sudah selesai semua."**
 
 Run mengerjakan 3 PR atau lebih, atau masih ada PR tersisa dari batas per run → judul blok menyebut
 "sesi baru: ketik /clear dulu". Maksimal 5 langkah.

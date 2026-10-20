@@ -32,7 +32,14 @@ Tanpa peninjau kode. Permintaan yang menyentuh dua jenis (mis. PRD berubah lalu 
 agent pertama, lalu daftar dampak dari laporannya diteruskan ke agent kedua.
 
 **Status PR di rencana dari git log** (rencana lama, mode `push-base` tanpa trailer `Plan:`): jalankan
-`python3 "$R/scripts/plan-status.py" <rencana>` lalu beri `tech-writer` daftar PR beserta branch dan isinya.
+`python3 "$R/scripts/plan-status.py" <rencana> --session <sid>`. Ada baris "Sedang dikerjakan sesi lain: catat Status
+PR" → berhenti, sebut di laporan, jangan dikerjakan dobel. Selain itu **klaim** dulu supaya sesi lain tidak
+disarankan langkah yang sama, dan hapus klaim di akhir (termasuk bila gagal):
+```bash
+mkdir -p ~/Library/Logs/clint/kerja && printf '%s' '{"dir":"<repo utama absolut>","rencana":"<rencana>","prs":[],"tugas":"status-pr","judul":"docs Status PR","label":"Status PR","tahap":"tech-writer mencocokkan git log"}' > ~/Library/Logs/clint/kerja/<sid>.json
+```
+`dir` seperti di skill `develop` (*Status di menu bar dan klaim PR*). Akhir: `rm -f ~/Library/Logs/clint/kerja/<sid>.json`.
+Lalu beri `tech-writer` daftar PR beserta branch dan isinya.
 Ia mencocokkan dengan `git log origin/<baseBranch>` (judul commit, ID modul/requirement, file yang disentuh), lalu
 menulis bagian `## Status PR` (format: `- [x] PR-n · ✅ selesai · commit <hash>`, dipisah baris kosong). PR yang
 buktinya tidak jelas ditulis `⬜ belum mulai` dan disebut di laporan, bukan ditebak selesai.

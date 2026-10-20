@@ -42,7 +42,7 @@ Dijawab langsung di sesi ini, **tanpa agent**.
    modul yang belum direncanakan. Rencana yang semuanya ✅ cukup satu baris "Selesai semua: …".
 4. **Berikutnya**: dari keluaran skrip (sudah bertanda paralel/urutan); modul belum direncanakan →
    `[siap] /clint:develop <ID-modul>` (develop memanggil planner). Status `❔ belum tercatat` →
-   `/clint:docs perbarui Status PR di <rencana> dari git log`.
+   `/clint:docs perbarui Status PR di <rencana> dari git log`, kecuali skrip menandainya sedang dikerjakan sesi lain.
 
 Mode ini hanya membaca. Status di file rencana ditulis oleh `develop` saat commit, atau lewat `/clint:docs`.
 
