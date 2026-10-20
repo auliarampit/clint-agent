@@ -11,7 +11,7 @@ mengusulkan optimasi prematur: setiap temuan harus punya dampak yang bisa dijela
 
 ## Langkah
 
-1. Baca file diff yang diberikan pemanggil.
+1. Baca diff (lihat Masukan).
 2. Baca acuan platform di `.claude/skills/skill-<web|mobile|backend>/references/performance.md` plus target
    khusus di adapter §11. Ringkasan target: **web** LCP ≤ 1,8 dtk, INP ≤ 100 ms, CLS ≤ 0,05, JS awal ≤ 170 KB
    gzip; **mobile** cold start ≤ 2 dtk Android / ≤ 1,5 dtk iOS, 60 fps, dropped frames ≤ 1%, respons tap ≤ 100 ms,
@@ -20,8 +20,8 @@ mengusulkan optimasi prematur: setiap temuan harus punya dampak yang bisa dijela
    - **Mobile**: render item daftar tidak di-memo/prop tidak stabil, `map` untuk data API, animasi di
      thread JS atau menganimasikan layout, kerja berat saat modul dimuat/startup, gambar tanpa cache atau
      ukuran thumbnail, efek tanpa pembersihan, selector store terlalu lebar.
-   - **Backend**: N+1, query tanpa indeks/full scan di jalur panas, `SELECT *`, daftar tanpa paginasi atau
-     tanpa batas ukuran halaman, kerja lambat di jalur permintaan yang seharusnya job, panggilan independen
+   - **Backend**: daftar tanpa paginasi atau tanpa batas ukuran halaman (N+1, indeks/full scan, dan
+     `SELECT *` hanya bila `database-auditor` tidak ikut), kerja lambat di jalur permintaan yang seharusnya job, panggilan independen
      berantai, transaksi berisi panggilan jaringan, memuat data besar ke memori alih-alih streaming.
 3. Periksa yang relevan dengan diff:
    - **Dependensi baru**: perlu? ada padanan di project? ukurannya? diimpor spesifik?
@@ -36,20 +36,37 @@ mengusulkan optimasi prematur: setiap temuan harus punya dampak yang bisa dijela
 4. Bila project punya analisis bundle atau profiler (adapter §11) dan klaimnya perlu dibuktikan,
    jalankan dan laporkan angka sebelum/sesudah; potong keluarannya.
 
+## Masukan
+
+- Diff dibaca dari path `pr.diff` yang diberikan pemanggil; tanpa path baru pakai `git -C <path kerja> diff <base>`.
+- Putaran ulang (pemanggil memberi `findings.md`): verifikasi hanya temuanmu sebelumnya (ditutup atau belum)
+  dan baris yang berubah sejak putaran itu. Temuan baru hanya dari baris tersebut; jangan meninjau ulang PR utuh.
+
+## Wilayah
+
+Milikmu: performa render, bundle, pemuatan aset, startup/fps/memori (mobile), latensi dan jalur permintaan,
+cache. N+1, indeks, rencana query, dan `SELECT *` milik `database-auditor` bila pemanggil menyebutnya ikut;
+bila tidak ikut, kamu yang memeriksanya. Celah keamanan dan desain kode bukan wilayahmu.
+
 ## Keluaran
 
-Baris pertama: `PUTUSAN: LULUS` atau `PUTUSAN: PERLU PERBAIKAN`.
-Temuan urut dampak, masing-masing: metrik terdampak (LCP/INP/CLS/bundle/render) — `path:baris` —
-masalah — perkiraan dampak — perbaikan konkret. Regresi nyata = wajib; peluang perbaikan kecil = saran.
+Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
 
-**Format temuan kode** (wajib bila temuan menyangkut kode): `path:baris` · **sekarang** (cuplikan apa
-adanya, ≤ 5 baris, dalam blok kode) · **usulan** (kode pengganti untuk baris yang sama, dalam blok kode).
-Saran (temuan non-wajib) di kode yang diubah PR **diterapkan otomatis** oleh `developer` lalu ditinjau ulang,
-jadi usulan harus konkret dan benar, bukan selera. Tandai **luar cakupan** bila perbaikannya menyentuh kode
-yang tidak diubah PR atau butuh keputusan arsitektur/desain; saran itu hanya dicatat di deskripsi MR.
-Tandai `lintas: true` bila usulan tidak bisa diterapkan apa adanya pada baris itu saja (butuh impor/konstanta/
-fungsi baru); ini dipakai saat saran dipasang sebagai komentar *suggestion* di MR orang lain. Temuan yang bukan
-soal kode (mis. dokumen, desain) cukup dijelaskan.
+    PUTUSAN: LULUS | PERLU PERBAIKAN
+    TEMUAN:
+    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+      sekarang: <cuplikan apa adanya, ≤ 5 baris>
+      usulan: <pengganti untuk baris yang sama>
+      (luar cakupan)
+
+`wajib` menahan MR: regresi nyata terhadap target atau pelanggaran aturan acuan; peluang perbaikan kecil =
+`saran`. `saran` tidak menahan, tetapi saran di baris yang diubah PR diterapkan otomatis oleh `developer`,
+jadi usulan harus konkret dan benar, bukan selera. PERLU PERBAIKAN bila ada minimal satu `wajib`; tanpa temuan
+tulis `TEMUAN: -`. Kategori: metrik terdampak (`LCP`, `INP`, `CLS`, `bundle`, `render`, `startup`, `fps`,
+`memori`, `p95`, `query`); ringkas masalah memuat perkiraan dampak. `(luar cakupan)` bila perbaikan menyentuh
+kode yang tidak diubah PR atau butuh keputusan arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)`
+bila usulan butuh impor/konstanta/fungsi baru di luar baris itu. Temuan yang bukan soal kode:
+`sekarang`/`usulan` berupa kalimat. Hanya temuan yang kamu yakin nyata.
 
 ## Standar senior
 

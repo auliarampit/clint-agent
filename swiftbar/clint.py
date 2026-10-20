@@ -7,7 +7,7 @@
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
 """Menu bar clint (SwiftBar, streamable). Membaca file lokal saja, tanpa jaringan dan tanpa token:
-~/Library/Logs/clint/terakhir.json (laporan), kerja.json (kemajuan develop), ~/.config/clint/sesi/
+~/Library/Logs/clint/terakhir.json (laporan), kerja/<sid>.json (kemajuan develop per sesi), ~/.config/clint/sesi/
 (sesi Claude Code). Saat agent bekerja, cincin avatar berputar."""
 import base64, datetime, io, json, os, subprocess, sys, time
 
@@ -49,7 +49,7 @@ def bersih(t, n=70):
 def aksi(nama, *args, refresh=False):
     s = f'bash="{AKSI}" param1={nama}'
     for i, a in enumerate(args, start=2):
-        s += f' param{i}="{bersih(a, 300)}"'
+        s += f' param{i}="{bersih(a, 1000)}"'
     return s + " terminal=false" + (" refresh=true" if refresh else "")
 
 
@@ -65,7 +65,7 @@ def durasi(dt):
 
 def nama_proyek(d):
     base, induk = os.path.basename(d), os.path.basename(os.path.dirname(d))
-    return f"{induk} · {base}" if len(base) < 12 and induk not in ("Desktop", "Documents", HOME) else base
+    return f"{induk} · {base}" if len(base) < 12 and induk not in ("Desktop", "Documents", os.path.basename(HOME)) else base
 
 
 def giliran_selesai(path):
@@ -99,19 +99,53 @@ def baca():
         try:
             lap = json.load(open(p, encoding="utf-8"))
             # Waktu laporan DIBUAT, bukan waktu file terakhir disentuh (pengecekan MR / tandai selesai).
-            waktu = datetime.datetime.fromtimestamp(lap.get("_dibuat") or os.path.getmtime(p)).strftime("%H.%M")
+            waktu = kapan(lap.get("_dibuat") or os.path.getmtime(p))
         except Exception:
             lap = None
-    kerja = None
-    for fn in ("kerja.json", "kerja-cek.json", "kerja.txt"):   # develop diutamakan, lalu status
+    return lap, waktu, baca_kerja(), baca_sesi()
+
+
+def kapan(ts):
+    t = datetime.datetime.fromtimestamp(ts)
+    selisih = (datetime.date.today() - t.date()).days
+    return t.strftime("%H.%M") if selisih == 0 else t.strftime("kemarin %H.%M") if selisih == 1 else t.strftime("%d/%m %H.%M")
+
+
+def hidup(path):
+    """Klaim kerja/<sid>.json hidup bila < 3 jam dan sesinya masih ada; cek-<pid>.json bila prosesnya masih jalan."""
+    if time.time() - os.path.getmtime(path) >= 3 * 3600:
+        return False
+    nama = os.path.basename(path)[:-5]
+    if nama.startswith("cek-"):
+        try:
+            os.kill(int(nama[4:]), 0); return True
+        except (ValueError, OSError):
+            return False
+    return os.path.exists(os.path.join(CFG, "sesi", nama + ".json"))
+
+
+def baca_kerja():
+    """Semua kemajuan kerja yang hidup: per sesi (kerja/*.json), plus file lama untuk kompatibilitas."""
+    kerja, kd = [], os.path.join(LOG, "kerja")
+    fs = [os.path.join(kd, f) for f in sorted(os.listdir(kd)) if f.endswith(".json")] if os.path.isdir(kd) else []
+    for k in fs:
+        try:
+            if hidup(k):
+                kerja.append(json.load(open(k, encoding="utf-8")))
+        except Exception:
+            pass
+    for fn in ("kerja.json", "kerja-cek.json", "kerja.txt"):
         k = os.path.join(LOG, fn)
-        if os.path.exists(k) and time.time() - os.path.getmtime(k) < 3 * 3600:
-            try:
-                kerja = json.load(open(k, encoding="utf-8")) if fn.endswith(".json") else \
-                    dict(zip(("label", "tahap", "catatan"), open(k, encoding="utf-8").read().splitlines()))
-            except Exception:
-                kerja = None
-            break
+        try:
+            if os.path.exists(k) and time.time() - os.path.getmtime(k) < 3 * 3600:
+                kerja.append(json.load(open(k, encoding="utf-8")) if fn.endswith(".json") else
+                             dict(zip(("label", "tahap", "catatan"), open(k, encoding="utf-8").read().splitlines())))
+        except Exception:
+            pass
+    return kerja
+
+
+def baca_sesi():
     sesi, sd = [], os.path.join(CFG, "sesi")
     for fn in (os.listdir(sd) if os.path.isdir(sd) else []):
         try:
@@ -139,12 +173,30 @@ def baca():
                 or (st in ("selesai", "diam") and umur < 1800 if st == "diam" else st == "selesai" and umur < 600):
             x["umur"] = umur; sesi.append(x)
     sesi.sort(key=lambda x: x.get("mulai", 0))
-    return lap, waktu, kerja, sesi
+    return sesi
+
+
+def proyek_aktif():
+    """Hasil active-projects.sh disimpan 5 menit: find di ~/.claude/projects lambat bila dipanggil tiap render."""
+    cache = os.path.join(CFG, "proyek-aktif.txt")
+    try:
+        if time.time() - os.path.getmtime(cache) < 300:
+            return [x for x in open(cache, encoding="utf-8").read().split("\n") if x.strip()]
+    except OSError:
+        pass
+    try:
+        out = subprocess.run(["bash", os.path.join(ROOT, "scripts/active-projects.sh"), "3"],
+                             capture_output=True, text=True, timeout=10).stdout
+        open(cache, "w", encoding="utf-8").write(out)
+    except Exception:
+        out = ""
+    return [x for x in out.split("\n") if x.strip()]
 
 
 def render():
     """Kembalikan (bekerja?, teks menu tanpa baris judul, judul (label, warna))."""
-    lap, waktu, kerja, sesi = baca()
+    lap, waktu, semua_kerja, sesi = baca()
+    kerja = semua_kerja[0] if semua_kerja else None
     L = lambda key: (lap or {}).get(key) or []
     gagal, kerjakan, cek, tunggu = L("gagal"), L("kerjakan"), L("cek"), L("tunggu")
     menunggu = len(gagal) + len(kerjakan) + len(cek)
@@ -154,7 +206,7 @@ def render():
     out = []; o = out.append
     ava = b64(os.path.join(CFG, "ikon.png"))
     ava_img = f"image={ava} width=34 height=34" if ava else "sfimage=person.crop.circle"
-    sesi_utama = (aktif or sesi or [{}])[0].get("cwd", "")
+    sesi_utama = (kerja or {}).get("path") or (kerja or {}).get("dir") or (aktif or sesi or [{}])[0].get("cwd", "")
 
     # ---- kepala ----
     if bekerja:
@@ -162,7 +214,8 @@ def render():
         mulai = (kerja or {}).get("mulai") or (datetime.datetime.fromtimestamp(aktif[0]["mulai"]).strftime("%H.%M") if aktif and aktif[0].get("mulai") else "")
         o(f"Sedang bekerja | {ava_img} size=15 font=HelveticaNeue-Bold {aksi('vscode', sesi_utama)}")
         o(f"{bersih(judul, 48)}{' · mulai ' + mulai if mulai else ''} | size=12 color={ABU}")
-        badge = ((kerja or {}).get("label") or (f"{len(aktif)} sesi" if len(aktif) > 1 else "bekerja"), ORANYE)
+        badge = (f"{len(semua_kerja)} kerja" if len(semua_kerja) > 1 else (kerja or {}).get("label")
+                 or (f"{len(aktif)} sesi" if len(aktif) > 1 else "bekerja"), ORANYE)
     elif gagal:
         o(f"Ada yang gagal | {ava_img} size=15 font=HelveticaNeue-Bold {aksi('laporan')}")
         o(f"{bersih(gagal[0].get('teks'), 50)} | size=12 color={ABU}")
@@ -180,15 +233,22 @@ def render():
     # ---- agent sedang bekerja ----
     if bekerja:
         o(f"Agent sedang bekerja | size=12 color={ABU}")
-        if kerja:
-            pr, total = kerja.get("pr"), kerja.get("total")
-            utama = f"PR-{pr} dari {total}" if pr and total else (kerja.get("label") or "")
-            o(f"{bersih(utama + (' · ' + kerja['tahap'] if kerja.get('tahap') else ''), 60)} | size=13 font=HelveticaNeue-Medium {aksi('vscode', sesi_utama)}")
-            if pr and total:
-                isi = round(26 * (int(pr) - 0.5) / int(total))
-                o(f"{'━' * isi}{'─' * (26 - isi)} | size=12 font=Menlo {aksi('vscode', sesi_utama)}")
-            if kerja.get("catatan"):
-                o(f"{bersih(kerja['catatan'], 60)} | size=12 color={ABU}")
+        for k in semua_kerja:
+            buka = k.get("path") or k.get("dir") or sesi_utama
+            pr, total = k.get("pr"), k.get("total")
+            utama = f"PR-{pr} dari {total}" if pr and total else (k.get("label") or "")
+            if len(semua_kerja) > 1 or k.get("dir"):
+                kepala = " · ".join(x for x in (nama_proyek(k["dir"]) if k.get("dir") else "", k.get("judul") or "") if x)
+                o(f"{bersih(kepala, 60)} | size=12 font=HelveticaNeue-Medium {aksi('vscode', buka)}")
+            o(f"{bersih(utama + (' · ' + k['tahap'] if k.get('tahap') else ''), 60)} | size=13 font=HelveticaNeue-Medium {aksi('vscode', buka)}")
+            try:
+                isi = round(26 * (int(pr) - 0.5) / int(total)) if pr and total else None
+            except (TypeError, ValueError):
+                isi = None
+            if isi is not None:
+                o(f"{'━' * isi}{'─' * (26 - isi)} | size=12 font=Menlo {aksi('vscode', buka)}")
+            if k.get("catatan"):
+                o(f"{bersih(k['catatan'], 60)} | size=12 color={ABU}")
         for x in sesi:
             st = x["status"]
             warna, kata = {"bekerja": (ORANYE, "bekerja"), "latar": (ORANYE, "di latar"),
@@ -223,7 +283,8 @@ def render():
             o(f"{pre}--Buka MR di browser | {aksi('buka', x['url'])} sfimage=safari")
         if DIR.get(x.get("proyek")):
             o(f"{pre}--Buka project di VS Code | {aksi('vscode', DIR[x['proyek']])} sfimage=chevron.left.forwardslash.chevron.right")
-        o(f"{pre}--Tandai selesai | {aksi('selesai', x.get('teks'), refresh=True)} sfimage=checkmark")
+        ident = "b64:" + base64.urlsafe_b64encode(str(x.get("sumber") or x.get("teks") or "").encode()).decode().rstrip("=")
+        o(f"{pre}--Tandai selesai | {aksi('selesai', ident, x.get('proyek') or '', refresh=True)} sfimage=checkmark")
 
     grup = (("Perlu perhatian", gagal, MERAH), ("Perlu dikerjakan", kerjakan, ORANYE), ("Menunggu review Anda", cek, KUNING))
     if bekerja and menunggu:   # saat bekerja menu fokus ke kemajuan; tugas diringkas
@@ -243,21 +304,21 @@ def render():
             o(f"Tidak ada yang perlu ditindaklanjuti. | color={ABU}")
             o("---")
 
-    nx = ((lap or {}).get("berikutnya") or "").strip()
+    nx = (lap or {}).get("berikutnya") or ""
     if nx and not bekerja:
-        if nx.startswith("/"):
-            o(f"Berikutnya: {bersih(nx, 52)} | {aksi('salin', nx, 'project terkait')} sfimage=arrow.right.circle")
+        if isinstance(nx, list):
+            for b in [b for b in nx if b.get("langkah")][:3]:
+                t = b["langkah"][0]; cmd = t[t.find("/"):] if "/" in t else t
+                o(f"Berikutnya · {bersih(b.get('proyek'), 20)}: {bersih(t, 48)} | {aksi('salin', cmd, b.get('proyek') or '')} sfimage=arrow.right.circle")
+        elif nx.strip().startswith("/"):
+            o(f"Berikutnya: {bersih(nx.strip(), 52)} | {aksi('salin', nx.strip(), 'project terkait')} sfimage=arrow.right.circle")
         else:
             o(f"{bersih(nx, 60)} | sfimage=checkmark.seal color={ABU}")
         o("---")
 
     # ---- tombol cepat ----
     o(f"Buka laporan terakhir | {aksi('laporan')} sfimage=doc.text")
-    try:
-        aktif_p = [x for x in subprocess.run(["bash", os.path.join(ROOT, "scripts/active-projects.sh"), "3"],
-                                             capture_output=True, text=True, timeout=10).stdout.split("\n") if x.strip()]
-    except Exception:
-        aktif_p = []
+    aktif_p = proyek_aktif()
     o(f"Cek semua project ({len(aktif_p)} aktif) | {aksi('cek-semua', refresh=True)} sfimage=arrow.clockwise")
     o("Cek project | sfimage=folder")
     for d in aktif_p:
@@ -291,9 +352,9 @@ def tanda():
     """Sidik perubahan file sumber; menu dirender ulang hanya bila berubah (atau tiap 30 detik)."""
     fs = [os.path.join(LOG, f) for f in ("terakhir.json", "kerja.json", "kerja-cek.json", "kerja.txt")] + \
          [os.path.join(CFG, f) for f in ("diam", "bisu-sampai")]
-    sd = os.path.join(CFG, "sesi")
-    if os.path.isdir(sd):
-        fs += [os.path.join(sd, f) for f in os.listdir(sd)]
+    for sd in (os.path.join(CFG, "sesi"), os.path.join(LOG, "kerja")):
+        if os.path.isdir(sd):
+            fs += [os.path.join(sd, f) for f in os.listdir(sd)]
     return tuple((f, os.path.getmtime(f)) for f in fs if os.path.exists(f))
 
 

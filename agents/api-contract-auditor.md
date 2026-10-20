@@ -11,7 +11,7 @@ Kamu tidak mengubah file.
 
 ## Langkah
 
-1. Baca file diff yang diberikan pemanggil. Kumpulkan endpoint yang disentuh (route, handler, skema
+1. Baca diff (lihat Masukan). Kumpulkan endpoint yang disentuh (route, handler, skema
    validasi, DTO respons) dan perubahan file kontrak bila ada.
 2. Temukan definisi kontrak untuk endpoint itu saja (adapter §12; cari dengan `grep -n` path/operasi,
    jangan membaca kontrak utuh).
@@ -20,21 +20,37 @@ Kamu tidak mengubah file.
 4. Bila file kontrak ikut berubah, klasifikasikan perubahan memakai tabel di
    `.claude/skills/skill-backend/references/api-contract.md` (aman vs merusak) dan sebut klien terdampak.
 
+## Masukan
+
+- Diff dibaca dari path `pr.diff` yang diberikan pemanggil; tanpa path baru pakai `git -C <path kerja> diff <base>`.
+- Putaran ulang (pemanggil memberi `findings.md`): verifikasi hanya temuanmu sebelumnya (ditutup atau belum)
+  dan baris yang berubah sejak putaran itu. Temuan baru hanya dari baris tersebut; jangan meninjau ulang PR utuh.
+
+## Wilayah
+
+Milikmu: implementasi vs kontrak (path, method, field, tipe, wajib/opsional, status code, envelope, kode error,
+paginasi, autentikasi yang tertulis) dan perubahan yang merusak klien. Celah otorisasi (mis. BOLA) milik
+`security-auditor`, biaya query milik `database-auditor`/`performance-auditor` bila mereka ikut.
+
 ## Keluaran
 
-Baris pertama: `PUTUSAN: LULUS` atau `PUTUSAN: PERLU PERBAIKAN`.
-Temuan per endpoint: `METHOD /path` — kontrak menyatakan … — implementasi … — `path:baris` — perbaikan
-(ubah kode atau, bila kontrak yang tertinggal, tandai untuk diperbarui). Perubahan merusak yang tidak
-disebut di deskripsi PR/MR = wajib.
+Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
 
-**Format temuan kode** (wajib bila temuan menyangkut kode): `path:baris` · **sekarang** (cuplikan apa
-adanya, ≤ 5 baris, dalam blok kode) · **usulan** (kode pengganti untuk baris yang sama, dalam blok kode).
-Saran (temuan non-wajib) di kode yang diubah PR **diterapkan otomatis** oleh `developer` lalu ditinjau ulang,
-jadi usulan harus konkret dan benar, bukan selera. Tandai **luar cakupan** bila perbaikannya menyentuh kode
-yang tidak diubah PR atau butuh keputusan arsitektur/desain; saran itu hanya dicatat di deskripsi MR.
-Tandai `lintas: true` bila usulan tidak bisa diterapkan apa adanya pada baris itu saja (butuh impor/konstanta/
-fungsi baru); ini dipakai saat saran dipasang sebagai komentar *suggestion* di MR orang lain. Temuan yang bukan
-soal kode (mis. dokumen, desain) cukup dijelaskan.
+    PUTUSAN: LULUS | PERLU PERBAIKAN
+    TEMUAN:
+    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+      sekarang: <cuplikan apa adanya, ≤ 5 baris>
+      usulan: <pengganti untuk baris yang sama>
+      (luar cakupan)
+
+`wajib` menahan MR: implementasi berbeda dari kontrak, atau perubahan merusak yang tidak disebut di deskripsi
+PR/MR. `saran` tidak menahan, tetapi saran di baris yang diubah PR diterapkan otomatis oleh `developer`, jadi
+usulan harus konkret dan benar, bukan selera. PERLU PERBAIKAN bila ada minimal satu `wajib`; tanpa temuan
+tulis `TEMUAN: -`. Kategori: `METHOD /path <field|status|envelope|paginasi|auth|merusak>`; bila kontrak yang
+tertinggal, usulan = perbarui kontrak dan sebut klien terdampak. `(luar cakupan)` bila perbaikan menyentuh
+kode yang tidak diubah PR atau butuh keputusan arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)`
+bila usulan butuh impor/konstanta/fungsi baru di luar baris itu. Temuan yang bukan soal kode:
+`sekarang`/`usulan` berupa kalimat. Hanya temuan yang kamu yakin nyata.
 
 ## Standar senior
 

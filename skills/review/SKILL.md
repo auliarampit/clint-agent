@@ -9,7 +9,7 @@ argument-hint: [branch | !nomor-MR] [--only]
 ## 1. Tentukan yang ditinjau
 
 Laporan memakai bahasa user (baris *Bahasa clint* di konteks sesi; default English); sebut bahasa itu di
-prompt agent.
+prompt agent. `R` = path plugin dari baris *Sesi clint* di konteks sesi.
 
 - Tanpa argumen: perubahan di working tree (belum di-commit) **ditambah** commit branch saat ini
   yang belum ada di `origin/<baseBranch>` (`.claude/clint.json`).
@@ -17,54 +17,54 @@ prompt agent.
 - **Mode hanya-tinjau** bila argumen `--only`, atau MR milik orang lain
   (`glab mr view` / `gh pr view` → author bukan user). Mode ini tidak mengubah apa pun.
 
-## 2. Tinjauan sesuai ukuran diff (hemat token)
+## 2. Pilih peninjau sesuai ukuran diff (hemat token)
 
-- ≤ ~30 baris di area biasa: **tanpa agent**; periksa sendiri dengan checklist skill platform.
-- ≤ ~150 baris di area biasa: hanya `code-reviewer`.
-- Lebih besar, atau menyentuh auth/data/migrasi/kontrak/pembayaran: daftar di bawah, dengan **maksimal 2**
-  auditor yang paling relevan. Review MR orang lain (`--only`) boleh memakai daftar lengkap yang relevan.
+| Diff | Peninjau |
+|---|---|
+| ≤ ~30 baris di area biasa | **tanpa agent**; periksa sendiri dengan checklist skill platform |
+| ≤ ~150 baris di area biasa | `code-reviewer` **sendirian** (ia juga memeriksa kebenaran logika dan kesesuaian dengan rencana bila ada) |
+| lebih besar, atau menyentuh auth/data/migrasi/kontrak/pembayaran | `conformance-reviewer` + `code-reviewer` + **maksimal 2** auditor paling relevan dari daftar di bawah |
+| MR orang lain (`--only`) | `conformance-reviewer` + `code-reviewer` + semua auditor yang pemicunya tersentuh |
 
-## 2b. Tinjauan paralel
+Pemicu auditor:
+- `security-auditor`: auth, API/HTTP, storage, konfigurasi, dependensi, WebView/deep link;
+- `database-auditor`: migrasi, skema, repository/akses data, query;
+- `api-contract-auditor`: endpoint, DTO/skema validasi, file kontrak;
+- `design-auditor`: UI **dan** `docs.design` bukan `TIDAK ADA`;
+- `accessibility-auditor`: komponen tampilan, form, dialog, navigasi, warna;
+- `performance-auditor`: dependensi baru, daftar besar, gambar, pengambilan data, komponen yang sering dirender,
+  startup/animasi (mobile), query/endpoint di jalur panas, job, ekspor/impor data (backend).
 
-Jalankan bersamaan, dalam satu pesan:
+Jalankan yang terpilih **bersamaan** (satu pesan). Input ke setiap peninjau:
+- path diff, bukan isinya: `<git-common-dir>/clint/<branch>/pr.diff`
+  (`git diff <base> > ...`; folder itu di dalam `.git`, tidak ikut ter-commit);
+- potongan rencana bila branch ini berasal dari rencana (`grep -l <branch> <docs.plans>/*.md`), selain itu tidak ada;
+- daftar peninjau lain di putaran ini, supaya wilayah auditor yang ikut tidak diperiksa ulang.
 
-- `conformance-reviewer` dan `code-reviewer`: selalu;
-- `security-auditor`: bila diff menyentuh auth, API/HTTP, storage, konfigurasi, dependensi,
-  WebView/deep link;
-- `design-auditor`: bila diff menyentuh UI dan `docs.design` bukan `TIDAK ADA`;
-- `accessibility-auditor`: bila diff menyentuh komponen tampilan, form, dialog, navigasi, atau warna;
-- `performance-auditor`: bila diff menambah dependensi, menyentuh daftar besar, gambar, pengambilan data, komponen yang sering dirender, startup/animasi (mobile), query, endpoint di jalur panas, job, atau ekspor/impor data (backend);
-- `database-auditor`: bila diff menyentuh migrasi, skema, repository/akses data, atau query;
-- `api-contract-auditor`: bila diff menyentuh endpoint, DTO/skema validasi, atau file kontrak.
-
-Input dari kamu ke setiap peninjau (hemat token):
-- simpan diff sekali ke file sementara (`git -C <path kerja> diff <base> > <tmp>/pr.diff`) dan
-  beri **path**-nya, bukan isi diff;
-- beri hanya potongan rencana untuk PR ini, plus hasil lint/typecheck/test dari laporan
-  `developer` (supaya tidak dijalankan ulang);
-- putaran ulang: kirim **hanya** daftar temuan sebelumnya + diff baru, minta peninjau
-  memverifikasi temuan itu saja, bukan meninjau dari awal.
+Setiap peninjau menutup laporannya dengan `PUTUSAN: LULUS | PERLU PERBAIKAN` dan `TEMUAN:` berlabel
+`[wajib]`/`[saran]`. Gabungkan ke `<folder>/findings.md` dan buang temuan ganda (lokasi + masalah sama).
 
 ## 3. Perbaiki otomatis (kecuali mode hanya-tinjau)
 
-- Kumpulkan temuan **wajib**: PERLU PERBAIKAN (termasuk dari `code-reviewer`), ADA CELAH
-  tingkat Sedang ke atas, dan selisih desain; ditambah temuan **Saran/Rendah** di kode yang berubah
-  (kecuali yang ditandai luar cakupan atau bertentangan dengan aturan project).
-- Kirim semuanya dalam satu daftar ke agent `developer` untuk diperbaiki di tempat yang sama
-  (repo utama; worktree hanya bila working tree user sedang dipakai untuk hal lain). Jangan commit.
-- Tinjau ulang **hanya** dengan peninjau yang tadi memberi temuan. Maksimal 2 putaran.
+- Kirim ke agent `developer` dalam satu pesan: path `findings.md`, semua `[wajib]`, dan `[saran]` di kode yang
+  berubah (kecuali `(luar cakupan)` atau yang bertentangan dengan aturan project). Kerjakan di tempat yang sama
+  Jangan commit. Tempatnya: tanpa argumen → di tempat (perubahan yang ditinjau memang ada di working tree ini);
+  branch/MR lain → `bash "$R/scripts/repo-busy.sh" . <sid>`: `bebas` → `git switch` di repo utama, `dipakai` →
+  worktree (aturan skill `develop` langkah 5.1).
+- Putaran ulang: perbarui `pr.diff`, jalankan **hanya** peninjau yang tadi memberi `[wajib]`, dengan path
+  `findings.md`; mereka memverifikasi temuannya saja. Maksimal 2 putaran.
 
 ## 4. Tandai sudah ditinjau
 
 Setelah selesai (lulus maupun berhenti di batas putaran), jalankan perintah penanda yang
-diberikan hook (`... stop-review.sh --tandai`) bila tinjauan ini dipicu hook. Ini mencegah
+diberikan hook (`... stop-review.sh --mark`, persis seperti di pesan hook) bila tinjauan ini dipicu hook. Ini mencegah
 tinjauan berulang untuk perubahan yang sama.
 
 ## 5. Laporan singkat
 
 Setiap temuan kode ditulis dengan `path:baris`, cuplikan **sekarang**, dan **usulan**. Untuk MR orang
-lain, komentar *suggestion* di MR (`scripts/mr-suggestions.py`) hanya dipasang bila user memintanya.
+lain, komentar *suggestion* di MR (`"$R/scripts/mr-suggestions.py"`) hanya dipasang bila user memintanya.
 
-
-Putusan per peninjau, apa saja yang sudah diperbaiki, temuan wajib yang masih tersisa (bila
-batas putaran tercapai), dan saran yang tidak diterapkan.
+Isi: putusan per peninjau, apa saja yang sudah diperbaiki, temuan wajib yang masih tersisa (bila batas putaran
+tercapai), dan saran yang tidak diterapkan. Tutup dengan blok **Berikutnya** (aturan skill `develop` bagian 6),
+mis. `[siap] /clint:develop` untuk membuat MR dari perubahan ini.

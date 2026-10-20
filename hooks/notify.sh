@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # Menyampaikan kabar singkat (notifikasi Mac + suara) yang ditulis skill ke file kabar.
 # Dipanggil hook Stop, atau langsung: notify.sh "kalimat".
-file="${TMPDIR:-/tmp}/clint-kabar.txt"
 if [ -n "$1" ]; then teks="$1"; else
-  [ -s "$file" ] || exit 0
+  sid=""
+  if [ ! -t 0 ]; then sid="$(jq -r '.session_id // empty' 2>/dev/null)"; fi
+  file=""
+  for f in ${sid:+"${TMPDIR:-/tmp}/clint-kabar-$sid.txt"} "${TMPDIR:-/tmp}/clint-kabar.txt"; do
+    [ -s "$f" ] && { file="$f"; break; }
+  done
+  [ -n "$file" ] || exit 0
   teks="$(head -c 300 "$file")"; rm -f "$file"
 fi
 dir="${CLAUDE_PROJECT_DIR:-$PWD}"
@@ -17,7 +22,8 @@ if [ -z "$CLINT_PAKSA" ] && [ -f "$cfg/bisu-sampai" ]; then
 fi
 
 judul="clint · $(basename "$dir")"
-osascript -e "display notification \"${teks//\"/\\\"}\" with title \"${judul}\"" >/dev/null 2>&1
+osascript -e 'on run a' -e 'display notification (item 1 of a) with title (item 2 of a)' -e 'end run' \
+  "$teks" "$judul" >/dev/null 2>&1
 # Suara mengikuti bahasa pribadi (~/.config/clint/user.json); English memakai suara bawaan sistem.
 [ "$(jq -r '.language // "en"' "$cfg/user.json" 2>/dev/null)" = "id" ] && vo=(-v Damayanti) || vo=()
 [ "$suara" = 1 ] && command -v say >/dev/null && (say "${vo[@]}" "$teks" >/dev/null 2>&1 &)

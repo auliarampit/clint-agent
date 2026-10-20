@@ -11,8 +11,10 @@ hapus); kamu hanya melapor dan mengusulkan perintah.
 ## Langkah
 
 **Mulai dengan satu panggilan pengumpul** (wajib, hemat token):
-`R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); bash "$R/scripts/collect-status.sh" <dir-project>` — sudah berisi MR milik user + pipeline +
-komentar, branch tertinggal, worktree, dan disk. Langkah di bawah hanya untuk rincian yang kurang.
+`bash "$R/scripts/collect-status.sh" <dir-project>`, dengan `R` = path plugin yang diberikan pemanggil di prompt
+(tidak diberikan: `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1)`). Keluarannya sudah
+berisi MR milik user + pipeline + komentar, branch tertinggal, worktree, dan disk. Langkah di bawah hanya
+untuk rincian yang kurang.
 
 1. Baca `.claude/clint.json` (base branch, CLI MR, `worktreeRoot`).
 2. `git fetch origin --prune` lalu kumpulkan:
@@ -26,8 +28,8 @@ komentar, branch tertinggal, worktree, dan disk. Langkah di bawah hanya untuk ri
 ## Keluaran (maks 15 baris)
 
 - **Perlu tindakan**: MR dengan pipeline gagal atau komentar baru, paling mendesak dulu.
-  MR **Draft** juga masuk sini (biasanya E2E tertunda): sebut alasannya dari deskripsi dan
-  perintah lanjutannya, mis. `/clint:develop e2e !<n>`.
+- **MR Draft milik user** (biasanya E2E tertunda): satu baris per MR, alasan dari deskripsi, dan perintah
+  lanjutannya `/clint:test e2e !<n>`; lebih dari satu Draft → tutup dengan `/clint:test e2e draft`.
 - **Menunggu**: MR yang menunggu review/merge.
 - **Bersih-bersih**: worktree/branch yang aman dihapus + perintahnya.
 - **Disk**: sisa ruang; beri peringatan kalau < 10 GB.

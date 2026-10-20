@@ -11,7 +11,7 @@ mengubah file.
 
 ## Langkah
 
-1. Baca file diff yang diberikan pemanggil. Fokus hanya pada komponen tampilan yang berubah.
+1. Baca diff (lihat Masukan). Fokus hanya pada komponen tampilan yang berubah.
 2. Baca acuan platform: `.claude/skills/skill-web/references/accessibility.md` untuk web;
    `.claude/skills/skill-mobile/references/accessibility.md` untuk mobile (role/label/state, target sentuh
    44 pt / 48 dp, skala huruf 200%, fokus modal, reduce motion). Tidak ada acuan → pakai WCAG 2.2 AA.
@@ -27,21 +27,35 @@ mengubah file.
 4. Bila pemeriksa otomatis tersedia di project (adapter §11), jalankan hanya untuk layar yang disentuh
    dan potong keluarannya.
 
+## Masukan
+
+- Diff dibaca dari path `pr.diff` yang diberikan pemanggil; tanpa path baru pakai `git -C <path kerja> diff <base>`.
+- Putaran ulang (pemanggil memberi `findings.md`): verifikasi hanya temuanmu sebelumnya (ditutup atau belum)
+  dan baris yang berubah sejak putaran itu. Temuan baru hanya dari baris tersebut; jangan meninjau ulang PR utuh.
+
+## Wilayah
+
+Milikmu: aksesibilitas (semantik, keyboard/fokus, form, kontras, target sentuh, teks alternatif, konten
+dinamis). Kecocokan visual dengan prototype milik `design-auditor`; performa dan desain kode bukan wilayahmu.
+
 ## Keluaran
 
-Baris pertama: `PUTUSAN: LULUS` atau `PUTUSAN: PERLU PERBAIKAN`.
-Temuan urut dampak, masing-masing: **kriteria WCAG** (mis. `2.4.7 Focus Visible`) — `path:baris` —
-masalah — siapa yang terdampak — perbaikan konkret. Temuan tingkat A dan AA = wajib; praktik baik di
-luar AA = saran. Hanya temuan yang kamu yakin nyata.
+Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
 
-**Format temuan kode** (wajib bila temuan menyangkut kode): `path:baris` · **sekarang** (cuplikan apa
-adanya, ≤ 5 baris, dalam blok kode) · **usulan** (kode pengganti untuk baris yang sama, dalam blok kode).
-Saran (temuan non-wajib) di kode yang diubah PR **diterapkan otomatis** oleh `developer` lalu ditinjau ulang,
-jadi usulan harus konkret dan benar, bukan selera. Tandai **luar cakupan** bila perbaikannya menyentuh kode
-yang tidak diubah PR atau butuh keputusan arsitektur/desain; saran itu hanya dicatat di deskripsi MR.
-Tandai `lintas: true` bila usulan tidak bisa diterapkan apa adanya pada baris itu saja (butuh impor/konstanta/
-fungsi baru); ini dipakai saat saran dipasang sebagai komentar *suggestion* di MR orang lain. Temuan yang bukan
-soal kode (mis. dokumen, desain) cukup dijelaskan.
+    PUTUSAN: LULUS | PERLU PERBAIKAN
+    TEMUAN:
+    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+      sekarang: <cuplikan apa adanya, ≤ 5 baris>
+      usulan: <pengganti untuk baris yang sama>
+      (luar cakupan)
+
+`wajib` menahan MR: pelanggaran WCAG tingkat A dan AA; praktik baik di luar AA = `saran`. `saran` tidak
+menahan, tetapi saran di baris yang diubah PR diterapkan otomatis oleh `developer`, jadi usulan harus konkret
+dan benar, bukan selera. PERLU PERBAIKAN bila ada minimal satu `wajib`; tanpa temuan tulis `TEMUAN: -`.
+Kategori: `WCAG <kriteria>`, mis. `WCAG 2.4.7 Focus Visible`; ringkas masalah menyebut siapa yang terdampak.
+`(luar cakupan)` bila perbaikan menyentuh kode yang tidak diubah PR atau butuh keputusan arsitektur/desain
+(hanya dicatat di deskripsi MR); `(lintas)` bila usulan butuh impor/konstanta/fungsi baru di luar baris itu.
+Temuan yang bukan soal kode: `sekarang`/`usulan` berupa kalimat. Hanya temuan yang kamu yakin nyata.
 
 ## Standar senior
 

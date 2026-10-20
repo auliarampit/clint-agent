@@ -44,6 +44,10 @@ hanya untuk diteruskan ke agent (beri path/potongan saja).
   di konteks sesi; default English). Sebut bahasa itu di setiap prompt agent. Dokumen project lain
   (feedback QA, README, CHANGELOG, ADR) memakai `docs.language` di `.claude/clint.json`.
 - Baca `.claude/clint.json`. Tidak ada → berhenti, tawarkan `/clint:setup`.
+- `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi (cadangan
+  `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1)`). Teruskan `R` ke agent yang butuh skrip.
+- **Sesi lain di repo ini**: PR yang diklaim sesi lain terlihat di `plan-status.py` (🔄) dan tidak dikerjakan di
+  sini. Apakah repo utama boleh dipakai ditentukan di langkah 5.1.
 - `git fetch origin --prune`. Tarik juga `relatedRepos` (`git -C <path> pull --ff-only` bila
   bersih) supaya rencana dan implementasi memakai dokumen dan desain terbaru.
 - Cocokkan tugas dengan `surfaces[]` (dari path/app yang disebut, atau dari rencana). Tugas
@@ -71,7 +75,8 @@ hanya untuk diteruskan ke agent (beri path/potongan saja).
 | Path dokumen lain (feedback QA, bug report, MoM, notulen) | jadikan **sumber tugas**: ambil butir yang masih open dan menyangkut surface ini; muat 1 PR → langsung; lebih → `planner` membuat rencana di `docs.plans` dari butir itu. Jangan mengubah dokumen sumber |
 
 Untuk tugas **Besar**, panggil `solution-architect` sekali untuk meninjau rencana (baru atau yang sudah ada)
-sebelum PR pertama; putusan `PERLU DIUBAH` → perbarui rencana dulu.
+sebelum PR pertama; putusan `PERLU DIUBAH` → teruskan daftar perubahan rencana dari SA apa adanya ke `planner`
+sebagai masukan, baru lanjut.
 
 Untuk jalur rencana, panggil agent `planner` bila:
 - rencana belum ada → buat baru; atau
@@ -88,12 +93,20 @@ Ambil tabel **Urutan pekerjaan** (PR · Branch · Isi · Menutup · Bergantung �
 
 ## 3. Pilih PR yang dikerjakan
 
-- Pilihan dari argumen (`PR-2,PR-4`, `PR-2..PR-5`); tanpa pilihan → semua PR yang belum selesai.
+Status setiap PR diambil dari satu skrip (tanpa token):
+`python3 "$R/scripts/plan-status.py" <rencana> --session <sid>` (`--json` untuk dibaca mesin). Skrip memakai MR
+(merged/open/Draft), trailer `Plan:` di base, branch yang tertinggal, klaim sesi lain, dan bagian `## Status PR`.
+
+- Pilihan dari argumen (`PR-2,PR-4`, `PR-2..PR-5`); tanpa pilihan → PR `⏸️ tertahan` milik run ini dulu, lalu
+  PR `⬜` yang siap (dependensi selesai, atau MR dependensinya open untuk ditumpuk).
+- PR yang `🔄 dikerjakan sesi lain` dilewati, termasuk bila disebut di argumen: sebut sesi dan tahapnya di
+  laporan. PR `✅`, `🔍`, `🧪` tidak dikerjakan ulang (tindak lanjut MR → jalur MR di langkah 2, E2E → `test`).
+- `❔ belum tercatat` (push-base tanpa bukti) → jangan menebak; tanya user PR mana yang sudah selesai, atau
+  sarankan `/clint:docs perbarui Status PR di <rencana> dari git log` dulu.
 - **Maksimal 3 PR per run** (paralel maupun berurutan), supaya konteks sesi tidak membengkak. PR lain
-  ditulis di baris *Berikutnya* untuk dikerjakan di sesi baru.
-- PR dianggap **selesai** bila branch-nya sudah punya MR merged; **sedang jalan** bila MR-nya
-  open (lewati dan sebut di laporan). Cek dengan `glab mr list --source-branch <b> --all` /
-  `gh pr list --head <b> --state all`.
+  masuk *Berikutnya*.
+- Segera setelah PR dipilih, **klaim** dengan menulis file status sesi (lihat *Status di menu bar*): `dir`,
+  `rencana`, dan `prs` wajib terisi, supaya sesi lain yang memilih PR sesudahnya tidak mengambil PR yang sama.
 
 ## 4. Susun gelombang
 
@@ -113,24 +126,27 @@ Untuk PR paralel, panggil agent-agent sejenis dalam satu pesan. Langkah per PR:
 
 ### 5.1 Siapkan branch dari base terbaru
 
-**Path kerja** ditentukan oleh jumlah PR yang berjalan **bersamaan**:
+**Path kerja: repo utama bila bebas, worktree bila sedang dipakai.** Satu perintah, tanpa token:
+`bash "$R/scripts/repo-busy.sh" . <sid>` → `bebas` atau `dipakai: <alasan>` (sesi clint lain bekerja di repo
+utama, sesi Claude lain sedang aktif di folder repo ini, atau working tree kotor). Cek sekali saat run mulai,
+dan sekali lagi tepat sebelum `git switch` bila PR berikutnya dikerjakan berurutan.
 
-- **Satu PR pada satu waktu** (tugas tunggal, atau beberapa PR yang dikerjakan berurutan):
-  kerjakan langsung di repo utama, **tanpa worktree**. Syarat: working tree bersih
-  (`git status --porcelain` kosong). Catat branch asal user, lalu:
+- **Bebas, satu PR pada satu waktu** (tugas tunggal, atau beberapa PR berurutan): kerjakan langsung di repo
+  utama, **tanpa worktree**. Catat branch asal user, lalu:
   ```bash
   git fetch origin --prune
   git switch -c <branch> <base>
   ```
-  Bila working tree **tidak** bersih, jangan sentuh perubahan user (jangan stash/reset): pakai
-  worktree seperti di bawah.
-- **Lebih dari satu PR bersamaan** (gelombang paralel): satu worktree per PR supaya tidak
-  saling bentrok:
+- **Dipakai**, atau **lebih dari satu PR bersamaan** di run ini: satu worktree per PR, supaya tidak mengganggu
+  sesi lain atau perubahan user (jangan stash/reset/switch di repo utama):
   ```bash
   git fetch origin --prune
   git worktree add -b <branch> <worktreeRoot>/<slug> <base>
   ```
-  Pasang dependensi di worktree bila dibutuhkan untuk lint/test (perintah install dari adapter).
+  Dependensi untuk lint/test di worktree, cara tercepat dulu: lockfile sama dengan repo utama
+  (`cmp -s <repo>/<lockfile> <worktree>/<lockfile>`) → tautkan `ln -s <repo>/node_modules <worktree>/node_modules`
+  (juga untuk `node_modules` per app di monorepo); berbeda, atau lint/test gagal karena modul → install dengan
+  perintah dari adapter. Selain JS ikuti adapter.
 
 `<base>` = `origin/<baseBranch>`, kecuali PR ini bergantung pada PR yang belum merged: base =
 branch PR dependensi itu, dan deskripsi MR menyebut "Bergantung pada !X, merge setelahnya".
@@ -164,8 +180,10 @@ wajib-tanya dari skill platform):
   relevan dengan diff (urutkan: keamanan/database/kontrak untuk data dan API, aksesibilitas/desain/performa
   untuk UI). Auditor lain dilewati walaupun pemicunya tersentuh sedikit.
 
-Jalankan yang terpilih **bersamaan** (satu pesan), masing-masing diberi `<path kerja>`, base branch, dan
-bagian rencana:
+Jalankan yang terpilih **bersamaan** (satu pesan), masing-masing diberi `<path kerja>`, base branch, bagian
+rencana, dan **daftar peninjau lain di putaran ini** (wilayah auditor yang ikut dipanggil tidak diperiksa ulang
+peninjau umum). `code-reviewer` yang dipanggil tanpa peninjau lain (PR Kecil) diberi tahu "sendirian": ia juga
+memeriksa kebenaran logika dan kesesuaian dengan rencana.
 
 | Agent | Kapan | Fokus |
 |---|---|---|
@@ -178,20 +196,23 @@ bagian rencana:
 | `database-auditor` | diff menyentuh migrasi, skema, repository/akses data, atau query | keamanan migrasi, integritas, indeks, N+1 |
 | `api-contract-auditor` | diff menyentuh endpoint, DTO/skema validasi, atau file kontrak | kesesuaian dengan API contract, perubahan merusak |
 
-Input dari orkestrator ke setiap peninjau (hemat token):
-- simpan diff sekali ke file sementara (`git -C <path kerja> diff <base> > <tmp>/pr.diff`) dan
-  beri **path**-nya, bukan isi diff;
+**Folder kerja PR** (dipakai bersama semua agent PR ini): `<git-common-dir>/clint/<branch>/`
+(`git -C <path kerja> rev-parse --path-format=absolute --git-common-dir`; di dalam `.git`, jadi tidak ikut
+ter-commit).
+- `pr.diff`: `git -C <path kerja> diff <base> > <folder>/pr.diff`; peninjau diberi **path**-nya, bukan isi diff;
 - beri hanya potongan rencana untuk PR ini, plus hasil lint/typecheck/test dari laporan
   `developer` (supaya tidak dijalankan ulang);
-- putaran ulang: kirim **hanya** daftar temuan sebelumnya + diff baru, minta peninjau
-  memverifikasi temuan itu saja, bukan meninjau dari awal.
+- `findings.md`: gabungan temuan semua peninjau.
 
-Gabungkan temuan yang bersifat wajib (PERLU PERBAIKAN, ADA CELAH tingkat Sedang ke atas,
-selisih desain) **dan temuan Saran/Rendah di kode yang diubah PR** (kecuali yang ditandai luar
-cakupan), lalu kirim kembali ke `developer` dalam satu daftar (SendMessage ke agent yang
-sama bila masih ada). Butir saran yang bertentangan dengan aturan project → lewati dan sebut
-alasannya. Setelah diperbaiki, jalankan ulang **hanya** peninjau yang tadinya
-memberi temuan. **Maksimal 2 putaran perbaikan.** Masih ada temuan wajib setelah itu →
+Setiap peninjau menutup laporan dengan blok seragam `PUTUSAN: LULUS | PERLU PERBAIKAN` + `TEMUAN:` berlabel
+`[wajib]`/`[saran]` (`path:baris · kategori · masalah`, `sekarang`, `usulan`, `(luar cakupan)` bila perlu).
+Gabungkan ke `findings.md`: buang temuan ganda (lokasi + masalah sama → satu butir, sebut kedua peninjau), lalu
+kirim ke `developer` dalam satu pesan: path `findings.md`, semua `[wajib]`, dan `[saran]` di kode yang diubah PR
+(kecuali luar cakupan). SendMessage ke agent yang sama bila masih ada. Butir saran yang bertentangan dengan
+aturan project → lewati dan sebut alasannya. `developer` menandai setiap butir diperbaiki/dilewati di laporannya.
+Putaran ulang: perbarui `pr.diff`, lalu jalankan **hanya** peninjau yang tadinya memberi `[wajib]`, dengan path
+`findings.md` + `pr.diff`; mereka memverifikasi temuannya saja, bukan meninjau dari awal.
+**Maksimal 2 putaran perbaikan.** Masih ada temuan wajib setelah itu →
 berhenti, laporkan ke user, jangan buat MR. Saran tidak pernah menahan alur: saran yang masih
 tersisa setelah batas putaran, dan saran luar cakupan, dicantumkan di deskripsi MR.
 
@@ -211,7 +232,8 @@ dan sebut alasannya di laporan. Perangkat/simulator tidak tersedia → laporkan 
 jangan dianggap lulus.
 
 Beri: `<path kerja>`, fitur, sumber test case. Flow gagal karena bug produk → kembali ke
-langkah 5.2 dengan temuan itu (dihitung dalam batas 2 putaran). Adapter mengisi **Pratinjau
+langkah 5.2 dengan temuan itu (dihitung dalam batas 2 putaran); penyebabnya tidak jelas dari laporan
+`e2e-tester` → `bug-investigator` dulu, diagnosisnya ikut ke `developer`. Adapter mengisi **Pratinjau
 E2E** → `e2e-tester` menguji lewat EAS Update ke channel khusus simulator, bukan build lokal; satu
 channel E2E dipakai satu PR pada satu waktu, jadi E2E antar-PR dijalankan berurutan.
 
@@ -227,7 +249,15 @@ Lanjutannya `/clint:test e2e !<n>` (skill `test`).
 
 - `git -C <path kerja> status` lalu **stage eksplisit** per path dari laporan `developer`/`e2e-tester`.
   Jangan `git add -A` / `commit -a`. Pastikan tidak ada screenshot, log, atau output build.
-- Pesan commit mengikuti gaya `git log --oneline -15` repo.
+- Pesan commit mengikuti gaya `git log --oneline -15` repo. PR dari rencana: commit utama diberi trailer
+  `Plan: <nama-file-rencana-tanpa-.md> PR-<n>` (baris terakhir pesan), supaya status selesai terdeteksi di
+  mode `push-base`.
+- **Status di rencana** (PR dari rencana): sebelum commit utama, tulis status PR ini ke bagian `## Status PR`
+  dan stage file rencananya bersama commit itu:
+  `python3 "$R/scripts/plan-status.py" <rencana> --repo <path kerja> --set PR-<n>=<review|draft|done> --write`
+  (`review` untuk MR biasa, `draft` bila E2E tertunda, `done` untuk `push-base`). Skrip sekaligus memperbarui butir
+  PR lain yang faktanya berubah (mis. MR-nya sudah merged). Butir dipisah baris kosong, jadi PR paralel yang
+  masing-masing mengubah butirnya sendiri tidak bentrok saat merge.
 - Tarik base sekali lagi sebelum push; rebase kalau tertinggal, lalu ulangi **cek cepat** saja (lint,
   typecheck, test terkait). Setelah push, jangan menunggu pipeline; hasilnya muncul di `/clint:status`.
 
@@ -254,7 +284,7 @@ Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
 - **Saran tinjauan yang tidak diterapkan** (luar cakupan, atau tersisa setelah batas putaran) dicatat
   supaya user bisa memvalidasinya: tulis ke file sementara sebagai JSON
   `[{"path","line","sekarang","usulan","alasan","agent"}]`, lalu setelah MR dibuat jalankan dari repo:
-  `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); python3 "$R/scripts/mr-suggestions.py" <nomor MR> <file.json> --deskripsi`
+  `python3 "$R/scripts/mr-suggestions.py" <nomor MR> <file.json> --deskripsi`
   Hasilnya blok "Saran tinjauan" (tautan file#baris + diff) yang ditempel ke deskripsi MR
   (`glab mr update <n> --description` / `gh pr edit`). Tanpa komentar *suggestion*: Apply di MR membuat
   commit per saran, saling bentrok, dan tidak melewati lint/test. Menerapkannya nanti:
@@ -263,7 +293,7 @@ Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
   (mis. 403). Kalau gagal, berikan user tautan "create merge request" dari keluaran push.
 - **Wajib, tanpa token:** bila PR berasal dari butir laporan `status`, pindahkan butir itu ke "menunggu
   review" supaya menu bar ikut diperbarui:
-  `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); python3 "$R/scripts/update-report.py" review "<ID/teks butir>" "MR !<n>" "<url MR>"`
+  `python3 "$R/scripts/update-report.py" review "<ID/teks butir>" "MR !<n>" "<url MR>" --proyek <nama project>`
 
 ### 5.6 Bersihkan
 
@@ -276,22 +306,26 @@ Kegagalan satu PR (masih ada temuan wajib setelah 2 putaran, test gagal, konflik
 
 - jangan buat MR untuk PR itu;
 - commit lokal semua perubahannya (stage eksplisit) dengan pesan `wip(<PR>): tertahan, <alasan>`,
-  **jangan push**; tanpa worktree, kembali ke branch asal user. Branch/worktree itu disebut di
+  **jangan push**; PR dari rencana: tulis dulu `--set PR-<n>=held:<alasan>` ke rencana (langkah 5.5) dan
+  ikutkan di commit itu. Tanpa worktree, kembali ke branch asal user. Branch/worktree itu disebut di
   laporan untuk diperiksa user. (Working tree bersih = hook tinjau otomatis tidak terpicu ulang.)
 - PR yang bergantung padanya **dilewati**; PR lain tetap jalan.
 
-## Status di menu bar
+## Status di menu bar dan klaim PR
 
-Saat mulai, setiap ganti PR/tahap, dan saat selesai, tulis kemajuan (murah, satu perintah):
+File status **per sesi** `~/Library/Logs/clint/kerja/<sid>.json`. Tulis saat PR dipilih (klaim), setiap ganti
+PR/tahap, dan hapus di akhir, termasuk bila berhenti karena gagal (murah, satu perintah):
 ```bash
-printf '%s' '{"judul":"develop MOB-10","mulai":"11.21","pr":2,"total":4,"label":"PR-2/4","tahap":"ditinjau code-reviewer","catatan":"PR-1 → MR !127 · PR-3 dan PR-4 menunggu"}' > ~/Library/Logs/clint/kerja.json
+mkdir -p ~/Library/Logs/clint/kerja && printf '%s' '{"dir":"<repo utama absolut>","rencana":"docs/plans/mob-10.md","prs":["PR-2","PR-3"],"path":"<path kerja>","judul":"develop MOB-10","mulai":"11.21","pr":2,"total":3,"label":"PR-2/3","tahap":"ditinjau code-reviewer","catatan":"PR-1 → MR !127 · PR-3 menunggu"}' > ~/Library/Logs/clint/kerja/<sid>.json
 ```
-`label` pendek (tampil di sebelah ikon); untuk tugas tunggal pakai `"pr":1,"total":1`. Hapus file itu
-di akhir (`rm -f ~/Library/Logs/clint/kerja.json`), termasuk bila berhenti karena gagal.
+`dir` = repo utama (bukan worktree): `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"`.
+`rencana` = path relatif rencana, `null` bila tanpa rencana. `prs` = PR yang **masih** dipegang sesi ini; PR yang
+sudah jadi MR dikeluarkan dari `prs` supaya sesi lain bisa melanjutkan PR sesudahnya. `label` pendek (tampil di
+sebelah ikon); tugas tunggal `"pr":1,"total":1`. Akhir run: `rm -f ~/Library/Logs/clint/kerja/<sid>.json`.
 
 Bila tugas berasal dari butir laporan `status` (feedback, bug, temuan), setelah MR terverifikasi pindahkan
 butir itu ke "menunggu review" supaya badge menu bar ikut berkurang (tanpa token):
-`R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1); python3 "$R/scripts/update-report.py" review "<ID/teks butir>" "MR !<n>" "<url MR>"`
+`python3 "$R/scripts/update-report.py" review "<ID/teks butir>" "MR !<n>" "<url MR>" --proyek <nama project>`
 Tindak lanjut yang tidak menghasilkan MR baru (mis. perbaikan di MR yang sama) → `... selesai "<ID/teks>"`.
 
 
@@ -306,7 +340,7 @@ Tindak lanjut yang tidak menghasilkan MR baru (mis. perbaikan di MR yang sama) �
 
 ## 6. Laporan akhir (satu pesan, singkat dan manusiawi)
 
-Seperti rekan kerja mengabari lewat chat, maksimal ±12 baris:
+Seperti rekan kerja mengabari lewat chat, maksimal ±12 baris (di luar blok *Berikutnya*):
 
 - Satu kalimat hasil, mis. "Beres: 3 MR siap Anda review, 1 tertahan karena test gagal."
 - Satu baris per MR: tautan + apa yang berubah dari sudut pengguna aplikasi. Mode `push-base`:
@@ -319,23 +353,46 @@ Seperti rekan kerja mengabari lewat chat, maksimal ±12 baris:
 
 Merge tetap oleh user.
 
-**Baris terakhir wajib: "Berikutnya"** — satu perintah siap ketik untuk pekerjaan berikutnya yang paling
-penting, lengkap dengan sumbernya, mis.:
-`Berikutnya: /clint:develop perbaiki BUG-092 tombol Verifikasi Customer (docs/qa/feedback/feedback-ui.md)`
-`Berikutnya: /clint:develop docs/plans/mob-10.md PR-2`
-Run mengerjakan 3 PR atau lebih, atau masih ada PR tersisa dari batas per run → awali dengan sesi baru:
-`Berikutnya (sesi baru, ketik /clear dulu): /clint:develop docs/plans/mob-10.md PR-4..PR-6`
-Urutan memilih: PR berikutnya dari rencana yang sedang dikerjakan → butir *Perlu perhatian* → butir
-*Perlu dikerjakan* teratas di laporan terakhir (`~/Library/Logs/clint/terakhir.json`) → MR yang menunggu
-review (sebut "review dan merge !n" tanpa perintah). Tidak ada sama sekali → tulis **"Selesai semua
-pekerjaan."**
+### Berikutnya (wajib, blok terakhir; aturan ini dipakai semua skill clint)
+
+Blok berisi langkah siap ketik untuk **project sesi ini saja**, setiap baris diberi tanda:
+
+| Tanda | Arti |
+|---|---|
+| `[paralel]` | PR saling bebas: satu run (develop memprosesnya bersamaan, maks 3), atau satu sesi per PR |
+| `[siap]` | satu langkah yang bisa langsung dikerjakan |
+| `[urutan, setelah X]` | baru bisa dikerjakan setelah X selesai |
+| `[lanjutkan]` | PR yang tertahan atau setengah jalan |
+| `[E2E]` | MR Draft yang menunggu E2E (`/clint:test`) |
+| `[terblokir]` | menunggu pihak lain; sebut penyebabnya |
+
+```
+Berikutnya (magnet-rezeki/mobile, sesi baru: ketik /clear dulu):
+[paralel] /clint:develop docs/plans/mr-mob-11.md PR-2,PR-3
+[urutan, setelah PR-2,PR-3] /clint:develop docs/plans/mr-mob-11.md PR-4,PR-5,PR-8
+[terblokir] PR-7: seeder api data inbox
+Sedang dikerjakan sesi lain: PR-1 (ditinjau)
+```
+
+Cara menyusun (tanpa menebak):
+1. Rencana yang sedang dikerjakan → **jalankan ulang** `python3 "$R/scripts/plan-status.py" <rencana> --session <sid>`
+   di akhir run dan pakai baris *Berikutnya* dari skrip apa adanya. Skrip sudah membuang PR yang diklaim sesi
+   lain, yang selesai, dan yang MR-nya open, jadi saran tidak mengulang PR yang sedang dikerjakan sesi lain.
+2. Lalu butir *Perlu perhatian* dari run ini.
+3. Lalu butir *Perlu dikerjakan* milik project ini saja di laporan `status` (`~/Library/Logs/clint/terakhir.json`,
+   ambil hanya butir yang `proyek`-nya project ini; cocokkan `dir` di `proyek[]`). Butir project lain **tidak
+   pernah** masuk *Berikutnya*.
+4. Tidak ada langkah → "Menunggu review: !n" bila ada, selain itu **"Selesai semua pekerjaan."**
+
+Run mengerjakan 3 PR atau lebih, atau masih ada PR tersisa dari batas per run → judul blok menyebut
+"sesi baru: ketik /clear dulu". Maksimal 5 langkah.
 
 ## Kabar suara (wajib, di akhir)
 
-Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) ke file kabar;
+Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) ke file kabar sesi ini;
 hook akan menampilkannya sebagai notifikasi dan membacakannya:
 
 ```bash
-printf '%s' "<kalimat inti>" > "${TMPDIR:-/tmp}/clint-kabar.txt"
+printf '%s' "<kalimat inti>" > "${TMPDIR:-/tmp}/clint-kabar-<sid>.txt"
 ```
 Contoh: "Selesai. Tiga MR siap direview, satu tertahan karena test gagal."

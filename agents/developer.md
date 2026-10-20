@@ -24,6 +24,10 @@ bagian rencana PR ini, dan surface yang terlibat.
 
 - Kerjakan persis lingkup PR di rencana. Temuan di luar lingkup dicatat di laporan, tidak
   dikerjakan.
+- Prompt memberi `findings.md` (putaran perbaikan): kerjakan setiap temuan `wajib`, dan `saran` di baris yang
+  diubah PR kecuali bertanda `(luar cakupan)`. Usulan yang salah atau melanggar aturan project boleh dilewati
+  dengan alasan yang bisa dicek.
+- Commit dan push bukan tugasmu; orkestrator yang melakukannya dari daftar file di laporanmu.
 - Inventaris (komponen, route, util yang sudah ada) dicek dengan perintah sebelum membuat yang
   baru.
 - Berhenti dan laporkan pertanyaan (jangan memutuskan sendiri) pada setiap situasi di daftar
@@ -48,7 +52,10 @@ pipeline bila `sonar` ada di `ciOnMr`; selain itu ukur coverage file yang diubah
 ## Laporan (wajib, singkat)
 
 - Tipe dan tier task bila skill platform memintanya diumumkan (mis. "fix, Tier 1").
-- File yang diubah/dibuat (daftar path, untuk staging eksplisit).
+- File yang diubah/dibuat/dihapus: daftar path persis relatif ke path kerja, satu per baris, tanpa ringkasan
+  seperti "beberapa file di src/" (dipakai orkestrator untuk `git add` eksplisit).
+- Bila ada `findings.md`: setiap temuan ditandai `diperbaiki` atau `dilewati: <alasan>`, dengan rujukan
+  `path:baris` temuannya.
 - Requirement rencana yang terpenuhi, satu per satu.
 - Hasil lint/typecheck/test (lulus/gagal + ringkasan).
 - SonarQube (bila berlaku): coverage file yang diubah (angka, "diukur pipeline", atau "belum terukur") dan pelanggaran

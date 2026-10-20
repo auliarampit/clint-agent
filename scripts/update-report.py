@@ -1,44 +1,137 @@
 #!/usr/bin/env python3
 """Ubah laporan terakhir (~/Library/Logs/clint/terakhir.json) tanpa memeriksa ulang. Tanpa token.
-  update-report.py selesai "<teks atau sumber>"
-  update-report.py review  "<teks atau sumber>" "<MR !N>" "<url MR>"
+  update-report.py merge   <laporan.json>                     # ganti entri project yang ada di file baru saja
+  update-report.py selesai "<sumber|teks|b64:...>" [--proyek <nama>]
+  update-report.py review  "<sumber|teks|b64:...>" "<MR !N>" "<url MR>" [--proyek <nama>]
   update-report.py periksa-mr          # hapus butir MR yang sudah merged/closed (glab/gh)"""
-import json, os, subprocess, sys
+import base64, contextlib, fcntl, json, os, subprocess, sys, tempfile, time
 
 P = os.path.expanduser("~/Library/Logs/clint/terakhir.json")
 GRUP = ("gagal", "kerjakan", "cek", "tunggu")
-if not os.path.exists(P):
-    sys.exit(0)
-d = json.load(open(P, encoding="utf-8"))
-# Waktu laporan dibuat disimpan sekali; mtime berubah setiap kali butir diubah.
-baru_dibuat = "_dibuat" not in d
-d.setdefault("_dibuat", os.path.getmtime(P))
-cocok = lambda x, k: k and (k == x.get("teks") or k == x.get("sumber") or k in (x.get("teks") or ""))
 
-def simpan():
-    tmp = P + ".tmp"; json.dump(d, open(tmp, "w", encoding="utf-8"), ensure_ascii=False, indent=1); os.replace(tmp, P)
+
+def baca():
+    try:
+        d = json.load(open(P, encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return d
+
+
+def simpan(d):
+    if "_dibuat" not in d:
+        d["_dibuat"] = os.path.getmtime(P) if os.path.exists(P) else time.time()
+    fd, tmp = tempfile.mkstemp(prefix=".terakhir.", suffix=".tmp", dir=os.path.dirname(P))
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        json.dump(d, fh, ensure_ascii=False, indent=1)
+    os.replace(tmp, P)
+
+
+@contextlib.contextmanager
+def kunci():
+    os.makedirs(os.path.dirname(P), exist_ok=True)
+    with open(P + ".lock", "a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        yield
+
+
+def norm(s):
+    return str(s or "").strip().lower()
+
+
+def pilih(d, k, proyek, grup):
+    """Butir yang cocok tepat pada sumber/teks; substring hanya bila hasilnya tepat satu."""
+    if k.startswith("b64:"):
+        k = base64.urlsafe_b64decode(k[4:] + "=" * (-len(k[4:]) % 4)).decode("utf-8")
+    n = norm(k)
+    if not n:
+        return []
+    kand = [(g, x) for g in grup for x in d.get(g) or [] if not proyek or x.get("proyek") == proyek]
+    tepat = [(g, x) for g, x in kand if n in (norm(x.get("sumber")), norm(x.get("teks")))]
+    if tepat:
+        return tepat
+    sub = [(g, x) for g, x in kand if n in norm(x.get("teks"))]
+    return sub if len(sub) == 1 else []
+
+
+def gabung(lama, baru):
+    """Ganti entri project yang ada di `baru` (cocok berdasarkan dir); project lain dipertahankan."""
+    if not lama:
+        return dict(baru)
+    dirs = {p.get("dir") for p in baru.get("proyek") or [] if p.get("dir")}
+    nama_baru = {p.get("nama") for p in baru.get("proyek") or []}
+    dir_lama = {p.get("nama"): p.get("dir") for p in lama.get("proyek") or []}
+    milik_lain = lambda x, nama: (x.get("dir") or dir_lama.get(x.get(nama))) not in dirs
+
+    d = dict(lama)
+    for k, v in baru.items():
+        if k not in GRUP + ("proyek", "berikutnya", "rincian"):
+            d[k] = v
+    d["proyek"] = [p for p in lama.get("proyek") or [] if p.get("dir") not in dirs] + list(baru.get("proyek") or [])
+    for g in GRUP:
+        d[g] = [x for x in lama.get(g) or [] if milik_lain(x, "proyek")] + list(baru.get(g) or [])
+    d["rincian"] = [r for r in lama.get("rincian") or [] if r.get("proyek") not in nama_baru] + \
+        list(baru.get("rincian") or [])
+    nl, nb = lama.get("berikutnya"), baru.get("berikutnya")
+    if isinstance(nb, list):
+        d["berikutnya"] = [b for b in (nl if isinstance(nl, list) else []) if milik_lain(b, "proyek")] + nb
+    elif nb:
+        d["berikutnya"] = nb
+    return d
+
+
+def argumen():
+    a, proyek = sys.argv[2:], None
+    if "--proyek" in a:
+        i = a.index("--proyek")
+        proyek = a[i + 1] if i + 1 < len(a) else None
+        a = a[:i] + a[i + 2:]
+    return a, proyek
+
 
 aksi = sys.argv[1] if len(sys.argv) > 1 else ""
+if aksi == "merge":
+    baru = json.load(open(sys.argv[2], encoding="utf-8"))
+    with kunci():
+        d = gabung(baca(), baru)
+        d["_dibuat"] = time.time()
+        simpan(d)
+    sys.exit(0)
+
+if not os.path.exists(P):
+    sys.exit(0)
+
 if aksi == "selesai":
-    for g in GRUP:
-        d[g] = [x for x in d.get(g) or [] if not cocok(x, sys.argv[2])]
-    simpan()
+    a, proyek = argumen()
+    with kunci():
+        d = baca()
+        kena = pilih(d, a[0], proyek, GRUP) if d and a else []
+        if kena:
+            ids = {id(x) for _, x in kena}
+            for g in GRUP:
+                d[g] = [x for x in d.get(g) or [] if id(x) not in ids]
+            simpan(d)
 elif aksi == "review":
-    k, mr, url = sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else ""
-    pindah = None
-    for g in ("gagal", "kerjakan", "tunggu"):
-        for x in d.get(g) or []:
-            if cocok(x, k) and pindah is None:
-                pindah = x
-        d[g] = [x for x in d.get(g) or [] if x is not pindah]
-    if pindah:
-        d.setdefault("cek", []).append({"teks": pindah.get("teks"), "proyek": pindah.get("proyek"),
-                                       "sumber": mr, "url": url})
-        simpan()
+    a, proyek = argumen()
+    k, mr, url = a[0], a[1], a[2] if len(a) > 2 else ""
+    with kunci():
+        d = baca()
+        kena = pilih(d, k, proyek, ("gagal", "kerjakan", "tunggu")) if d else []
+        if kena:
+            g, x = kena[0]
+            d[g] = [y for y in d[g] if y is not x]
+            d.setdefault("cek", []).append({"teks": x.get("teks"), "proyek": x.get("proyek"),
+                                           "sumber": mr, "url": url})
+            simpan(d)
 elif aksi == "periksa-mr":
-    import re, datetime
-    berubah = baru_dibuat
-    dibuat = datetime.datetime.fromtimestamp(d["_dibuat"]).astimezone()
+    import copy, re, datetime
+    d0 = baca()
+    if d0 is None:
+        sys.exit(0)
+    d = copy.deepcopy(d0)
+    sidik = lambda x: json.dumps(x, sort_keys=True, ensure_ascii=False)
+    ops = []   # diterapkan ulang ke isi terbaru saat menyimpan
+    dibuat = datetime.datetime.fromtimestamp(d.get("_dibuat") or os.path.getmtime(P)).astimezone()
     DIR = {x.get("nama"): x.get("dir") for x in d.get("proyek") or [] if x.get("dir")}
 
     def repo_untuk(url):
@@ -114,13 +207,13 @@ elif aksi == "periksa-mr":
                 sisa.append(x); continue
             mrs = mr_terbaru(dirp)
             if all(any(m["state"] == "merged" and cocok(m, i, k) for m in mrs) for i, k in ids):
-                berubah = True; continue
+                ops.append((g, sidik(x), None)); continue
             buka = next((m for m in mrs if m["state"] == "opened" or m["state"] == "open"
                          for i, k in ids if cocok(m, i, k)), None)
             if buka:
-                berubah = True
-                d.setdefault("cek", []).append({"teks": x.get("teks"), "proyek": x.get("proyek"),
-                                                "sumber": buka["ref"], "url": buka["url"]})
+                pindah = {"teks": x.get("teks"), "proyek": x.get("proyek"), "sumber": buka["ref"], "url": buka["url"]}
+                ops.append((g, sidik(x), pindah))
+                d.setdefault("cek", []).append(pindah)
                 continue
             sisa.append(x)
         d[g] = sisa
@@ -144,9 +237,23 @@ elif aksi == "periksa-mr":
                 except Exception:
                     st = ""
                 if st in ("merged", "closed"):
-                    berubah = True
+                    ops.append((g, sidik(x), None))
                     continue
             sisa.append(x)
         d[g] = sisa
-    if berubah:            # simpan hanya bila ada butir yang berubah (mtime tetap jujur)
-        simpan()
+
+    with kunci():
+        d = baca()
+        if d is None:
+            sys.exit(0)
+        berubah = "_dibuat" not in d
+        for g, k, pindah in ops:
+            xs = d.get(g) or []
+            i = next((i for i, x in enumerate(xs) if sidik(x) == k), None)
+            if i is None:
+                continue
+            del xs[i]; berubah = True
+            if pindah:
+                d.setdefault("cek", []).append(pindah)
+        if berubah:            # simpan hanya bila ada butir yang berubah (mtime tetap jujur)
+            simpan(d)

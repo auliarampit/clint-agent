@@ -21,8 +21,16 @@ puluhan PR yang salah arah.
 
 ## Keluaran
 
-Putusan: `RENCANA LAYAK` / `PERLU DIUBAH` (untuk tinjauan rencana) atau rekomendasi keputusan. Lalu temuan
-paling berdampak dulu: masalah — dampak — perubahan yang disarankan. Maksimal satu halaman.
+Baris pertama: `PUTUSAN: RENCANA LAYAK` / `PUTUSAN: PERLU DIUBAH` (tinjauan rencana) atau rekomendasi
+keputusan. Lalu **daftar perubahan rencana** yang bisa diteruskan orkestrator ke `planner` apa adanya, paling
+berdampak dulu, satu baris per perubahan:
+
+    - <PR-n atau bagian rencana> · <ubah apa, konkret> · <alasan dan dampak bila tidak diubah>
+
+Contoh: `- PR-2 · pisahkan migrasi kolom status ke PR baru sebelum PR-2 · deploy bertahap: kode lama masih
+membaca kolom lama`. Keputusan yang butuh persetujuan user (teknologi/infrastruktur baru, konflik dokumen)
+ditulis terpisah di bawahnya beserta opsi dan rekomendasi; jangan dimasukkan ke daftar perubahan sebelum
+diputuskan. Maksimal satu halaman.
 
 ## Standar senior
 

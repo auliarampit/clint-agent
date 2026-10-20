@@ -101,8 +101,16 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    Perbedaan di project bisa jadi perbaikan yang belum naik ke master. Tanya per file: tarik
    dari master, naikkan ke master, atau biarkan.
 4. File master yang belum ada di project (mis. `sonarqube.md`, `no-ai-slop.md`, field `docs.language`, `ciOnMr`,
-   `surfaces[].testRelated`) → tawarkan
+   `surfaces[].testRelated`, `autoReview`) → tawarkan
    untuk ditambahkan.
+5. **Status PR di rencana**: rencana di `docs.plans` yang punya tabel *Urutan pekerjaan* tetapi belum punya
+   `## Status PR` → tunjukkan hasil `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-status.py"` dan tawarkan
+   `--write` untuk rencana yang statusnya terbukti (mode `mr`). Rencana `push-base` yang statusnya `❔ belum
+   tercatat` diarahkan ke `/clint:docs perbarui Status PR di <rencana> dari git log`.
+6. **Settings global yang bocor antar project**: `jq '.permissions.additionalDirectories, .permissions.allow' ~/.claude/settings.json`.
+   Entri yang menyebut path project tertentu (folder memori project lain, path repo lain) berlaku di **semua**
+   project dan bisa membawa konteks project itu ke sesi lain. Tunjukkan entrinya dan tawarkan memindahkannya ke
+   `.claude/settings.local.json` project pemiliknya. Pindahkan hanya yang disetujui user.
 
 ## Mode `language <en|id>`
 

@@ -2,7 +2,7 @@
 
 ![clint — tim agent Claude Code yang mengerjakan tiket sampai jadi MR](docs/images/cover.png)
 
-**clint** adalah plugin Claude Code untuk tim Badr Interactive. Isinya 18 agent senior yang bekerja sebagai
+**clint** adalah plugin Claude Code untuk tim Badr Interactive. Isinya 21 agent senior yang bekerja sebagai
 satu tim: membaca dokumen, merencanakan, menulis kode, meninjau berlapis, menguji, merilis, dan menjaga
 dokumen tetap sinkron. Dipasang sekali, berlaku di semua project, baik project baru maupun project lama
 yang sedang di-enhance.
@@ -46,7 +46,7 @@ yang sedang di-enhance.
 
 ## Mulai cepat
 
-**1. Pasang plugin** (sekali per laptop):
+**1. Pasang plugin** (sekali per laptop; butuh `jq` dan `python3`, mis. `brew install jq`):
 
 ```bash
 claude plugin marketplace add auliarampit/clint-agent
@@ -81,16 +81,37 @@ Tidak ada yang di-commit otomatis; periksa dulu hasilnya.
 
 | Perintah | Untuk | Contoh |
 |---|---|---|
-| `/clint:status` | Kondisi kerja: update docs/design dan dampaknya ke kode, feedback QA yang masih open, MR, pipeline, branch, disk. Juga **sisa tugas sprint** | `/clint:status`, `/clint:status all`, `/clint:status sprint` |
+| `/clint:status` | Kondisi kerja: update docs/design dan dampaknya ke kode, feedback QA yang masih open, MR, pipeline, branch, disk. Juga **sisa PR di rencana** dan **sisa tugas sprint** | `/clint:status`, `/clint:status all`, `/clint:status plan`, `/clint:status sprint` |
 | `/clint:develop` | Mengerjakan **kode** apa pun sampai jadi MR, dari perbaikan kecil sampai modul penuh | `/clint:develop MOB-10` |
 | `/clint:review` | Meninjau kode. Milik sendiri: ditinjau lalu diperbaiki. MR rekan: hanya temuan, tanpa mengubah kode | `/clint:review !123` |
-| `/clint:test` | Menguji tanpa mengubah kode produk: menulis dan menjalankan E2E, menyelesaikan E2E yang tertunda | `/clint:test e2e !123` |
-| `/clint:docs` | Pekerjaan **dokumen** tanpa kode: status feedback/bug, README, CHANGELOG, ADR | `/clint:docs tandai FB-MOB-008 diperbaiki di !130` |
+| `/clint:test` | Menguji tanpa mengubah kode produk: menulis dan menjalankan E2E, menutup MR Draft yang E2E-nya tertunda, test case, regresi, laporan bug | `/clint:test e2e draft`, `/clint:test regresi !123` |
+| `/clint:docs` | Pekerjaan **dokumen** tanpa kode: BRD/PRD, STD, sprint tracker, status feedback/bug, Status PR di rencana, README, CHANGELOG, ADR | `/clint:docs tandai FB-MOB-008 diperbaiki di !130` |
 | `/clint:release` | Build dan rilis: APK/IPA untuk UAT, update OTA, versi, changelog, kesiapan deploy | `/clint:release build APK UAT Android` |
 | `/clint:setup` | Pasang clint di project, sinkronkan dengan master (`sync`), atau ganti bahasa (`language id`) | `/clint:setup sync` |
 
-Setiap perintah ditutup dengan baris **Berikutnya**: satu perintah siap ketik untuk pekerjaan berikutnya,
-atau "Selesai semua pekerjaan." Baris yang sama muncul di layar laporan dan menu bar, dengan tombol salin.
+Setiap perintah ditutup dengan blok **Berikutnya**: langkah siap ketik untuk project yang sedang Anda buka
+(tidak pernah milik project lain), masing-masing bertanda:
+
+```
+Berikutnya (magnet-rezeki/mobile):
+[paralel] /clint:develop docs/plans/mr-mob-11.md PR-2,PR-3
+[urutan, setelah PR-2,PR-3] /clint:develop docs/plans/mr-mob-11.md PR-4,PR-5,PR-8
+[E2E] /clint:test e2e !222 · PR-7
+[terblokir] PR-9: seeder api data inbox
+Sedang dikerjakan sesi lain: PR-1 (ditinjau)
+```
+
+| Tanda | Arti |
+|---|---|
+| `[paralel]` | saling bebas: ketik satu perintah (develop mengerjakannya bersamaan, maks 3), atau buka satu sesi per PR |
+| `[siap]` | satu langkah yang bisa langsung dikerjakan |
+| `[urutan, setelah X]` | tunggu X selesai dulu |
+| `[lanjutkan]` | PR yang tertahan atau setengah jalan |
+| `[E2E]` | MR Draft yang menunggu E2E |
+| `[terblokir]` | menunggu pihak lain |
+
+PR yang sedang dikerjakan sesi lain (di laptop yang sama) tidak disarankan lagi. Blok yang sama muncul di
+layar laporan dan menu bar (per project), dengan tombol salin.
 
 Anda **tidak perlu memanggil agent** dan tidak wajib mengetik perintah. Kalimat biasa seperti "tolong
 perbaiki pipeline MR 123" atau "ada update apa hari ini?" juga dikenali dan diarahkan ke perintah yang tepat.
@@ -116,6 +137,9 @@ Beberapa contoh yang sering tertukar:
 | "Perbaiki bug FB-MOB-008" | `develop` | kode berubah |
 | "Tandai FB-MOB-008 sudah diperbaiki" | `docs` | hanya dokumen QA berubah |
 | "E2E MR !123 masih tertunda" | `test` | menguji, kode produk tidak berubah |
+| "Ada 4 MR Draft, tolong tutup" | `test e2e draft` | Draft = E2E tertunda; E2E-nya yang diselesaikan |
+| "Rencana MOB-11 tinggal apa?" | `status plan` | membaca status, tidak mengubah apa pun |
+| "Buat PRD dari MoM ini" | `docs` | dokumen requirement, tanpa kode |
 | "Pipeline !123 merah" | `develop` | perbaikannya mengubah kode/konfigurasi |
 | "Build APK untuk UAT" | `release` | build dan distribusi, bukan kode |
 | "Cek dulu sebelum MR" | `review` | memeriksa hasil kerja |
@@ -136,6 +160,8 @@ maksudnya. Kolom "Atau cukup bilang" menunjukkan kalimat tanpa perintah yang has
 | `/clint:status all` | Semua project aktif sekaligus, satu layar laporan (sama dengan laporan pagi) | "cek semua project" |
 | `/clint:status toko-online` | Kondisi project lain tanpa pindah folder | "gimana kondisi project toko online?" |
 | `/clint:status since 1 minggu` | Perubahan seminggu terakhir, bukan hanya 3 hari | "apa saja yang berubah minggu ini?" |
+| `/clint:status plan` | Setiap rencana di `docs/plans`: berapa PR selesai, yang setengah jalan/tertahan, Draft, dikerjakan sesi lain, yang siap; plus modul di PRD yang **belum punya rencana** | "sisa tugas di rencana apa?", "modul mana yang belum direncanakan?" |
+| `/clint:status plan MR-MOB-11` | Hanya rencana modul itu, lengkap per PR | "MOB-11 tinggal PR apa?" |
 | `/clint:status sprint` | Sisa tugas **sprint yang sedang berjalan** (dipilih dari tanggal sprint), dikelompokkan: terblokir/bug → sedang dikerjakan/QA → belum mulai | "sprint saat ini yang belum selesai apa?" |
 | `/clint:status sprint saya` | Sama, hanya butir yang PIC-nya Anda | "tugas saya di sprint ini yang belum apa?" |
 | `/clint:status sprint 3` | Sisa tugas Sprint 3 | "sisa tugas sprint 3 apa saja?" |
@@ -161,8 +187,30 @@ menanyakan letak sprint tracker-nya. Mengubah isi tracker (centang, status, PIC)
 | `/clint:develop perbaiki pipeline !123` | CI merah (lint, test, build, quality gate SonarQube) |
 | `/clint:develop` (tanpa argumen, setelah `status`) | Kerjakan temuan "perlu dikerjakan" dari laporan `status` barusan |
 
-Modul besar dikerjakan bertahap. Setelah 3 PR, baris *Berikutnya* berisi perintah lanjutannya; ketik `/clear`
+Modul besar dikerjakan bertahap. Setelah 3 PR, blok *Berikutnya* berisi perintah lanjutannya; ketik `/clear`
 dulu, lalu tempel perintah itu.
+
+**Beberapa sesi sekaligus.** Langkah `[paralel]` boleh dibagi ke beberapa sesi (mis. 3 jendela VS Code untuk PR-1,
+PR-2, PR-3). Setiap sesi mengklaim PR-nya di `~/Library/Logs/clint/kerja/<id-sesi>.json`, jadi:
+- sesi lain tidak mengambil PR yang sama, dan otomatis memakai worktree (tidak saling `git switch` di folder yang sama);
+- sesi yang selesai lebih dulu menyarankan PR berikutnya yang benar-benar tersedia, bukan PR yang sedang
+  dikerjakan sesi lain.
+
+**Status di rencana.** Setiap rencana punya bagian `## Status PR` yang diperbarui `develop` di commit PR-nya:
+
+```
+- [x] PR-1 · ✅ selesai · MR !212
+
+- [ ] PR-2 · 🔍 menunggu review · MR !213
+
+- [ ] PR-3 · ⏸️ tertahan: test gagal di useFollowUp
+
+- [ ] PR-4 · ⬜ belum mulai
+```
+
+Status: ✅ selesai · 🔍 menunggu review · 🧪 Draft, E2E tertunda · ⏸️ tertahan/setengah jalan · 🚫 terblokir ·
+⬜ belum mulai. Butir dipisah baris kosong supaya PR paralel yang masing-masing mengubah butirnya sendiri tidak
+bentrok saat merge (baris tabel yang berdempetan bentrok). Status 🚫 dan ✅ yang Anda tulis sendiri dipertahankan.
 
 ### `/clint:review`: memeriksa kode
 
@@ -178,7 +226,18 @@ dulu, lalu tempel perintah itu.
 | Ketik | Hasilnya |
 |---|---|
 | `/clint:test login` | Tulis dan jalankan E2E fitur login (happy path + error utama); flow-nya jadi MR |
-| `/clint:test e2e !123` | Selesaikan E2E yang tertunda di MR !123; lulus → MR ditandai siap |
+| `/clint:test e2e !123` | Selesaikan E2E yang tertunda di MR Draft !123; lulus → MR ditandai siap (bukan Draft lagi) |
+| `/clint:test e2e !219 !220 !222` | Beberapa MR Draft, dikerjakan **berurutan** |
+| `/clint:test e2e draft` | Semua MR Draft milik Anda di project ini, berurutan (maks 3 per run, sisanya di *Berikutnya*) |
+| `/clint:test tc MR-MOB-11` | Test case dari AC di PRD, lengkap dengan matriks AC↔TC (`qa-analyst`) |
+| `/clint:test regresi !123` | Daftar TC dan flow E2E yang perlu diuji ulang karena perubahan di MR itu |
+| `/clint:test bug tombol simpan tidak aktif setelah ganti foto` | Laporan bug di dokumen feedback, format project |
+
+**Menutup MR Draft.** Draft di clint artinya E2E belum dijalankan atau belum lulus, jadi perintahnya selalu
+`/clint:test`. Beberapa Draft dikerjakan berurutan, tidak paralel, karena satu simulator dan satu channel
+pratinjau E2E hanya bisa dipakai satu MR pada satu waktu; menjalankannya di beberapa sesi bersamaan membuat
+hasilnya saling mengganggu. MR yang bertumpuk diuji dari dasarnya dulu. Draft yang muncul di `/clint:status`
+dan `/clint:status plan` sudah disertai perintahnya.
 
 Bug yang ditemukan dilaporkan dengan langkah reproduksi; perbaikannya lewat `/clint:develop`.
 
@@ -190,6 +249,11 @@ Bug yang ditemukan dilaporkan dengan langkah reproduksi; perbaikannya lewat `/cl
 | `/clint:docs tandai MOD-AD-04 kolom QA selesai di sprint 9` | Sprint tracker diperbarui |
 | `/clint:docs catat ADR: pembayaran memakai Midtrans Snap` | ADR baru dengan alasan dan alternatif yang ditolak |
 | `/clint:docs perbarui CHANGELOG untuk rilis 1.4.0` | CHANGELOG dari MR/commit sejak rilis terakhir |
+| `/clint:docs buat MoM dan confirmation list dari notulen ini` (tempel notulennya) | Keputusan, action item, dan pertanyaan terbuka (`business-analyst`) |
+| `/clint:docs buat PRD modul MOB-15 dari BRD` | PRD dengan FR/AC ber-ID; dokumen turunan yang terdampak disebut |
+| `/clint:docs susun STD modul MOB-15` | STD dan test case yang menunjuk AC (`qa-analyst`) |
+| `/clint:docs rekap sprint 9 dan carry-over` | Rekap per PIC dari bukti MR/commit/Status PR, butir pindah ke sprint berikutnya (`sprint-tracker`) |
+| `/clint:docs perbarui Status PR di docs/plans/x.md dari git log` | Rencana lama tanpa status: dicocokkan dengan commit di base |
 
 ### `/clint:release`: build dan rilis
 
@@ -218,6 +282,9 @@ Rilis yang berdampak ke orang lain (kanal QA, store, produksi) hanya dijalankan 
 | "Sprint ini masih sisa apa?" / "Sprint 3 yang belum apa?" | `/clint:status sprint` / `/clint:status sprint 3` |
 | "Tugas saya di sprint ini?" | `/clint:status sprint saya` |
 | "Ada MR yang nunggu saya review?" | `/clint:status` |
+| "Rencana ini tinggal PR apa? Modul mana yang belum direncanakan?" | `/clint:status plan` |
+| "Ada MR Draft, tolong tutup semuanya" | `/clint:test e2e draft` |
+| "Saya buka 3 sesi, PR mana yang masih bisa diambil?" | `/clint:status plan` (PR yang dipegang sesi lain ditandai 🔄) |
 | "Kenapa pipeline MR ini merah?" | `/clint:develop perbaiki pipeline !123` |
 | "Kodingan saya sudah layak MR belum?" | `/clint:review` |
 | "Tolong review MR teman saya" | `/clint:review !124` |
@@ -250,6 +317,11 @@ rilis    /clint:release build APK UAT Android
 /clint:status sprint saya              → butir QA saya yang belum selesai di sprint ini
 /clint:test login                      → tulis dan jalankan E2E fitur login, hasilnya jadi MR
 /clint:test e2e !123                   → selesaikan E2E yang tertunda di MR !123
+/clint:test e2e draft                  → semua MR Draft, berurutan
+/clint:test tc MR-MOB-11               → test case dari AC, dengan matriks AC↔TC
+/clint:test regresi !123               → TC yang perlu diuji ulang karena MR itu
+/clint:test bug <deskripsi>            → laporan bug sesuai format feedback project
+/clint:docs susun STD modul MOB-15
 /clint:docs tandai FB-MOB-008 diverifikasi tanggal 20 Okt
 /clint:review !123                     → baca temuan teknis sebelum menguji
 ```
@@ -262,14 +334,17 @@ Bug yang ditemukan dilaporkan; perbaikannya lewat `/clint:develop` oleh develope
 /clint:status                                 → apa yang berubah di docs, design, dan kode; butir milik Anda
 /clint:status sprint                          → sisa tugas sprint berjalan, per status dan PIC
 /clint:status sprint 1 2 3                    → sisa tugas beberapa sprint
+/clint:status plan                            → sisa PR per rencana, modul yang belum direncanakan
+/clint:docs buat MoM dan confirmation list dari notulen ini
+/clint:docs buat PRD modul MOB-15 dari BRD    → FR/AC ber-ID, dampak ke dokumen turunan
+/clint:docs rekap sprint 9 dan carry-over     → dari bukti MR/commit/Status PR, per PIC
 /clint:docs tandai MOD-AD-04 kolom QA selesai di sprint 9
 /clint:docs catat ADR: pembayaran memakai Midtrans Snap
 /clint:docs perbarui CHANGELOG untuk rilis 1.4.0
 /clint:review !123                            → apakah implementasi sesuai PRD/API contract
 ```
 
-Penulisan dokumen requirement (BRD, PRD, SAD, API contract, STD) dan pembaruan sprint tracker otomatis
-dari git/MR sedang dikembangkan.
+Template dokumen per project (`kit/docs/`) dan SAD/API contract dari `solution-architect` masih dikembangkan.
 Lihat [Peta jalan](#peta-jalan).
 
 ### Designer
@@ -362,7 +437,7 @@ yang menambah nilai. Tugas kecil tidak dibuat kompleks:
 | Ukuran | Ciri | Tim |
 |---|---|---|
 | Mikro | 1–2 file, ≤ ~30 baris, area biasa | tanpa subagent; dikerjakan langsung, lalu lint/test dan MR |
-| Kecil | 1 PR, ≤ ~150 baris | `developer` + `code-reviewer` |
+| Kecil | 1 PR, ≤ ~150 baris | `developer` + `code-reviewer` (sendirian: ia juga memeriksa kebenaran logika dan kesesuaian rencana) |
 | Sedang | PR besar atau area sensitif | + `conformance-reviewer` + maksimal 2 auditor paling relevan |
 | Besar | modul, > 1 PR, lintas platform | `solution-architect` sekali → `planner` → tiap PR sesuai ukurannya |
 
@@ -373,10 +448,18 @@ Bug yang penyebabnya belum jelas → `bug-investigator` dulu. Pipeline merah →
 - **Tarik terbaru dulu**: base branch, docs, dan design, supaya rencana dan kode memakai acuan terbaru.
 - **Rencana otomatis** untuk modul atau tugas > 1 PR; diperbarui bila dokumen berubah sejak rencana
   terakhir. Tugas kecil langsung dikerjakan tanpa file rencana.
-- **Tempat kerja**: satu PR dikerjakan langsung di repo utama; worktree hanya dibuat bila beberapa PR
-  jalan bersamaan. Perubahan Anda yang belum di-commit tidak pernah disentuh.
-- **Tinjauan paralel** setelah kode ditulis; temuan wajib dikirim balik ke `developer`, maksimal 2
-  putaran. Masih gagal → berhenti tanpa MR, perubahan disimpan sebagai commit `wip` lokal.
+- **Tempat kerja**: repo utama bila sedang **bebas**; worktree bila repo utama **sedang dipakai** (sesi clint lain
+  bekerja di sana, sesi Claude lain sedang aktif di folder itu, atau ada perubahan yang belum di-commit) atau bila
+  beberapa PR jalan bersamaan. Pengecekannya satu skrip (`scripts/repo-busy.sh`, ±0,05 dtk, tanpa token).
+  Worktree memakai `node_modules` repo utama lewat tautan bila lockfile-nya sama, jadi tidak install ulang.
+  Perubahan Anda yang belum di-commit tidak pernah disentuh.
+- **Klaim PR**: PR yang dipilih dicatat di file status sesi, sehingga sesi lain tidak mengambilnya.
+- **Tinjauan paralel** setelah kode ditulis. Semua peninjau memakai format temuan yang sama
+  (`PUTUSAN: LULUS | PERLU PERBAIKAN`, temuan `[wajib]`/`[saran]` dengan `path:baris`), tahu siapa saja peninjau
+  lain di putaran itu (wilayah auditor yang ikut tidak diperiksa dua kali), dan berbagi folder kerja PR
+  (`.git/clint/<branch>/`: `pr.diff`, `findings.md`). Temuan ganda digabung, lalu dikirim ke `developer`, yang
+  menandai setiap butir diperbaiki/dilewati. Putaran ulang hanya memverifikasi temuan itu, maksimal 2 putaran.
+  Masih gagal → berhenti tanpa MR, perubahan disimpan sebagai commit `wip` lokal dan PR ditandai ⏸️ di rencana.
 - **E2E** dijalankan bila rencana memintanya atau bila perubahan terlihat pengguna. Project Expo dengan
   **Pratinjau E2E** di adapter menguji sebelum MR lewat EAS Update ke channel khusus simulator (tanpa
   build native lokal, QA tidak ikut menerima). Status E2E wajib tertulis (lulus / tidak perlu /
@@ -388,11 +471,16 @@ Bug yang penyebabnya belum jelas → `bug-investigator` dulu. Pipeline merah →
   terapkan nanti dengan `/clint:develop terapkan saran di !<n>`.
 - **MR**: stage eksplisit (tanpa `git add -A`), tarik base lagi, push, buat MR, dan pastikan MR-nya
   benar-benar ada. PR yang bergantung dibangun di atas branch dependensinya; deskripsi MR menyebut
-  urutan merge.
+  urutan merge. Commit PR dari rencana membawa trailer `Plan: <rencana> PR-<n>` dan memperbarui `## Status PR`.
+- **Berikutnya** dihitung ulang di akhir run dari fakta terbaru (`scripts/plan-status.py`), bukan dari ingatan sesi.
 
 ## Tim agent
 
-![18 agent senior](docs/images/agent-team.png)
+![Tim agent](docs/images/agent-team.png)
+
+21 agent. **Skill yang memanggil agent**, bukan sebaliknya: `/clint:develop` dan skill lain adalah orkestrator
+yang memilih dan memanggil agent, meneruskan hasil satu agent ke agent berikutnya (mis. temuan peninjau ke
+`developer`), lalu melapor. Agent tidak memanggil skill atau agent lain. Gambar di atas belum memuat tiga agent dokumen yang baru (`business-analyst`, `qa-analyst`, `sprint-tracker`).
 
 | Kelompok | Agent | Peran | Model |
 |---|---|---|---|
@@ -402,7 +490,10 @@ Bug yang penyebabnya belum jelas → `bug-investigator` dulu. Pipeline merah →
 | | `pipeline-fixer` | memperbaiki CI yang gagal dari penyebabnya, termasuk quality gate Sonar | Opus |
 | | `bug-investigator` | akar masalah bug sebelum diperbaiki (hanya bila penyebab belum jelas) | Opus |
 | | `release-engineer` | build, APK/IPA untuk UAT, update OTA, versi, changelog, kesiapan deploy | Sonnet |
-| | `tech-writer` | status feedback/bug di docs, README, CHANGELOG, ADR | Sonnet |
+| | `tech-writer` | status feedback/bug di docs, Status PR di rencana, README, CHANGELOG, ADR, dok API | Sonnet |
+| **Dokumen** | `business-analyst` | MoM, confirmation list, risk register, BRD, PRD (FR/AC ber-ID), dampak perubahan ke dokumen turunan | Opus |
+| | `qa-analyst` | STD dan test case (TC→AC), matriks keterlacakan, pilih regresi, laporan bug | Sonnet |
+| | `sprint-tracker` | sprint tracker dari bukti (MR, commit, Status PR): status, PIC, rekap, carry-over | Sonnet |
 | **Arsitektur** (tugas Besar saja) | `solution-architect` | tinjau rencana modul besar, keputusan lintas platform, ADR | Opus |
 | **Tinjauan inti** (setiap PR) | `conformance-reviewer` | sesuai rencana, dokumen, dan aturan project? | Sonnet |
 | | `code-reviewer` | clean code, clean architecture, SonarQube | Opus |
@@ -497,7 +588,8 @@ Ikon clint di menu bar Mac (lewat SwiftBar) menampilkan kondisi kerja sepanjang 
 | `✓` | semua aman |
 | `!` | ada yang gagal |
 
-Isi menu: kemajuan PR, setiap sesi Claude Code yang bekerja (termasuk di VS Code) beserta agent yang
+Isi menu: kemajuan PR **per sesi** (beberapa sesi develop di project berbeda tampil masing-masing dengan nama
+project-nya), *Berikutnya* per project (maks 3 project, klik untuk menyalin), setiap sesi Claude Code yang bekerja (termasuk di VS Code) beserta agent yang
 sedang jalan, hal yang menunggu (submenu *Salin perintah*, *Buka MR di browser*, *Buka project di VS
 Code*, *Tandai selesai*), dan tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project*, *Halo
 Clint*, *Pengaturan*.
@@ -635,6 +727,11 @@ Tidak disimpan di repo mana pun:
 |---|---|
 | `user.json` | `{"name": ["Nama Anda", "username-git"], "language": "id"}`: nama untuk filter PIC, bahasa pribadi |
 | `avatar.jpg` | avatar laporan dan menu bar (opsional) |
+| `sesi/<id-sesi>.json` | status setiap sesi Claude Code untuk menu bar (dihapus saat sesi berakhir) |
+
+Di `~/Library/Logs/clint/`: `terakhir.json` (laporan gabungan untuk menu bar; laporan satu project digabung,
+tidak menimpa project lain), `kerja/<id-sesi>.json` (kemajuan dan klaim PR setiap sesi develop), dan arsip
+laporan per tanggal.
 
 ## Pindah dari clint v1
 
@@ -670,6 +767,20 @@ bagi yang memasang plugin.
 manusia. Mode `push-base` hanya dipakai bila tim memang push langsung ke base branch, dan tugas besar tetap
 meminta konfirmasi sebelum push pertama.
 
+**Kenapa saran *Berikutnya* di project A menyebut project B?** Sejak v2.3 tidak lagi: *Berikutnya* hanya
+diambil dari project sesi itu, dan laporan satu project digabung ke file menu bar tanpa menimpa project lain.
+Bila masih terjadi, periksa `~/.claude/settings.json`: `additionalDirectories` atau izin yang menyebut path project
+lain berlaku di **semua** project dan bisa membawa konteksnya. `/clint:setup sync` menunjukkan entri seperti itu
+dan menawarkan memindahkannya ke `.claude/settings.local.json` project pemiliknya.
+
+**Saya buka beberapa sesi untuk PR paralel. Apakah aman?** Ya. Setiap sesi mengklaim PR-nya. Sesi pertama bekerja di
+repo utama; sesi yang mulai saat repo utama sedang dipakai otomatis memakai worktree. PR yang dipegang sesi lain tidak disarankan atau dikerjakan ulang. Klaim hanya
+terlihat di laptop yang sama; untuk rekan tim, acuannya bagian `## Status PR` di rencana dan MR.
+
+**Rencana lama (sebelum v2.3) tidak punya `## Status PR`.** Mode `mr`: `/clint:setup sync` menulisnya dari
+status MR. Mode `push-base` tanpa MR: statusnya `❔ belum tercatat` sampai dicatat dengan
+`/clint:docs perbarui Status PR di <rencana> dari git log`, karena commit lama tidak punya trailer `Plan:`.
+
 **Kenapa tugas kecil saya tidak ditinjau semua auditor?** Karena tidak menambah nilai dan memboroskan token.
 Ukuran dan area tugas menentukan siapa yang ikut meninjau.
 
@@ -685,10 +796,10 @@ project selalu mengalahkan kebiasaan umum agent.
 ```
 clint/
   README.md
-  agents/            18 agent
+  agents/            21 agent
   skills/            status · develop · review · test · docs · release · setup
   hooks/             prinsip kerja + bahasa, format, review otomatis, kabar, status sesi
-  scripts/           sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
+  scripts/           status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
   swiftbar/          plugin menu bar (clint.py, streamable)
   kit/               master skill/rules/adapter + sonarqube.md yang DISALIN ke project (lihat kit/README.md)
   docs/images/       gambar README; sumbernya di docs/images/source (python3 build.py)
@@ -720,10 +831,11 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 4 | sweeping token: skrip pengumpul untuk pemantau, aturan gambar untuk `e2e-tester` | selesai |
 | 5 | tim lengkap 18 agent + aturan tim seperlunya | selesai |
 | 6 | **v2**: nama bahasa Inggris, 7 perintah per jenis kerja, dua bahasa, standar SonarQube | selesai |
+| 6b | **v2.3**: isolasi antar project, klaim PR antar sesi, `## Status PR` di rencana, `status plan`, *Berikutnya* bertanda paralel/urutan, menutup MR Draft, format temuan peninjau seragam | selesai |
 | 7 | rantai dokumen yang bisa diatur per project (`docs` di `clint.json`) + template dokumen di `kit/docs/` | berikutnya |
-| 8 | `business-analyst` (PM): MoM, confirmation list, risk register, BRD, PRD | rencana |
+| 8 | `business-analyst` (PM): MoM, confirmation list, risk register, BRD, PRD | agent selesai; template `kit/docs/` menunggu fase 7 |
 | 9 | `solution-architect` diperluas: SAD, API contract (OpenAPI 3.1 YAML), ADR | rencana |
-| 10 | `qa-analyst` (QA): STD dan test case, uji terpandu, regresi, laporan bug; `/clint:test` diperluas | rencana |
-| 11 | `sprint-tracker` + tampilan `status` per peran (PM, SA, QA, Dev, Designer) | rencana |
+| 10 | `qa-analyst` (QA): STD dan test case, uji terpandu, regresi, laporan bug; `/clint:test` diperluas | selesai kecuali uji terpandu |
+| 11 | `sprint-tracker` + tampilan `status` per peran (PM, SA, QA, Dev, Designer) | agent selesai; tampilan per peran belum |
 | 12 | `/clint:release` diperluas: ops (preflight, backup, health check), ekspor dokumen DOCX/PDF | rencana |
 | 13 | mode adopsi: memetakan agent/skill lama di project ke clint, lalu uji di turborepo, magnet-rezeki, lajoo | rencana |

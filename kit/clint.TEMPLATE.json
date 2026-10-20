@@ -5,7 +5,9 @@
     "targetBranch": "dev",
     "mode": "mr"
   },
+  "autoReview": true,
   "autoReviewMinLines": 40,
+  "suara": true,
   "ciOnMr": ["{cek yang dijalankan CI pada MR: lint, typecheck, test, sonar, build, e2e}"],
   "worktreeRoot": "../{nama-repo}-worktrees",
   "relatedRepos": [

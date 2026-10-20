@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Render laporan pagi gabungan (JSON dari /clint:status semua) menjadi halaman HTML lokal.
+"""Render laporan pagi gabungan (JSON dari /clint:status all) menjadi halaman HTML lokal.
 Pakai: render-report.py <laporan.json> <laporan.html>"""
-import json, sys, html, datetime, base64, os
+import json, sys, html, datetime, base64, os, re
 
 src, dst = sys.argv[1], sys.argv[2]
 d = json.load(open(src, encoding="utf-8"))
@@ -19,9 +19,10 @@ def butir(x):
         cmd = (f'<div class="cmd"><code>{e(x["perintah"])}</code>'
                f'<button class="copy" type="button">Salin</button>'
                f'<span class="hint">jalankan di {e(x.get("proyek"))}</span></div>')
+    tautan = f'<a href="{e(x["url"])}">buka</a>' if x.get("url") else ""
     return (f'<li class="item"><div class="body"><p>{e(x.get("teks"))}</p>'
             f'<div class="meta">{chip(x.get("proyek"))}<span>{e(x.get("sumber"))}</span>'
-            f'{f"<a href=\"{e(x["url"])}\">buka</a>" if x.get("url") else ""}</div>{cmd}</div></li>')
+            f'{tautan}</div>{cmd}</div></li>')
 
 def grup(kunci, judul, kelas):
     xs = d.get(kunci) or []
@@ -79,12 +80,22 @@ navigator.clipboard.writeText(t).then(()=>{b.textContent='Tersalin';setTimeout((
 const sp=document.getElementById('speak');if(sp)sp.onclick=()=>{const u=new SpeechSynthesisUtterance(sp.dataset.t);u.lang='id-ID';speechSynthesis.cancel();speechSynthesis.speak(u)};
 """
 judul = d.get("judul") or d.get("kalimat") or "Selamat pagi."
-nx = (d.get("berikutnya") or "").strip()
-if nx.startswith("/"):
-    berikut = (f'<section class="group do"><h2>Berikutnya</h2><div class="cmd"><code>{e(nx)}</code>'
-               f'<button class="copy" type="button">Salin</button></div></section>')
-elif nx:
-    berikut = f'<section class="group"><h2>Berikutnya</h2><p class="lead">{e(nx)}</p></section>'
+def langkah(t, proyek=""):
+    m = re.match(r"^(\[[^\]]*\])?\s*(/\S.*)$", t.strip())
+    if not m:
+        return f'<p class="lead">{e(t)}</p>'
+    ket = " ".join(x for x in (m.group(1) or "", f"jalankan di {proyek}" if proyek else "") if x)
+    hint = f'<span class="hint">{e(ket)}</span>' if ket else ""
+    return (f'<div class="cmd"><code>{e(m.group(2))}</code>'
+            f'<button class="copy" type="button">Salin</button>{hint}</div>')
+
+nx = d.get("berikutnya") or ""
+if isinstance(nx, list):
+    isi = "".join(f'<div class="body">{chip(b.get("proyek"))}{"".join(langkah(t, b.get("proyek")) for t in b.get("langkah") or [])}</div>'
+                  for b in nx if b.get("langkah"))
+    berikut = f'<section class="group do"><h2>Berikutnya</h2>{isi}</section>' if isi else ""
+elif nx.strip():
+    berikut = f'<section class="group do"><h2>Berikutnya</h2>{langkah(nx.strip())}</section>'
 else:
     berikut = ""
 out = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

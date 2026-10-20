@@ -12,7 +12,7 @@ oleh agent `developer` tanpa membaca ulang semua dokumen.
 
 1. Baca `.claude/clint.json` → `docs.*` untuk lokasi dokumen, `surfaces[]` untuk platform
    yang terlibat, dan adapter tiap surface (`surfaces[].adapter`).
-2. Tarik versi terbaru dokumen dan desain kalau repo-nya terpisah (`git -C <path> pull`).
+2. Repo dokumen dan desain terpisah (`relatedRepos`) anggap sudah ditarik orkestrator; jangan `git pull`.
 3. Baca dokumen yang relevan dengan modul. Catat ID requirement (US/FR/BR/TC/endpoint) yang
    menjadi sumber setiap keputusan.
 4. Cek kode yang sudah ada sebelum merencanakan sesuatu sebagai "baru". Kesimpulan "belum
@@ -35,7 +35,9 @@ kolom tetap persis seperti ini apa pun bahasa rencananya:
 | PR-2 | feat/<modul>-<slug> | ... | FR-02 | PR-1 | ya |
 
 *Bergantung* hanya diisi bila PR benar-benar butuh kode PR lain; makin sedikit dependensi,
-makin banyak yang bisa paralel.
+makin banyak yang bisa paralel. Dependensi lokal ditulis `PR-n` (dipisah koma). Dependensi lintas modul/repo
+ditulis setelah `;` dengan ID modul di depannya, atau kata `blocker`, supaya skrip membedakannya:
+`PR-1; MR-MOB-06 PR-3`, `; blocker endpoint inquiry belum ada di backend`. Tanpa dependensi: `—`.
 
 Selain tabel:
 
@@ -49,6 +51,22 @@ Selain tabel:
 - Kalau backend belum siap, rencanakan lapisan mock sejak PR awal, PR E2E terhadap mock, lalu
   PR terpisah untuk mencabut mock dan memasang endpoint asli sesuai API contract.
 
+Bagian **`## Status PR`** wajib menjadi bagian terakhir file, satu butir per PR, dipisah baris kosong
+(PR paralel yang mengubah butirnya masing-masing tidak bentrok saat merge, sedangkan baris yang berdempetan
+bentrok). Rencana baru: semua PR mulai `⬜ belum mulai`. Judul dan format tetap persis apa pun bahasa rencana:
+
+    ## Status PR
+
+    - [ ] PR-1 · ⬜ belum mulai
+
+    - [ ] PR-2 · ⬜ belum mulai
+
+Memperbarui rencana yang sudah ada: butir status yang ada dipertahankan apa adanya (termasuk `[x]`, catatan,
+dan nomor MR); hanya butir untuk PR baru yang ditambahkan dengan `⬜ belum mulai`. Rencana lama tanpa bagian
+ini: **jangan** menambahkannya dengan semua PR `⬜` (PR yang sudah selesai jadi tercatat belum mulai); sebut di
+laporan bahwa statusnya perlu dicatat dari bukti (`plan-status.py --write` untuk mode `mr`, atau
+`/clint:docs perbarui Status PR di <rencana> dari git log`).
+
 ## Batas
 
 - Jangan menulis kode produk.
@@ -56,7 +74,7 @@ Selain tabel:
   desain, PRD vs API contract), **jangan memilih sendiri**: catat keduanya di tabel
   ketidakjelasan dengan jawaban "PERLU KEPUTUSAN USER", sertakan rekomendasimu (biasanya yang
   terbaru) beserta alasannya, dan sebutkan di laporan. PR yang bergantung pada konflik itu
-  ditandai tertahan sampai user memutuskan.
+  ditandai di Status PR `⏸️ tertahan: <konflik>` sampai user memutuskan.
 
 ## Standar senior
 

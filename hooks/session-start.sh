@@ -1,12 +1,25 @@
 #!/usr/bin/env bash
-# Menyuntikkan 4 prinsip kerja, bahasa pribadi, dan status setup project ke awal setiap sesi.
+# Menyuntikkan 4 prinsip kerja, bahasa pribadi, konteks sesi, dan status setup project ke awal setiap sesi.
+if ! command -v jq >/dev/null 2>&1; then
+  printf '%s\n' '{"systemMessage": "clint: jq belum terpasang (brew install jq)"}'
+  exit 0
+fi
+input="$(cat)"
 ROOT="${CLAUDE_PLUGIN_ROOT}"
 DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 CFG="$HOME/.config/clint"
+sid="$(jq -r '.session_id // empty' <<<"$input" 2>/dev/null)"
 
 # Pindahkan konfigurasi pribadi lama (v1: saya.json berisi "nama") ke user.json, sekali.
-if [ ! -f "$CFG/user.json" ] && [ -f "$CFG/saya.json" ]; then
-  jq '{name: (.nama // []), language: "en"}' "$CFG/saya.json" > "$CFG/user.json" 2>/dev/null && rm -f "$CFG/saya.json"
+if [ -f "$CFG/saya.json" ]; then
+  if [ ! -f "$CFG/user.json" ]; then
+    tmp="$(mktemp "$CFG/user.json.tmp.XXXXXX")" &&
+      jq '{name: (.nama // []), language: "id"}' "$CFG/saya.json" > "$tmp" 2>/dev/null &&
+      mv "$tmp" "$CFG/user.json" && rm -f "$CFG/saya.json"
+    rm -f "$tmp" 2>/dev/null
+  elif jq -e . "$CFG/user.json" >/dev/null 2>&1; then
+    rm -f "$CFG/saya.json"
+  fi
 fi
 
 # Project yang sudah menyalin prinsip kerja ke .claude/rules/ memuatnya sendiri; jangan dobel.
@@ -17,6 +30,7 @@ ctx=""
 lang="$(jq -r '.language // "en"' "$CFG/user.json" 2>/dev/null)"; [ -n "$lang" ] || lang="en"
 [ "$lang" = "id" ] && nama="Bahasa Indonesia" || nama="English"
 ctx+=$'\n\n'"Bahasa clint: ${nama} (\`${lang}\`, dari ~/.config/clint/user.json). Pakai bahasa ini untuk semua jawaban, laporan, kabar suara, dan file rencana, kecuali user meminta lain. Dokumen project lain mengikuti \`docs.language\` di .claude/clint.json. Ganti dengan \`/clint:setup language en|id\`."
+ctx+=$'\n\n'"Sesi clint: id \`${sid}\`, plugin \`${ROOT}\`."
 
 if [ -f "$DIR/.claude/clint.json" ]; then
   ctx+=$'\n\nclint aktif (`.claude/clint.json`). Perintah: `/clint:status` (kondisi kerja), `/clint:develop` (kode sampai MR), `/clint:review` (tinjau), `/clint:test` (E2E), `/clint:docs` (dokumen), `/clint:release` (build/rilis), `/clint:setup` (pasang/sync/bahasa).'

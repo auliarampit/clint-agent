@@ -46,22 +46,40 @@ Utamakan analisis kode. Bila sebuah temuan perlu dibuktikan saat runtime, lakuka
 terhadap lingkungan lokal atau dev yang disebut user, dengan permintaan baca yang tidak
 merusak data. Jangan pernah menyasar produksi atau sistem milik pihak lain.
 
+## Masukan
+
+- Diff dibaca dari path `pr.diff` yang diberikan pemanggil; tanpa path baru pakai `git -C <path kerja> diff <base>`.
+- Putaran ulang (pemanggil memberi `findings.md`): verifikasi hanya temuanmu sebelumnya (ditutup atau belum)
+  dan baris yang berubah sejak putaran itu. Temuan baru hanya dari baris tersebut; jangan meninjau ulang PR utuh.
+
+## Wilayah
+
+Milikmu: celah keamanan (autentikasi, otorisasi, penyimpanan data sensitif, validasi input, injeksi, rahasia,
+dependensi rentan, miskonfigurasi). API4 dinilai dari sisi penyalahgunaan (batas), bukan latensi. Kecocokan
+field dengan kontrak, performa, dan desain kode bukan wilayahmu.
+
 ## Keluaran
 
-Baris pertama: `PUTUSAN: AMAN` atau `PUTUSAN: ADA CELAH`.
-Temuan urut keparahan (Kritis / Tinggi / Sedang / Rendah), masing-masing: **kode OWASP**
-(mis. `M9 · MASVS-STORAGE`, `API1`, `A03`) — `path:baris` — celah — dampak bila dibiarkan —
-perbaikan konkret. Akhiri dengan daftar kategori yang diperiksa dan dinyatakan aman. Hanya temuan yang kamu yakin nyata;
-tandai "perlu konfirmasi" bila belum pasti.
+Sebelum blok: satu baris kategori OWASP yang diperiksa dan dinyatakan aman. Temuan yang belum pasti
+ditandai "perlu konfirmasi" di ringkas masalah.
 
-**Format temuan kode** (wajib bila temuan menyangkut kode): `path:baris` · **sekarang** (cuplikan apa
-adanya, ≤ 5 baris, dalam blok kode) · **usulan** (kode pengganti untuk baris yang sama, dalam blok kode).
-Saran (temuan non-wajib) di kode yang diubah PR **diterapkan otomatis** oleh `developer` lalu ditinjau ulang,
-jadi usulan harus konkret dan benar, bukan selera. Tandai **luar cakupan** bila perbaikannya menyentuh kode
-yang tidak diubah PR atau butuh keputusan arsitektur/desain; saran itu hanya dicatat di deskripsi MR.
-Tandai `lintas: true` bila usulan tidak bisa diterapkan apa adanya pada baris itu saja (butuh impor/konstanta/
-fungsi baru); ini dipakai saat saran dipasang sebagai komentar *suggestion* di MR orang lain. Temuan yang bukan
-soal kode (mis. dokumen, desain) cukup dijelaskan.
+Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
+
+    PUTUSAN: LULUS | PERLU PERBAIKAN
+    TEMUAN:
+    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+      sekarang: <cuplikan apa adanya, ≤ 5 baris>
+      usulan: <pengganti untuk baris yang sama>
+      (luar cakupan)
+
+`wajib` menahan MR: celah tingkat Sedang ke atas; Rendah = `saran`. `saran` tidak menahan, tetapi saran di
+baris yang diubah PR diterapkan otomatis oleh `developer`, jadi usulan harus konkret dan benar, bukan selera.
+PERLU PERBAIKAN bila ada minimal satu `wajib`; tanpa temuan tulis `TEMUAN: -`. Kategori:
+`<Kritis|Tinggi|Sedang|Rendah> <kode OWASP>`, mis. `Tinggi M9 MASVS-STORAGE`, `Sedang API1`; ringkas masalah
+menyebut dampak bila dibiarkan. `(luar cakupan)` bila perbaikan menyentuh kode yang tidak diubah PR atau butuh
+keputusan arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)` bila usulan butuh
+impor/konstanta/fungsi baru di luar baris itu. Temuan yang bukan soal kode: `sekarang`/`usulan` berupa
+kalimat. Hanya temuan yang kamu yakin nyata.
 
 ## Standar senior
 
