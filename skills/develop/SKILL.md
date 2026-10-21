@@ -43,21 +43,20 @@ hanya untuk diteruskan ke agent (beri path/potongan saja).
 - **Bahasa**: laporan ke user, kabar suara, dan file rencana memakai bahasa user (baris *Bahasa clint*
   di konteks sesi; default English). Sebut bahasa itu di setiap prompt agent. Dokumen project lain
   (feedback QA, README, CHANGELOG, ADR) memakai `docs.language` di `.claude/clint.json`.
-- Baca `.claude/clint.json`. Tidak ada → berhenti, tawarkan `/clint:setup`.
 - `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi (cadangan
   `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1)`). Teruskan `R` ke agent yang butuh skrip.
 - **Sesi lain di repo ini**: PR yang diklaim sesi lain terlihat di `plan-status.py` (🔄) dan tidak dikerjakan di
   sini. Apakah repo utama boleh dipakai ditentukan di langkah 5.1.
-- `git fetch origin --prune`. Tarik juga `relatedRepos` (`git -C <path> pull --ff-only` bila
-  bersih) supaya rencana dan implementasi memakai dokumen dan desain terbaru.
+- **Satu perintah, tanpa token:** `bash "$R/scripts/preflight.sh" .` → fetch, tarik `relatedRepos` yang bersih
+  (dokumen dan desain terbaru), lalu cetak `base`, `mr_mode`, `surface=...`, status tiap related repo, dan
+  `paralel=` (sisa disk ≥ 20 GB → 3 PR sekaligus; 5–20 GB → 1). Exit 1 = belum ada `.claude/clint.json` →
+  tawarkan `/clint:setup`; exit 2 = disk < 5 GB → berhenti dan laporkan.
 - Cocokkan tugas dengan `surfaces[]` (dari path/app yang disebut, atau dari rencana). Tugas
   menyentuh app yang tidak ada di `surfaces[]` (mis. backend/web saat clint baru dipasang
   untuk mobile) → berhenti, sebut surface yang tidak tercakup, dan sarankan mengerjakannya
   tanpa clint (skill/rules project untuk app itu) atau menambah surface lewat
   `/clint:setup`. Tugas campuran → kerjakan hanya bagian surface yang tercakup bila
   user setuju.
-- `df -h ~`. Tentukan paralelisme: sisa ≥ 20 GB → maks 3 PR sekaligus; 5–20 GB → 1; < 5 GB →
-  berhenti dan laporkan.
 
 ## 2. Tentukan jalur (otomatis, jangan tanya user)
 
@@ -127,26 +126,15 @@ Untuk PR paralel, panggil agent-agent sejenis dalam satu pesan. Langkah per PR:
 ### 5.1 Siapkan branch dari base terbaru
 
 **Path kerja: repo utama bila bebas, worktree bila sedang dipakai.** Satu perintah, tanpa token:
-`bash "$R/scripts/repo-busy.sh" . <sid>` → `bebas` atau `dipakai: <alasan>` (sesi clint lain bekerja di repo
-utama, sesi Claude lain sedang aktif di folder repo ini, atau working tree kotor). Cek sekali saat run mulai,
-dan sekali lagi tepat sebelum `git switch` bila PR berikutnya dikerjakan berurutan.
-
-- **Bebas, satu PR pada satu waktu** (tugas tunggal, atau beberapa PR berurutan): kerjakan langsung di repo
-  utama, **tanpa worktree**. Catat branch asal user, lalu:
-  ```bash
-  git fetch origin --prune
-  git switch -c <branch> <base>
-  ```
-- **Dipakai**, atau **lebih dari satu PR bersamaan** di run ini: satu worktree per PR, supaya tidak mengganggu
-  sesi lain atau perubahan user (jangan stash/reset/switch di repo utama):
-  ```bash
-  git fetch origin --prune
-  git worktree add -b <branch> <worktreeRoot>/<slug> <base>
-  ```
-  Dependensi untuk lint/test di worktree, cara tercepat dulu: lockfile sama dengan repo utama
-  (`cmp -s <repo>/<lockfile> <worktree>/<lockfile>`) → tautkan `ln -s <repo>/node_modules <worktree>/node_modules`
-  (juga untuk `node_modules` per app di monorepo); berbeda, atau lint/test gagal karena modul → install dengan
-  perintah dari adapter. Selain JS ikuti adapter.
+`bash "$R/scripts/prepare-branch.sh" <repo utama> <branch> <base> <sid> [--worktree]`
+→ `path=<path kerja> mode=repo|worktree asal=<branch asal user>`.
+- Tanpa `--worktree` (tugas tunggal, atau beberapa PR berurutan): skrip memeriksa `repo-busy.sh`; repo utama
+  bebas → `git switch -c` di repo utama, selain itu (sesi clint/Claude lain di repo ini, working tree kotor)
+  → worktree, dengan alasannya di `alasan_worktree=`.
+- `--worktree` bila **lebih dari satu PR bersamaan** di run ini, supaya tidak mengganggu sesi lain atau
+  perubahan user (jangan stash/reset/switch di repo utama).
+- Di worktree, `node_modules` repo utama ditautkan bila lockfile sama (`node_modules=ditautkan`). Lockfile
+  berbeda, atau lint/test gagal karena modul → install dengan perintah dari adapter. Selain JS ikuti adapter.
 
 `<base>` = `origin/<baseBranch>`, kecuali PR ini bergantung pada PR yang belum merged: base =
 branch PR dependensi itu, dan deskripsi MR menyebut "Bergantung pada !X, merge setelahnya".
@@ -249,62 +237,45 @@ berarti PR belum siap masuk base branch:
 - mode `"push-base"` → jangan push ke base branch; push ke branch PR itu saja dan laporkan.
 Lanjutannya `/clint:test e2e !<n>` (skill `test`).
 
-### 5.5 Commit, push, MR
+### 5.5 Commit, push, MR, bersihkan (satu perintah)
 
-- `git -C <path kerja> status` lalu **stage eksplisit** per path dari laporan `developer`/`e2e-tester`.
-  Jangan `git add -A` / `commit -a`. Pastikan tidak ada screenshot, log, atau output build.
-- Pesan commit mengikuti gaya `git log --oneline -15` repo. PR dari rencana: commit utama diberi trailer
+Yang ditulis model hanya isi berkas; sisanya dijalankan skrip tanpa token:
+- **Pesan commit** mengikuti gaya `git log --oneline -15` repo. PR dari rencana: commit utama diberi trailer
   `Plan: <nama-file-rencana-tanpa-.md> PR-<n>` (baris terakhir pesan), supaya status selesai terdeteksi di
-  mode `push-base`.
-- **Status di rencana** (PR dari rencana): sebelum commit utama, tulis status PR ini ke bagian `## Status PR`
-  dan stage file rencananya bersama commit itu:
-  `python3 "$R/scripts/plan-status.py" <rencana> --repo <path kerja> --set PR-<n>=<review|draft|done> --write`
-  (`review` untuk MR biasa, `draft` bila E2E tertunda, `done` untuk `push-base`). Skrip sekaligus memperbarui butir
-  PR lain yang faktanya berubah (mis. MR-nya sudah merged). Butir dipisah baris kosong, jadi PR paralel yang
-  masing-masing mengubah butirnya sendiri tidak bentrok saat merge.
-- Tarik base sekali lagi sebelum push; rebase kalau tertinggal, lalu ulangi **cek cepat** saja (lint,
-  typecheck, test terkait). Setelah push, jangan menunggu pipeline; hasilnya muncul di `/clint:status`.
+  mode `push-base`. Perbaikan Low punya pesan sendiri (langkah 5.3).
+- **Daftar file** per commit, satu path per baris, dari laporan `developer`/`e2e-tester` (stage eksplisit;
+  tanpa screenshot, log, atau output build).
+- **Deskripsi MR**: ringkasan, requirement yang dipenuhi (ID), cara verifikasi, hasil lint/typecheck/test/E2E,
+  dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola. Tanpa AI slop: tanpa nama
+  agent, jumlah putaran tinjauan, atau kalimat pujian. E2E tertunda → memuat `E2E: tertunda, <alasan>`.
+- **Temuan luar cakupan dan usulan yang dilewati** sebagai JSON
+  `[{"path","line","sekarang","usulan","alasan","agent","tingkat"}]`, supaya user bisa memvalidasinya.
 
-Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
+```bash
+python3 "$R/scripts/ship-pr.py" --dir <path kerja> \
+  --commit <pesan-utama.txt>:<file-utama.txt> [--commit <pesan-low.txt>:<file-low.txt>] \
+  [--plan <rencana> --pr PR-<n> --state review|draft|done] [--desc <deskripsi.md>] [--draft] \
+  [--saran <saran.json>] [--check "<lint>" --check "<test terkait>"] \
+  [--butir "<ID/teks butir status>" --proyek <nama project>] [--asal <branch asal> | --worktree]
+```
 
-**`"push-base"`** (tim langsung push ke base branch, tanpa MR):
-- PR dikerjakan satu per satu urut gelombang; tidak ada MR bertumpuk.
-- Setelah rebase ke `origin/<baseBranch>`: di repo utama `git switch <baseBranch>`,
-  `git merge --ff-only origin/<baseBranch>`, lalu `git merge --ff-only <branch>`;
-  `git push origin <baseBranch>`. Bukan fast-forward → rebase ulang, jangan merge commit.
-- Push ditolak/diblokir (proteksi branch, izin) → biarkan commit di `<baseBranch>` lokal,
-  jangan force, dan minta user menjalankan `git push origin <baseBranch>` di laporan.
-- Tugas besar (> 1 PR) atau menyentuh pekerjaan orang lain → konfirmasi ke user sekali sebelum
-  push pertama.
-- Lewati langkah MR di bawah; saran yang tidak diterapkan masuk laporan akhir. Di 5.6 hapus branch
-  lokal PR setelah push.
+Skrip menulis `## Status PR` di rencana dan mengikutkannya di commit pertama (`review` untuk MR biasa, `draft`
+bila E2E tertunda, `done` untuk `push-base`), commit berurutan, menarik base dan rebase bila tertinggal (lalu
+menjalankan ulang `--check` saja), push, membuat MR ke `mr.targetBranch` (Draft dengan `--draft`),
+**memverifikasi MR benar-benar ada**, menempel blok "Saran tinjauan" ke deskripsi, memindahkan butir laporan
+`status` ke "menunggu review" (`--butir`, wajib bila PR berasal dari butir itu), lalu bersih-bersih: kembali
+ke `--asal` dan menghapus branch lokal, atau menghapus worktree. Tidak pernah force push; tidak menunggu
+pipeline (hasilnya muncul di `/clint:status`).
 
-**`"mr"`**:
-- `git push -u origin <branch>`.
-- Buat MR ke `mr.targetBranch` dengan `mr.cli` (`glab mr create` / `gh pr create`). Deskripsi:
-  ringkasan, requirement yang dipenuhi (ID), cara verifikasi, hasil lint/typecheck/test/E2E,
-  dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola. Tanpa AI slop
-  (`no-ai-slop.md`): tanpa nama agent, jumlah putaran tinjauan, atau kalimat pujian.
-- **Temuan luar cakupan dan usulan yang dilewati** dicatat
-  supaya user bisa memvalidasinya: tulis ke file sementara sebagai JSON
-  `[{"path","line","sekarang","usulan","alasan","agent","tingkat"}]`, lalu setelah MR dibuat jalankan dari repo:
-  `python3 "$R/scripts/mr-suggestions.py" <nomor MR> <file.json> --deskripsi`
-  Hasilnya blok "Saran tinjauan" (tautan file#baris + diff) yang ditempel ke deskripsi MR
-  (`glab mr update <n> --description` / `gh pr edit`). Tanpa komentar *suggestion*: Apply di MR membuat
-  commit per saran, saling bentrok, dan tidak melewati lint/test. Menerapkannya nanti:
-  `/clint:develop terapkan saran di !<n>`. Mode `push-base` (tanpa MR): cetak blok itu di laporan akhir.
-- **Verifikasi MR benar-benar ada** (`glab mr view` / `gh pr view`). CLI bisa gagal diam-diam
-  (mis. 403). Kalau gagal, berikan user tautan "create merge request" dari keluaran push.
-- **Wajib, tanpa token:** bila PR berasal dari butir laporan `status`, pindahkan butir itu ke "menunggu
-  review" supaya menu bar ikut diperbarui:
-  `python3 "$R/scripts/update-report.py" review "<ID/teks butir>" "MR !<n>" "<url MR>" --proyek <nama project>`
+Keluaran `commit=`, `rebase=`, `mr=!<n> <url>`, `push=`, `bersih=`; berhenti dengan `error=` dan exit:
+3 konflik rebase (branch dibiarkan seperti sebelum rebase), 4 cek setelah rebase gagal, 5 push ke base ditolak
+(commit tetap di base lokal; minta user menjalankan `git push origin <baseBranch>`), 6 MR tidak terverifikasi
+(beri user tautan "create merge request" dari keluaran push). Exit selain 0 → jalur kegagalan di bawah.
 
-### 5.6 Bersihkan
-
-Setelah push dan MR terverifikasi (mode `push-base`: setelah push base berhasil):
-- tanpa worktree: kembali ke branch asal user (`git switch <branch-asal>`), hapus branch lokal
-  PR (`git branch -D <branch>`) karena sudah ada di remote;
-- dengan worktree: `git worktree remove <path>`, `git worktree prune`, `git branch -D <branch>`.
+**`push-base`** (tim langsung push ke base, tanpa MR): PR dikerjakan satu per satu urut gelombang, tanpa MR
+bertumpuk; skrip fast-forward base di repo utama lalu push. Tugas besar (> 1 PR) atau menyentuh pekerjaan
+orang lain → konfirmasi ke user sekali sebelum push pertama. Blok saran dicetak di laporan akhir. Menerapkan
+saran di MR nanti: `/clint:develop terapkan saran di !<n>`.
 
 Kegagalan satu PR (masih ada temuan setelah 3 putaran, test gagal, konflik rebase):
 
