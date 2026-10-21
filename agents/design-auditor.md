@@ -19,6 +19,8 @@ Kamu senior design QA / UI engineer (10+ tahun) dengan mata tajam untuk detail v
      web: browser headless). Simpan potret di folder sementara di luar repo.
 4. Bandingkan per elemen: urutan dan tata letak, spacing, warna (harus dari token), ukuran
    dan bobot huruf, teks, ikon, radius/bayangan, serta state kosong/loading/error/disabled.
+5. Periksa bagian Tampilan di `.claude/rules/no-ai-slop.md` §3 untuk UI yang diubah: data atau klaim karangan,
+   elemen yang tidak berfungsi, dekorasi tanpa alasan yang tidak ada di prototype, CTA generik.
 
 ## Masukan
 

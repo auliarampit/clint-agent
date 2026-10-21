@@ -402,7 +402,7 @@ Cara clint menegakkannya:
    `globalThis`), lengkap dengan contoh salah dan benar.
 2. `developer` mengikuti aturan itu saat menulis kode, menulis test untuk logika baru, dan melaporkan angka
    coverage file yang diubah (tidak pernah mengklaim "≥ 80%" tanpa angka).
-3. `code-reviewer` menjadikan pelanggaran yang akan menggagalkan gate sebagai temuan **Wajib**.
+3. `code-reviewer` menjadikan pelanggaran yang akan menggagalkan gate sebagai temuan **Major**.
 4. Gate tetap gagal di CI → `/clint:develop perbaiki pipeline !123`; `pipeline-fixer` membaca issue Sonar-nya
    dan memperbaiki kode.
 
@@ -424,10 +424,15 @@ belum punya salinannya. Berlaku untuk kode, komentar, commit, deskripsi MR, lapo
 | Commit dan MR tanpa nama agent atau "dibuat oleh AI" | Nama mengikuti pola codebase, bukan `data2`/`helper` |
 | Teks UI spesifik ("Nomor HP harus 10–13 digit"), bukan "Oops! 😅" | Pesan error menyebut apa yang gagal |
 
+Aturan dari Anti-Slop (standar AI Badr) sudah digabung ke file yang sama, bukan dipasang terpisah, supaya tidak
+ada dua aturan yang tumpang tindih: pola tulisan tambahan, batas panjang komentar, dan bagian **Tampilan** (konten
+nyata atau placeholder jujur, semua state, semua tombol berfungsi, dekorasi butuh alasan, CTA menyebut aksinya).
+Bagian kode clint tetap lebih ketat dari Anti-Slop: default tanpa komentar.
+
 `code-reviewer` memeriksa sisi kode: implementasi palsu, data contoh tertinggal, kode mati, dan **komentar baru
 yang tidak perlu** (komentar per langkah, JSDoc fungsi internal, banner, kode dikomentari) adalah temuan
-**Wajib**; kode defensif berlebih, nama generik, dan abstraksi spekulatif adalah **Saran** (tetap diterapkan
-otomatis di kode yang diubah PR). Komentar lama di luar lingkup PR tidak disentuh.
+**Minor**; kode defensif berlebih, nama generik, dan abstraksi spekulatif adalah **Low**. Keduanya wajib
+diperbaiki sebelum MR. `design-auditor` memeriksa bagian Tampilan. Komentar lama di luar lingkup PR tidak disentuh.
 
 ## Cara kerja `develop`
 
@@ -468,9 +473,9 @@ Bug yang penyebabnya belum jelas → `bug-investigator` dulu. Pipeline merah →
   build native lokal, QA tidak ikut menerima). Status E2E wajib tertulis (lulus / tidak perlu /
   tertunda); **tertunda → MR dibuat Draft** (mode `push-base`: tidak di-push ke base) dan muncul di
   `status` sampai `/clint:test e2e !<n>` lulus.
-- **Saran tinjauan langsung diterapkan**: saran di kode yang diubah PR ikut diperbaiki, lewat lint/test dan
+- **Temuan Low langsung diterapkan**: Low di kode yang diubah PR ikut diperbaiki, lewat lint/test dan
   tinjauan ulang, lalu di-commit terpisah (`refactor: terapkan saran tinjauan`) supaya mudah diperiksa dan
-  di-revert. Saran luar cakupan masuk deskripsi MR dengan tautan file#baris dan diff sekarang/usulan;
+  di-revert. Temuan luar cakupan masuk deskripsi MR dengan tautan file#baris dan diff sekarang/usulan;
   terapkan nanti dengan `/clint:develop terapkan saran di !<n>`.
 - **MR**: stage eksplisit (tanpa `git add -A`), tarik base lagi, push, buat MR, dan pastikan MR-nya
   benar-benar ada. PR yang bergantung dibangun di atas branch dependensinya; deskripsi MR menyebut
@@ -546,7 +551,7 @@ target yang lebih ketat dari ambang umum:
 
 - `developer` membaca acuan ini **selalu** untuk halaman, layar, atau endpoint baru, dan melaporkan angka
   sebelum/sesudah. Kalau tidak bisa diukur, laporannya "belum terukur"; target tidak pernah diklaim tanpa angka.
-- `performance-auditor` menjadikan pelanggaran aturan dan regresi target sebagai temuan **Wajib**. Regresi
+- `performance-auditor` menjadikan pelanggaran aturan dan regresi target sebagai temuan **Major** atau **Minor**. Regresi
   menahan MR sampai diperbaiki atau Anda menyetujui pengecualiannya.
 - Bagian lama yang sudah di bawah target sebelum PR tidak menahan MR, selama PR tidak memperburuknya;
   selisihnya dilaporkan sebagai utang performa.
