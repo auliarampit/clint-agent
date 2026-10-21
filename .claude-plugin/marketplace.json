@@ -10,7 +10,7 @@
       "name": "clint",
       "description": "Tim agent Badr untuk siklus kerja project: status, develop sampai MR, review berlapis, test, docs, dan release; standar SonarQube, prinsip kerja wajib, dan master skill mobile/web/backend",
       "source": "./",
-      "version": "2.3.1"
+      "version": "2.4.0"
     }
   ]
 }

@@ -584,19 +584,23 @@ Ikon clint di menu bar Mac (lewat SwiftBar) menampilkan kondisi kerja sepanjang 
 | Ikon | Arti |
 |---|---|
 | angka | jumlah hal yang menunggu |
-| cincin oranye + label | agent sedang bekerja, mis. `PR-2/4` |
+| `<jumlah sesi> · <tahap>` | agent sedang bekerja, mis. `2 · tinjau` |
 | `✓` | semua aman |
 | `!` | ada yang gagal |
 
-Isi menu: kemajuan PR **per sesi** (beberapa sesi develop di project berbeda tampil masing-masing dengan nama
-project-nya), *Berikutnya* per project (maks 3 project, klik untuk menyalin), setiap sesi Claude Code yang bekerja (termasuk di VS Code) beserta agent yang
-sedang jalan, hal yang menunggu (submenu *Salin perintah*, *Buka MR di browser*, *Buka project di VS
-Code*, *Tandai selesai*), dan tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project*, *Halo
-Clint*, *Pengaturan*.
+Isi menu: *Sedang berjalan*, satu baris per sesi Claude Code (termasuk di VS Code): project, tugas, dan lama
+berjalan, dengan bilah lima tahap (worktree → implementasi → tinjau → test → MR). Tahap dicatat hook dari
+agent yang mulai dan perintah `git worktree add` / `git push` / `glab mr create`, jadi realtime dan tanpa token.
+Sesi yang menunggu jawaban Anda bertitik kuning; sesi yang baru selesai bertanda ✓ selama 10 menit lalu hilang.
+Lalu hal yang menunggu (submenu *Salin perintah*, *Buka MR di browser*, *Buka project di VS Code*, *Tandai
+selesai*), *Berikutnya*, dan tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project*, *Halo Clint*,
+*Pengaturan*.
 
-Badge berkurang sendiri tanpa cek ulang: butir yang dikerjakan `develop` pindah ke *Menunggu review*;
-MR yang merged/closed hilang, termasuk butir tanpa tautan bila ID-nya (mis. `BUG-42`) disebut MR yang
-merged setelah laporan dibuat (dicek tiap 15 menit lewat `glab`/`gh`).
+Butir yang sedang dikerjakan sebuah sesi (perintahnya sama dengan tugas sesi itu) tidak tampil di hal yang
+menunggu; butir yang tugasnya baru selesai diberi ✓ sampai Anda menandainya selesai. Badge juga berkurang sendiri:
+butir yang dikerjakan `develop` pindah ke *Menunggu review*, dan MR yang merged/closed hilang, termasuk butir
+tanpa tautan bila ID-nya (mis. `BUG-42`) disebut MR yang merged setelah laporan dibuat. Status MR dicek tiap
+5 menit dan setiap giliran sesi selesai, lewat `glab`/`gh`.
 
 ```bash
 brew install --cask swiftbar

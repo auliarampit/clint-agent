@@ -3,8 +3,9 @@
   update-report.py merge   <laporan.json>                     # ganti entri project yang ada di file baru saja
   update-report.py selesai "<sumber|teks|b64:...>" [--proyek <nama>]
   update-report.py review  "<sumber|teks|b64:...>" "<MR !N>" "<url MR>" [--proyek <nama>]
-  update-report.py periksa-mr          # hapus butir MR yang sudah merged/closed (glab/gh)"""
-import base64, contextlib, fcntl, json, os, subprocess, sys, tempfile, time
+  update-report.py periksa-mr          # hapus butir MR yang sudah merged/closed (glab/gh)
+  update-report.py langkah --dir <repo> [--session <sid>]   # butir siap ketik project ini, tanpa yang diklaim sesi lain"""
+import base64, contextlib, fcntl, glob, json, os, re, subprocess, sys, tempfile, time
 
 P = os.path.expanduser("~/Library/Logs/clint/terakhir.json")
 GRUP = ("gagal", "kerjakan", "cek", "tunggu")
@@ -80,6 +81,44 @@ def gabung(lama, baru):
     return d
 
 
+def penanda(sumber):
+    """ID dari sumber butir: kode seperti ABC-1/BUG-M-02, dan nomor seperti 'UI-mobile #12' (disertai kata
+    di depannya supaya '#12' milik dokumen lain tidak ikut cocok)."""
+    ids = [(i, []) for i in re.findall(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+\b", sumber)]
+    for kata, no in re.findall(r"([A-Za-z][\w-]*)\s*#(\d+)", sumber):
+        ids.append((f"#{no}", [w for w in re.split(r"[-_ ]", kata.lower()) if len(w) >= 2]))
+    return ids
+
+
+def klaim_lain(repo, own):
+    """Teks klaim sesi lain yang masih hidup di repo ini (~/Library/Logs/clint/kerja/<sid>.json)."""
+    out = []
+    for f in glob.glob(os.path.expanduser("~/Library/Logs/clint/kerja/*.json")):
+        sid = os.path.basename(f)[:-5]
+        if sid == own or time.time() - os.path.getmtime(f) > 3 * 3600 or \
+                not os.path.exists(os.path.expanduser(f"~/.config/clint/sesi/{sid}.json")):
+            continue
+        try:
+            k = json.load(open(f, encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if os.path.realpath(k.get("dir") or "") == os.path.realpath(repo):
+            out.append(k)
+    return out
+
+
+def diklaim(x, klaim):
+    """Butir laporan dipegang sesi lain: perintahnya sama, atau ID sumbernya disebut di klaim (judul, path, ...)."""
+    for k in klaim:
+        if x.get("perintah") and norm(x["perintah"]) == norm(k.get("perintah")):
+            return k
+        t = json.dumps(k, ensure_ascii=False).lower()
+        for i, konteks in penanda(x.get("sumber") or ""):
+            if re.search(rf"(?<![a-z0-9]){re.escape(i.lower())}(?!\d)", t) and all(w in t for w in konteks[:1]):
+                return k
+    return None
+
+
 def argumen():
     a, proyek = sys.argv[2:], None
     if "--proyek" in a:
@@ -124,7 +163,7 @@ elif aksi == "review":
                                            "sumber": mr, "url": url})
             simpan(d)
 elif aksi == "periksa-mr":
-    import copy, re, datetime
+    import copy, datetime
     d0 = baca()
     if d0 is None:
         sys.exit(0)
@@ -150,7 +189,7 @@ elif aksi == "periksa-mr":
 
     _mr = {}
     def mr_terbaru(dirp):
-        """MR/PR yang dibuat atau di-merge setelah laporan dibuat, sekali ambil per project (tanpa token)."""
+        """MR/PR yang masih open, atau dibuat/di-merge setelah laporan dibuat, sekali ambil per project (tanpa token)."""
         if dirp in _mr:
             return _mr[dirp]
         xs = []
@@ -177,23 +216,17 @@ elif aksi == "periksa-mr":
                 return datetime.datetime.fromisoformat((v or "").replace("Z", "+00:00"))
             except ValueError:
                 return None
-        _mr[dirp] = [x for x in xs if (waktu(x["merged_at"]) or waktu(x["created_at"]) or dibuat) > dibuat]
+        _mr[dirp] = [x for x in xs if x["state"] in ("opened", "open")
+                     or (waktu(x["merged_at"]) or waktu(x["created_at"]) or dibuat) > dibuat]
         return _mr[dirp]
-
-    def penanda(sumber):
-        """ID dari sumber butir: kode seperti ABC-1/BUG-M-02, dan nomor seperti 'UI-mobile #12' (disertai kata
-        di depannya supaya '#12' milik dokumen lain tidak ikut cocok)."""
-        ids = [(i, []) for i in re.findall(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+\b", sumber)]
-        for kata, no in re.findall(r"([A-Za-z][\w-]*)\s*#(\d+)", sumber):
-            ids.append((f"#{no}", [w for w in re.split(r"[-_ ]", kata.lower()) if len(w) >= 2]))
-        return ids
 
     def cocok(mr, ident, konteks):
         t = mr["teks"].upper()
         if ident.startswith("#"):
             no = ident[1:]
-            ada = re.search(rf"(#|\b(?:UI|BUTIR|NO|NOMOR|FEEDBACK)[- ]?){no}\b", t) or re.search(rf"\b\w+-{no}\b", t)
-            return bool(ada) and all(k.upper() in t for k in konteks[:1])
+            kata = [re.escape(k.upper()) for k in konteks[:1]]
+            ada = re.search(rf"(?<![\w-])(?:#|(?:UI|BUTIR|NO|NOMOR|FEEDBACK|{'|'.join(kata) or 'UI'})[- ]#?){no}\b", t)
+            return bool(ada) and all(re.search(rf"\b{k}\b", t) for k in kata)
         return ident.upper() in t
 
     # Butir tanpa url:
@@ -257,3 +290,17 @@ elif aksi == "periksa-mr":
                 d.setdefault("cek", []).append(pindah)
         if berubah:            # simpan hanya bila ada butir yang berubah (mtime tetap jujur)
             simpan(d)
+elif aksi == "langkah":
+    a = sys.argv[2:]
+    opsi = lambda n: a[a.index(n) + 1] if n in a and a.index(n) + 1 < len(a) else ""
+    repo, own = opsi("--dir") or os.getcwd(), opsi("--session")
+    d = baca() or {}
+    nama = {p.get("nama") for p in d.get("proyek") or [] if os.path.realpath(p.get("dir") or "") == os.path.realpath(repo)}
+    klaim = klaim_lain(repo, own)
+    for g in ("gagal", "kerjakan"):
+        for x in d.get(g) or []:
+            if x.get("proyek") not in nama or not x.get("perintah"):
+                continue
+            k = diklaim(x, klaim)
+            print(f"Sedang dikerjakan sesi lain: {x.get('teks')} ({k.get('tahap') or 'berjalan'})" if k
+                  else f"[siap] {x['perintah']}")

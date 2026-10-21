@@ -316,10 +316,11 @@ Kegagalan satu PR (masih ada temuan wajib setelah 2 putaran, test gagal, konflik
 File status **per sesi** `~/Library/Logs/clint/kerja/<sid>.json`. Tulis saat PR dipilih (klaim), setiap ganti
 PR/tahap, dan hapus di akhir, termasuk bila berhenti karena gagal (murah, satu perintah):
 ```bash
-mkdir -p ~/Library/Logs/clint/kerja && printf '%s' '{"dir":"<repo utama absolut>","rencana":"docs/plans/mob-10.md","prs":["PR-2","PR-3"],"path":"<path kerja>","judul":"develop MOB-10","mulai":"11.21","pr":2,"total":3,"label":"PR-2/3","tahap":"ditinjau code-reviewer","catatan":"PR-1 → MR !127 · PR-3 menunggu"}' > ~/Library/Logs/clint/kerja/<sid>.json
+mkdir -p ~/Library/Logs/clint/kerja && printf '%s' '{"dir":"<repo utama absolut>","rencana":"docs/plans/mob-10.md","prs":["PR-2","PR-3"],"perintah":"/clint:develop docs/plans/mob-10.md PR-2,PR-3","path":"<path kerja>","judul":"develop MOB-10","mulai":"11.21","pr":2,"total":3,"label":"PR-2/3","tahap":"ditinjau code-reviewer","catatan":"PR-1 → MR !127 · PR-3 menunggu"}' > ~/Library/Logs/clint/kerja/<sid>.json
 ```
 `dir` = repo utama (bukan worktree): `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"`.
-`rencana` = path relatif rencana, `null` bila tanpa rencana. `prs` = PR yang **masih** dipegang sesi ini; PR yang
+`rencana` = path relatif rencana, `null` bila tanpa rencana. `perintah` = perintah clint persis seperti diketik user
+(dipakai untuk membuang saran yang sama di sesi lain); sebut juga ID butir (FB-/BUG-/MR-MOB-...) di `judul`. `prs` = PR yang **masih** dipegang sesi ini; PR yang
 sudah jadi MR dikeluarkan dari `prs` supaya sesi lain bisa melanjutkan PR sesudahnya. `label` pendek (tampil di
 sebelah ikon); tugas tunggal `"pr":1,"total":1`. Akhir run: `rm -f ~/Library/Logs/clint/kerja/<sid>.json`.
 
@@ -379,9 +380,11 @@ Cara menyusun (tanpa menebak):
    di akhir run dan pakai baris *Berikutnya* dari skrip apa adanya. Skrip sudah membuang PR yang diklaim sesi
    lain, yang selesai, dan yang MR-nya open, jadi saran tidak mengulang PR yang sedang dikerjakan sesi lain.
 2. Lalu butir *Perlu perhatian* dari run ini.
-3. Lalu butir *Perlu dikerjakan* milik project ini saja di laporan `status` (`~/Library/Logs/clint/terakhir.json`,
-   ambil hanya butir yang `proyek`-nya project ini; cocokkan `dir` di `proyek[]`). Butir project lain **tidak
-   pernah** masuk *Berikutnya*.
+3. Lalu butir laporan `status` milik project ini, dari skrip (bukan membaca `terakhir.json` sendiri):
+   `python3 "$R/scripts/update-report.py" periksa-mr; python3 "$R/scripts/update-report.py" langkah --dir <repo utama> --session <sid>`.
+   `periksa-mr` membuang butir yang MR-nya sudah merged dan memindahkan yang MR-nya masih open ke "menunggu
+   review"; `langkah` membuang butir yang diklaim sesi lain dan butir project lain. Pakai keluarannya apa adanya;
+   butir yang baru dikerjakan run ini juga tidak ditulis lagi.
 4. Langkah yang sedang dikerjakan sesi lain (klaim di `~/Library/Logs/clint/kerja/`, ditandai skrip "Sedang
    dikerjakan sesi lain") **tidak pernah** ditulis sebagai langkah siap ketik, hanya sebagai baris info.
 5. Tidak ada langkah → "Menunggu review: !n" bila ada; sisanya dipegang sesi lain → **"Tidak ada tugas baru untuk
