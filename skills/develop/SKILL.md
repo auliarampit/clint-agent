@@ -204,21 +204,25 @@ ter-commit).
   `developer` (supaya tidak dijalankan ulang);
 - `findings.md`: gabungan temuan semua peninjau.
 
-Setiap peninjau menutup laporan dengan blok seragam `PUTUSAN: LULUS | PERLU PERBAIKAN` + `TEMUAN:` berlabel
-`[wajib]`/`[saran]` (`path:baris · kategori · masalah`, `sekarang`, `usulan`, `(luar cakupan)` bila perlu).
-Gabungkan ke `findings.md`: buang temuan ganda (lokasi + masalah sama → satu butir, sebut kedua peninjau), lalu
-kirim ke `developer` dalam satu pesan: path `findings.md`, semua `[wajib]`, dan `[saran]` di kode yang diubah PR
-(kecuali luar cakupan). SendMessage ke agent yang sama bila masih ada. Butir saran yang bertentangan dengan
-aturan project → lewati dan sebut alasannya. `developer` menandai setiap butir diperbaiki/dilewati di laporannya.
-Putaran ulang: perbarui `pr.diff`, lalu jalankan **hanya** peninjau yang tadinya memberi `[wajib]`, dengan path
-`findings.md` + `pr.diff`; mereka memverifikasi temuannya saja, bukan meninjau dari awal.
-**Maksimal 2 putaran perbaikan.** Masih ada temuan wajib setelah itu →
-berhenti, laporkan ke user, jangan buat MR. Saran tidak pernah menahan alur: saran yang masih
-tersisa setelah batas putaran, dan saran luar cakupan, dicantumkan di deskripsi MR.
+Setiap peninjau menutup laporan dengan blok seragam `VERDICT: LGTM | Needs Fix` + `TEMUAN:` berlabel
+`[Critical]`/`[Major]`/`[Minor]`/`[Low]` (`path:baris · aspek · kategori · masalah`, `sekarang`, `usulan`,
+`(luar cakupan)` bila perlu). Semua tingkat, termasuk Low, wajib diperbaiki dan menahan MR. Temuan
+`(luar cakupan)` tidak menahan PR ini apa pun tingkatnya; yang Critical/Major disebut di laporan akhir.
 
-Hasil perbaikan saran di-commit **terpisah** dari commit utama (mis. `refactor: terapkan saran
+**Kumpulkan dulu, perbaiki sekaligus.** Tunggu semua peninjau di putaran itu selesai, gabungkan ke `findings.md`
+(buang temuan ganda: lokasi + masalah sama → satu butir, sebut kedua peninjau), lalu kirim ke `developer` dalam
+**satu** pesan: path `findings.md`, semua temuan di kode yang diubah PR (kecuali luar cakupan), dan hasil lint/typecheck/test yang gagal bila ada. Jangan meneruskan temuan per peninjau begitu datang.
+SendMessage ke agent yang sama bila masih ada. Usulan yang bertentangan dengan aturan project → lewati dan sebut
+alasannya. `developer` menandai setiap butir diperbaiki/dilewati di laporannya.
+Putaran ulang: perbarui `pr.diff`, lalu jalankan **hanya** peninjau yang tadinya memberi temuan,
+dengan path `findings.md` + `pr.diff`; mereka memverifikasi temuannya dan baris yang berubah karena perbaikan,
+bukan meninjau dari awal. **Maksimal 3 putaran perbaikan.** Masih ada temuan setelah itu → berhenti, laporkan
+ke user, jangan buat MR. Temuan luar cakupan dan usulan yang dilewati karena bertentangan dengan aturan project
+dicantumkan di deskripsi MR.
+
+Hasil perbaikan Low di-commit **terpisah** dari commit utama (mis. `refactor: terapkan saran
 tinjauan`, ikuti gaya commit repo) supaya mudah diperiksa di tab Commits MR dan bisa di-revert
-sendiri. Bila perbaikan wajib dan saran menyentuh baris yang sama, satukan di commit utama.
+sendiri. Bila perbaikan Critical/Major/Minor dan Low menyentuh baris yang sama, satukan di commit utama.
 
 ### 5.4 E2E → agent `e2e-tester`
 
@@ -232,7 +236,7 @@ dan sebut alasannya di laporan. Perangkat/simulator tidak tersedia → laporkan 
 jangan dianggap lulus.
 
 Beri: `<path kerja>`, fitur, sumber test case. Flow gagal karena bug produk → kembali ke
-langkah 5.2 dengan temuan itu (dihitung dalam batas 2 putaran); penyebabnya tidak jelas dari laporan
+langkah 5.2 dengan temuan itu (dihitung dalam batas 3 putaran); penyebabnya tidak jelas dari laporan
 `e2e-tester` → `bug-investigator` dulu, diagnosisnya ikut ke `developer`. Adapter mengisi **Pratinjau
 E2E** → `e2e-tester` menguji lewat EAS Update ke channel khusus simulator, bukan build lokal; satu
 channel E2E dipakai satu PR pada satu waktu, jadi E2E antar-PR dijalankan berurutan.
@@ -281,9 +285,9 @@ Lanjutannya bergantung pada `mr.mode` (default `"mr"`):
   ringkasan, requirement yang dipenuhi (ID), cara verifikasi, hasil lint/typecheck/test/E2E,
   dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola. Tanpa AI slop
   (`no-ai-slop.md`): tanpa nama agent, jumlah putaran tinjauan, atau kalimat pujian.
-- **Saran tinjauan yang tidak diterapkan** (luar cakupan, atau tersisa setelah batas putaran) dicatat
+- **Temuan luar cakupan dan usulan yang dilewati** dicatat
   supaya user bisa memvalidasinya: tulis ke file sementara sebagai JSON
-  `[{"path","line","sekarang","usulan","alasan","agent"}]`, lalu setelah MR dibuat jalankan dari repo:
+  `[{"path","line","sekarang","usulan","alasan","agent","tingkat"}]`, lalu setelah MR dibuat jalankan dari repo:
   `python3 "$R/scripts/mr-suggestions.py" <nomor MR> <file.json> --deskripsi`
   Hasilnya blok "Saran tinjauan" (tautan file#baris + diff) yang ditempel ke deskripsi MR
   (`glab mr update <n> --description` / `gh pr edit`). Tanpa komentar *suggestion*: Apply di MR membuat
@@ -302,7 +306,7 @@ Setelah push dan MR terverifikasi (mode `push-base`: setelah push base berhasil)
   PR (`git branch -D <branch>`) karena sudah ada di remote;
 - dengan worktree: `git worktree remove <path>`, `git worktree prune`, `git branch -D <branch>`.
 
-Kegagalan satu PR (masih ada temuan wajib setelah 2 putaran, test gagal, konflik rebase):
+Kegagalan satu PR (masih ada temuan setelah 3 putaran, test gagal, konflik rebase):
 
 - jangan buat MR untuk PR itu;
 - commit lokal semua perubahannya (stage eksplisit) dengan pesan `wip(<PR>): tertahan, <alasan>`,
@@ -335,7 +339,7 @@ Tindak lanjut yang tidak menghasilkan MR baru (mis. perbaikan di MR yang sama) �
 - Jangan membaca dokumen/rencana utuh di sesi utama; cukup tabel *Urutan pekerjaan* dan potongan
   bagian tiap PR (`grep -n` + `sed -n`). Agent yang butuh detail membacanya sendiri.
 - Teruskan ke setiap agent hanya potongan yang relevan untuk PR-nya.
-- Minta setiap agent melapor ringkas (±25 baris). Simpan hanya putusan, daftar file, dan temuan wajib;
+- Minta setiap agent melapor ringkas (±25 baris). Simpan hanya verdict, daftar file, dan temuan yang tersisa;
   jangan menyalin ulang laporan panjang ke pesan berikutnya.
 - Tidak ada `sleep`/polling untuk pipeline, build, atau pihak luar lain (lihat aturan agent).
 

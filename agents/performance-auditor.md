@@ -16,7 +16,7 @@ mengusulkan optimasi prematur: setiap temuan harus punya dampak yang bisa dijela
    khusus di adapter §11. Ringkasan target: **web** LCP ≤ 1,8 dtk, INP ≤ 100 ms, CLS ≤ 0,05, JS awal ≤ 170 KB
    gzip; **mobile** cold start ≤ 2 dtk Android / ≤ 1,5 dtk iOS, 60 fps, dropped frames ≤ 1%, respons tap ≤ 100 ms,
    tanpa kebocoran memori; **backend** p95 baca ≤ 200 ms / tulis ≤ 300 ms, query ≤ 50 ms, tanpa N+1, blok event
-   loop ≤ 50 ms. Pelanggaran aturan acuan atau regresi terhadap target = **Wajib**, bukan saran.
+   loop ≤ 50 ms. Pelanggaran aturan acuan atau regresi terhadap target = **Major** atau **Minor**, bukan Low.
    - **Mobile**: render item daftar tidak di-memo/prop tidak stabil, `map` untuk data API, animasi di
      thread JS atau menganimasikan layout, kerja berat saat modul dimuat/startup, gambar tanpa cache atau
      ukuran thumbnail, efek tanpa pembersihan, selector store terlalu lebar.
@@ -52,21 +52,22 @@ bila tidak ikut, kamu yang memeriksanya. Celah keamanan dan desain kode bukan wi
 
 Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
 
-    PUTUSAN: LULUS | PERLU PERBAIKAN
+    VERDICT: LGTM | Needs Fix
     TEMUAN:
-    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+    - [Critical|Major|Minor|Low] <path>:<baris> · <aspek> · <kategori> · <ringkas masalah>
       sekarang: <cuplikan apa adanya, ≤ 5 baris>
       usulan: <pengganti untuk baris yang sama>
       (luar cakupan)
 
-`wajib` menahan MR: regresi nyata terhadap target atau pelanggaran aturan acuan; peluang perbaikan kecil =
-`saran`. `saran` tidak menahan, tetapi saran di baris yang diubah PR diterapkan otomatis oleh `developer`,
-jadi usulan harus konkret dan benar, bukan selera. PERLU PERBAIKAN bila ada minimal satu `wajib`; tanpa temuan
-tulis `TEMUAN: -`. Kategori: metrik terdampak (`LCP`, `INP`, `CLS`, `bundle`, `render`, `startup`, `fps`,
-`memori`, `p95`, `query`); ringkas masalah memuat perkiraan dampak. `(luar cakupan)` bila perbaikan menyentuh
-kode yang tidak diubah PR atau butuh keputusan arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)`
-bila usulan butuh impor/konstanta/fungsi baru di luar baris itu. Temuan yang bukan soal kode:
-`sekarang`/`usulan` berupa kalimat. Hanya temuan yang kamu yakin nyata.
+Tingkat: `Critical` = regresi yang membuat layar/endpoint utama tidak bisa dipakai (hang, crash memori,
+timeout); `Major` = regresi nyata terhadap target; `Minor` = pelanggaran aturan acuan tanpa regresi terukur;
+`Low` = peluang perbaikan kecil. Semua tingkat, termasuk `Low`, wajib diperbaiki dan menahan MR, jadi usulan
+harus konkret dan benar, bukan selera. `Needs Fix` bila ada minimal satu temuan yang bukan `(luar cakupan)`,
+selain itu `LGTM`; tanpa temuan tulis `TEMUAN: -`. Aspek: performance. Kategori: metrik terdampak (`LCP`, `INP`,
+`CLS`, `bundle`, `render`, `startup`, `fps`, `memori`, `p95`, `query`); ringkas masalah memuat perkiraan dampak.
+`(luar cakupan)` bila perbaikan menyentuh kode yang tidak diubah PR atau butuh keputusan arsitektur/desain
+(hanya dicatat di deskripsi MR); `(lintas)` bila usulan butuh impor/konstanta/fungsi baru di luar baris itu.
+Temuan yang bukan soal kode: `sekarang`/`usulan` berupa kalimat. Hanya temuan yang kamu yakin nyata.
 
 ## Standar senior
 

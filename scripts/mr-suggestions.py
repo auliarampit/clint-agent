@@ -6,14 +6,16 @@
   cuplikan kode sekarang, usulan dalam bentuk diff, dan alasannya.
 
 Pakai (dari dalam repo project):
-  mr-suggestions.py <nomor MR/PR> <saran.json> [--uji] [--deskripsi]
+  mr-suggestions.py <nomor MR/PR> <saran.json> [--uji] [--deskripsi] [--mention]
 saran.json: [{"path":"src/a.ts","line":42,"sekarang":"kode lama (1..n baris)","usulan":"kode baru",
-              "alasan":"kenapa","agent":"code-reviewer","lintas":false}]
+              "alasan":"kenapa","agent":"code-reviewer","tingkat":"Low","lintas":false}]
+  "tingkat": Critical | Major | Minor | Low (label standar review Badr), tampil di depan setiap saran.
   "lintas": true = perbaikan butuh perubahan di luar baris itu (mis. konstanta baru) → tidak dijadikan
   suggestion (Apply akan merusak build), masuk ke deskripsi saja.
 --uji: tampilkan apa yang akan diposting, tanpa mengirim apa pun.
 --deskripsi: tanpa komentar suggestion; semua saran dicetak sebagai blok deskripsi (dipakai develop untuk
   saran luar cakupan, karena saran di kode PR sudah diterapkan sebelum MR).
+--mention: komentar di baris kode diawali @author MR.
 """
 import json, re, subprocess, sys
 
@@ -32,8 +34,12 @@ def baris_berubah(base, head, path):
     return hasil
 
 
-def blok_saran(s, n):
-    return (f"**Saran:** {s.get('alasan', '')}\n\n"
+def label(s):
+    return f"[{s['tingkat']}] " if s.get("tingkat") else ""
+
+
+def blok_saran(s, n, sapa=""):
+    return (f"{sapa}**{label(s)}Saran:** {s.get('alasan', '')}\n\n"
             f"```suggestion:-0+{n - 1}\n{s.get('usulan', '').rstrip()}\n```")
 
 
@@ -46,24 +52,27 @@ def main():
     github = "github.com" in sh("git", "remote", "get-url", "origin").stdout
 
     if github:
-        pr = json.loads(sh("gh", "pr", "view", nomor, "--json", "url,headRefName,baseRefOid,headRefOid").stdout)
+        pr = json.loads(sh("gh", "pr", "view", nomor, "--json", "url,headRefName,baseRefOid,headRefOid,author").stdout)
         base, head, cabang, url = pr["baseRefOid"], pr["headRefOid"], pr["headRefName"], pr["url"]
+        author = pr["author"]["login"]
         repo_url = url.split("/pull/")[0]
         blob = lambda p, l: f"{repo_url}/blob/{cabang}/{p}#L{l}"
     else:
         mr = json.loads(sh("glab", "mr", "view", nomor, "-F", "json").stdout)
         ref, cabang, url = mr["diff_refs"], mr["source_branch"], mr["web_url"]
         base, head = ref["base_sha"], ref["head_sha"]
+        author = mr["author"]["username"]
         repo_url = url.split("/-/merge_requests/")[0]
         blob = lambda p, l: f"{repo_url}/-/blob/{cabang}/{p}#L{l}"
     sh("git", "fetch", "-q", "origin", head)
+    sapa = f"@{author} " if "--mention" in sys.argv else ""
 
     deskripsi, terpasang = [], 0
     for s in saran:
         path, line = s["path"], int(s["line"])
         n = max(1, len((s.get("sekarang") or "").rstrip("\n").splitlines()))
         if not hanya_deskripsi and not s.get("lintas") and line in baris_berubah(base, head, path):
-            body = blok_saran(s, n)
+            body = blok_saran(s, n, sapa)
             if github:
                 args = ["gh", "api", f"repos/{{owner}}/{{repo}}/pulls/{nomor}/comments", "-f", f"body={body}",
                         "-f", f"commit_id={head}", "-f", f"path={path}", "-F", f"line={line + n - 1}", "-f", "side=RIGHT"]
@@ -87,7 +96,7 @@ def main():
                 continue
         diff = "\n".join(["-" + x for x in (s.get("sekarang") or "").rstrip("\n").splitlines()] +
                          ["+" + x for x in (s.get("usulan") or "").rstrip("\n").splitlines()])
-        deskripsi.append(f"- **[{path}:{line}]({blob(path, line)})**: {s.get('alasan', '')}"
+        deskripsi.append(f"- {label(s)}**[{path}:{line}]({blob(path, line)})**: {s.get('alasan', '')}"
                          f"\n\n  ```diff\n  " + diff.replace("\n", "\n  ") + "\n  ```")
 
     print(f"{terpasang} saran dipasang di baris kode; {len(deskripsi)} saran untuk deskripsi.", file=sys.stderr)

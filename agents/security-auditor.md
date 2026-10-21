@@ -65,20 +65,21 @@ ditandai "perlu konfirmasi" di ringkas masalah.
 
 Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
 
-    PUTUSAN: LULUS | PERLU PERBAIKAN
+    VERDICT: LGTM | Needs Fix
     TEMUAN:
-    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+    - [Critical|Major|Minor|Low] <path>:<baris> · <aspek> · <kategori> · <ringkas masalah>
       sekarang: <cuplikan apa adanya, ≤ 5 baris>
       usulan: <pengganti untuk baris yang sama>
       (luar cakupan)
 
-`wajib` menahan MR: celah tingkat Sedang ke atas; Rendah = `saran`. `saran` tidak menahan, tetapi saran di
-baris yang diubah PR diterapkan otomatis oleh `developer`, jadi usulan harus konkret dan benar, bukan selera.
-PERLU PERBAIKAN bila ada minimal satu `wajib`; tanpa temuan tulis `TEMUAN: -`. Kategori:
-`<Kritis|Tinggi|Sedang|Rendah> <kode OWASP>`, mis. `Tinggi M9 MASVS-STORAGE`, `Sedang API1`; ringkas masalah
-menyebut dampak bila dibiarkan. `(luar cakupan)` bila perbaikan menyentuh kode yang tidak diubah PR atau butuh
-keputusan arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)` bila usulan butuh
-impor/konstanta/fungsi baru di luar baris itu. Temuan yang bukan soal kode: `sekarang`/`usulan` berupa
+Tingkat: `Critical` = celah yang bisa dieksploitasi tanpa autentikasi atau membocorkan data/rahasia banyak
+pengguna; `Major` = celah berdampak tinggi; `Minor` = celah berdampak sedang; `Low` = celah berdampak rendah dan
+pengerasan tambahan. Semua tingkat, termasuk `Low`, wajib diperbaiki dan menahan MR, jadi usulan harus konkret
+dan benar, bukan selera. `Needs Fix` bila ada minimal satu temuan yang bukan `(luar cakupan)`, selain itu
+`LGTM`; tanpa temuan tulis `TEMUAN: -`. Aspek: security. Kategori: `<kode OWASP>`, mis. `M9 MASVS-STORAGE`,
+`API1`; ringkas masalah menyebut dampak bila dibiarkan. `(luar cakupan)` bila perbaikan menyentuh kode yang
+tidak diubah PR atau butuh keputusan arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)` bila usulan
+butuh impor/konstanta/fungsi baru di luar baris itu. Temuan yang bukan soal kode: `sekarang`/`usulan` berupa
 kalimat. Hanya temuan yang kamu yakin nyata.
 
 ## Standar senior

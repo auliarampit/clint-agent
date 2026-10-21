@@ -20,8 +20,8 @@ butir 10–11.
    akses HTTP/storage langsung di luar lapisan data.
 2. **Tanggung jawab**: satu fungsi/komponen satu alasan untuk berubah. Ambang ukuran
    (baris per file/fungsi) diambil dari adapter (bagian lint, mis. `max-lines`) dan config
-   linter project, bukan angka sendiri. Melewati ambang itu = Wajib; adapter menyatakan
-   `TIDAK ADA` → file/fungsi yang membengkak dengan banyak cabang hanya jadi **Saran**,
+   linter project, bukan angka sendiri. Melewati ambang itu = Minor; adapter menyatakan
+   `TIDAK ADA` → file/fungsi yang membengkak dengan banyak cabang hanya jadi **Low**,
    beserta cara memecahnya.
 3. **Duplikasi**: logika atau komponen yang sudah ada di codebase tapi ditulis ulang
    (buktikan dengan `grep`, sebut path yang seharusnya dipakai).
@@ -34,11 +34,11 @@ butir 10–11.
    detail implementasi.
 8. **SonarQube** (bila `.claude/rules/sonarqube.md` ada): diff tidak melanggar aturan di sana —
    cognitive complexity, rule 🔴 TypeScript/React, hotspot, logika baru tanpa test. Pelanggaran yang
-   akan menggagalkan quality gate = Wajib.
+   akan menggagalkan quality gate = Major.
 9. **AI slop** (`.claude/rules/no-ai-slop.md` §2): implementasi palsu, data contoh tertinggal, kode mati, dan
    **komentar baru yang tidak termasuk pengecualian** (komentar per langkah, JSDoc fungsi internal, banner,
-   kode dikomentari) = Wajib, usulannya menghapus komentar atau memperjelas nama; kode defensif yang tidak
-   perlu, nama generik, dan abstraksi spekulatif = Saran.
+   kode dikomentari) = Minor, usulannya menghapus komentar atau memperjelas nama; kode defensif yang tidak
+   perlu, nama generik, dan abstraksi spekulatif = Low.
 10. **Kebenaran** (hanya bila sendirian): bug nyata, kasus tepi (daftar kosong, null dari API, nilai batas),
     error yang tidak ditangani, race dan state bocor.
 11. **Kesesuaian rencana** (hanya bila sendirian): setiap poin potongan rencana PR terpenuhi dan tidak ada
@@ -67,18 +67,20 @@ desain) dilewati.
 
 Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
 
-    PUTUSAN: LULUS | PERLU PERBAIKAN
+    VERDICT: LGTM | Needs Fix
     TEMUAN:
-    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+    - [Critical|Major|Minor|Low] <path>:<baris> · <aspek> · <kategori> · <ringkas masalah>
       sekarang: <cuplikan apa adanya, ≤ 5 baris>
       usulan: <pengganti untuk baris yang sama>
       (luar cakupan)
 
-`wajib` menahan MR: melanggar arsitektur/konvensi project, melewati ambang lint, pelanggaran yang menggagalkan
-quality gate, AI slop wajib (butir 9), dan saat sendirian: bug nyata atau poin rencana tidak terpenuhi.
-`saran` tidak menahan, tetapi saran di baris yang diubah PR diterapkan otomatis oleh `developer`, jadi usulan
-harus konkret dan benar, bukan selera. PERLU PERBAIKAN bila ada minimal satu `wajib`; tanpa temuan tulis
-`TEMUAN: -`. Kategori: `arsitektur`, `tanggung jawab`, `duplikasi`, `penamaan`, `error/state`,
+Tingkat: `Critical` = saat sendirian: bug yang membuat crash, kehilangan data, atau alur utama salah; `Major` =
+melanggar arsitektur project, pelanggaran yang menggagalkan quality gate, dan saat sendirian: bug nyata atau
+poin rencana tidak terpenuhi; `Minor` = melanggar konvensi project, melewati ambang lint, AI slop (butir 9);
+`Low` = keterbacaan dan butir yang di atas disebut Low. Semua tingkat, termasuk `Low`, wajib diperbaiki dan
+menahan MR, jadi usulan harus konkret dan benar, bukan selera. `Needs Fix` bila ada minimal satu temuan yang
+bukan `(luar cakupan)`, selain itu `LGTM`; tanpa temuan tulis `TEMUAN: -`. Aspek: standard|best-practice, dan
+saat sendirian requirement. Kategori: `arsitektur`, `tanggung jawab`, `duplikasi`, `penamaan`, `error/state`,
 `kesederhanaan`, `testabilitas`, `sonar <rule>`, `ai slop`, dan saat sendirian `bug`, `rencana`. `(luar
 cakupan)` bila perbaikan menyentuh kode yang tidak diubah PR atau butuh keputusan arsitektur/desain (hanya
 dicatat di deskripsi MR); `(lintas)` bila usulan butuh impor/konstanta/fungsi baru di luar baris itu. Temuan

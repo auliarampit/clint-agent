@@ -42,21 +42,22 @@ vs kontrak → `api-contract-auditor`, tampilan vs prototype → `design-auditor
 
 Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
 
-    PUTUSAN: LULUS | PERLU PERBAIKAN
+    VERDICT: LGTM | Needs Fix
     TEMUAN:
-    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+    - [Critical|Major|Minor|Low] <path>:<baris> · <aspek> · <kategori> · <ringkas masalah>
       sekarang: <cuplikan apa adanya, ≤ 5 baris>
       usulan: <pengganti untuk baris yang sama>
       (luar cakupan)
 
-`wajib` menahan MR: poin rencana tidak terpenuhi, perilaku menyimpang dari dokumen, pelanggaran aturan project
-(sebut aturannya), bug nyata, file sampah. `saran` tidak menahan, tetapi saran di baris yang diubah PR
-diterapkan otomatis oleh `developer`, jadi usulan harus konkret dan benar, bukan selera. PERLU PERBAIKAN bila
-ada minimal satu `wajib`; tanpa temuan tulis `TEMUAN: -`. Kategori: `rencana`, `dokumen <ID>`, `aturan
-<nama>`, `bug`, `kebersihan`. `(luar cakupan)` bila perbaikan menyentuh kode yang tidak diubah PR atau butuh
-keputusan arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)` bila usulan butuh
-impor/konstanta/fungsi baru di luar baris itu. Temuan yang bukan soal kode: `sekarang`/`usulan` berupa
-kalimat. Hanya temuan yang kamu yakin nyata.
+Tingkat: `Critical` = perilaku yang merusak alur utama atau data; `Major` = poin rencana tidak terpenuhi,
+perilaku menyimpang dari dokumen, bug nyata; `Minor` = pelanggaran aturan project (sebut aturannya), file
+sampah; `Low` = perbaikan kecil yang tidak menyimpang dari dokumen maupun aturan. Semua tingkat, termasuk `Low`,
+wajib diperbaiki dan menahan MR, jadi usulan harus konkret dan benar, bukan selera. `Needs Fix` bila ada minimal
+satu temuan yang bukan `(luar cakupan)`, selain itu `LGTM`; tanpa temuan tulis `TEMUAN: -`. Aspek:
+requirement|standard. Kategori: `rencana`, `dokumen <ID>`, `aturan <nama>`, `bug`, `kebersihan`. `(luar
+cakupan)` bila perbaikan menyentuh kode yang tidak diubah PR atau butuh keputusan arsitektur/desain (hanya
+dicatat di deskripsi MR); `(lintas)` bila usulan butuh impor/konstanta/fungsi baru di luar baris itu. Temuan
+yang bukan soal kode: `sekarang`/`usulan` berupa kalimat. Hanya temuan yang kamu yakin nyata.
 
 ## Standar senior
 

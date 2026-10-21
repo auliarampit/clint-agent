@@ -41,18 +41,21 @@ Jalankan yang terpilih **bersamaan** (satu pesan). Input ke setiap peninjau:
 - potongan rencana bila branch ini berasal dari rencana (`grep -l <branch> <docs.plans>/*.md`), selain itu tidak ada;
 - daftar peninjau lain di putaran ini, supaya wilayah auditor yang ikut tidak diperiksa ulang.
 
-Setiap peninjau menutup laporannya dengan `PUTUSAN: LULUS | PERLU PERBAIKAN` dan `TEMUAN:` berlabel
-`[wajib]`/`[saran]`. Gabungkan ke `<folder>/findings.md` dan buang temuan ganda (lokasi + masalah sama).
+Setiap peninjau menutup laporannya dengan `VERDICT: LGTM | Needs Fix` dan `TEMUAN:` berlabel
+`[Critical]`/`[Major]`/`[Minor]`/`[Low]`. Semua tingkat, termasuk Low, wajib diperbaiki.
+Tunggu semua peninjau selesai, baru gabungkan ke `<folder>/findings.md` dan buang temuan ganda (lokasi + masalah
+sama).
 
 ## 3. Perbaiki otomatis (kecuali mode hanya-tinjau)
 
-- Kirim ke agent `developer` dalam satu pesan: path `findings.md`, semua `[wajib]`, dan `[saran]` di kode yang
-  berubah (kecuali `(luar cakupan)` atau yang bertentangan dengan aturan project). Kerjakan di tempat yang sama
+- Kumpulkan dulu, perbaiki sekaligus: kirim ke agent `developer` dalam **satu** pesan: path `findings.md`, semua
+  temuan di kode yang berubah (kecuali `(luar cakupan)` atau yang bertentangan dengan aturan
+  project). Kerjakan di tempat yang sama
   Jangan commit. Tempatnya: tanpa argumen → di tempat (perubahan yang ditinjau memang ada di working tree ini);
   branch/MR lain → `bash "$R/scripts/repo-busy.sh" . <sid>`: `bebas` → `git switch` di repo utama, `dipakai` →
   worktree (aturan skill `develop` langkah 5.1).
-- Putaran ulang: perbarui `pr.diff`, jalankan **hanya** peninjau yang tadi memberi `[wajib]`, dengan path
-  `findings.md`; mereka memverifikasi temuannya saja. Maksimal 2 putaran.
+- Putaran ulang: perbarui `pr.diff`, jalankan **hanya** peninjau yang tadi memberi temuan, dengan
+  path `findings.md`; mereka memverifikasi temuannya dan baris yang berubah karena perbaikan. Maksimal 3 putaran.
 
 ## 4. Tandai sudah ditinjau
 
@@ -62,9 +65,11 @@ tinjauan berulang untuk perubahan yang sama.
 
 ## 5. Laporan singkat
 
-Setiap temuan kode ditulis dengan `path:baris`, cuplikan **sekarang**, dan **usulan**. Untuk MR orang
-lain, komentar *suggestion* di MR (`"$R/scripts/mr-suggestions.py"`) hanya dipasang bila user memintanya.
+Setiap temuan kode ditulis dengan `path:baris`, tingkat, cuplikan **sekarang**, dan **usulan**. Untuk MR orang
+lain, komentar *suggestion* di MR (`"$R/scripts/mr-suggestions.py" <n> <file.json> --mention`, field `tingkat`
+diisi) hanya dipasang bila user memintanya atau `mr.reviewComments` di `clint.json` bernilai `true` (default
+`false`, supaya tidak dobel dengan bot review di server).
 
-Isi: putusan per peninjau, apa saja yang sudah diperbaiki, temuan wajib yang masih tersisa (bila batas putaran
-tercapai), dan saran yang tidak diterapkan. Tutup dengan blok **Berikutnya** (aturan skill `develop` bagian 6),
+Isi: verdict per peninjau, apa saja yang sudah diperbaiki, temuan yang masih tersisa (bila batas
+putaran tercapai), dan usulan yang dilewati beserta alasannya. Tutup dengan blok **Berikutnya** (aturan skill `develop` bagian 6),
 mis. `[siap] /clint:develop` untuk membuat MR dari perubahan ini.

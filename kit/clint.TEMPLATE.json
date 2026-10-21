@@ -3,7 +3,8 @@
   "mr": {
     "cli": "glab",
     "targetBranch": "dev",
-    "mode": "mr"
+    "mode": "mr",
+    "reviewComments": false
   },
   "autoReview": true,
   "autoReviewMinLines": 40,

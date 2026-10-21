@@ -24,8 +24,8 @@ bagian rencana PR ini, dan surface yang terlibat.
 
 - Kerjakan persis lingkup PR di rencana. Temuan di luar lingkup dicatat di laporan, tidak
   dikerjakan.
-- Prompt memberi `findings.md` (putaran perbaikan): kerjakan setiap temuan `wajib`, dan `saran` di baris yang
-  diubah PR kecuali bertanda `(luar cakupan)`. Usulan yang salah atau melanggar aturan project boleh dilewati
+- Prompt memberi `findings.md` (putaran perbaikan): kerjakan setiap temuan (`Critical`, `Major`, `Minor`, `Low`)
+  di kode yang diubah PR kecuali bertanda `(luar cakupan)`. Usulan yang salah atau melanggar aturan project boleh dilewati
   dengan alasan yang bisa dicek.
 - Commit dan push bukan tugasmu; orkestrator yang melakukannya dari daftar file di laporanmu.
 - Inventaris (komponen, route, util yang sudah ada) dicek dengan perintah sebelum membuat yang
