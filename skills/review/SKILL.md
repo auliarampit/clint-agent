@@ -19,6 +19,11 @@ prompt agent. `R` = path plugin dari baris *Sesi clint* di konteks sesi.
 
 ## 2. Pilih peninjau sesuai ukuran diff (hemat token)
 
+`python3 "$R/scripts/review-prep.py" <path> <base> [--design]` → `pr.diff` di folder kerja PR, `ukuran=`,
+`sensitif=`, dan kandidat auditor beserta buktinya (aturan skill `develop` 5.3: ukuran skrip batas bawah,
+kandidat titik awal). Isi diff yang menyentuh auth, token, query, atau pembayaran = area sensitif walaupun nama
+filenya netral.
+
 | Diff | Peninjau |
 |---|---|
 | ≤ ~30 baris di area biasa | **tanpa agent**; periksa sendiri dengan checklist skill platform |
@@ -36,15 +41,15 @@ Pemicu auditor:
   startup/animasi (mobile), query/endpoint di jalur panas, job, ekspor/impor data (backend).
 
 Jalankan yang terpilih **bersamaan** (satu pesan). Input ke setiap peninjau:
-- path diff, bukan isinya: `<git-common-dir>/clint/<branch>/pr.diff`
-  (`git diff <base> > ...`; folder itu di dalam `.git`, tidak ikut ter-commit);
+- path diff dan folder kerja PR dari `review-prep.py`, bukan isi diff (folder itu di dalam `.git`, tidak ikut
+  ter-commit); peninjau menulis bloknya sendiri ke `<folder>/temuan-<agent>.md`;
 - potongan rencana bila branch ini berasal dari rencana (`grep -l <branch> <docs.plans>/*.md`), selain itu tidak ada;
 - daftar peninjau lain di putaran ini, supaya wilayah auditor yang ikut tidak diperiksa ulang.
 
 Setiap peninjau menutup laporannya dengan `VERDICT: LGTM | Needs Fix` dan `TEMUAN:` berlabel
 `[Critical]`/`[Major]`/`[Minor]`/`[Low]`. Semua tingkat, termasuk Low, wajib diperbaiki.
-Tunggu semua peninjau selesai, baru gabungkan ke `<folder>/findings.md` dan buang temuan ganda (lokasi + masalah
-sama).
+Tunggu semua peninjau selesai, baru gabungkan tanpa token: `python3 "$R/scripts/merge-findings.py" <folder>
+--putaran <n>` → `<folder>/findings.md`, verdict per agent, dan `putaran_ulang=`.
 
 ## 3. Perbaiki otomatis (kecuali mode hanya-tinjau)
 
@@ -54,7 +59,7 @@ sama).
   Jangan commit. Tempatnya: tanpa argumen → di tempat (perubahan yang ditinjau memang ada di working tree ini);
   branch/MR lain → `bash "$R/scripts/repo-busy.sh" . <sid>`: `bebas` → `git switch` di repo utama, `dipakai` →
   worktree (aturan skill `develop` langkah 5.1).
-- Putaran ulang: perbarui `pr.diff`, jalankan **hanya** peninjau yang tadi memberi temuan, dengan
+- Putaran ulang: jalankan ulang `review-prep.py`, lalu **hanya** peninjau di `putaran_ulang=`, dengan
   path `findings.md`; mereka memverifikasi temuannya dan baris yang berubah karena perbaikan. Maksimal 3 putaran.
 
 ## 4. Tandai sudah ditinjau

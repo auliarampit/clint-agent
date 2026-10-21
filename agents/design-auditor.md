@@ -39,7 +39,9 @@ state). Kontras dan label aksesibel milik `accessibility-auditor`, ukuran/pemuat
 Sebelum blok, per layar satu baris: elemen yang sudah sesuai, dan apa yang tidak bisa dibandingkan (mis.
 state yang tidak ada di prototype) apa adanya.
 
-Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
+Tutup laporan dengan blok seragam ini. Bila pemanggil memberi folder kerja PR, tulis juga blok itu ke
+`<folder>/temuan-design-auditor.md` (timpa; `merge-findings.py` menggabungkannya ke `findings.md`) dan balas pemanggil cukup
+dengan verdict dan jumlah temuan per tingkat:
 
     VERDICT: LGTM | Needs Fix
     TEMUAN:

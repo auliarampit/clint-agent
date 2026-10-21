@@ -21,7 +21,7 @@ bila ia menambah nilai yang tidak bisa didapat murah di sesi ini. **Tugas kecil 
 |---|---|---|
 | **Mikro** | 1–2 file, ≤ ~30 baris, area biasa (teks, warna, testID, satu kondisi, konfigurasi kecil) | **Tanpa subagent.** Kerjakan langsung di sesi ini mengikuti skill platform → lint/typecheck/test → commit → MR. Cocokkan sendiri dengan checklist skill |
 | **Kecil** | 1 PR, ≤ ~150 baris, area biasa | `developer` + **satu** peninjau: `code-reviewer` (clean code + aturan project) |
-| **Sedang** | 1 PR > ~150 baris, atau menyentuh area sensitif (auth, data/migrasi, kontrak API, pembayaran) | `developer` + `conformance-reviewer` + `code-reviewer` + **maksimal 2** auditor paling relevan (tabel 5.3) |
+| **Sedang** | 1 PR > ~150 baris, atau menyentuh area sensitif (auth, token/penyimpanan data sensitif, query/data/migrasi, kontrak API, pembayaran), dinilai dari **isi** diff, bukan hanya nama file | `developer` + `conformance-reviewer` + `code-reviewer` + **maksimal 2** auditor paling relevan (tabel 5.3) |
 | **Besar** | modul / > 1 PR / lintas platform / arsitektur atau teknologi baru | `solution-architect` sekali (tinjau rencana) → `planner` → setiap PR ditangani sesuai ukurannya sendiri |
 
 **Jenis tugas** (menggantikan tim di atas):
@@ -162,6 +162,13 @@ wajib-tanya dari skill platform):
 
 ### 5.3 Tinjauan sesuai ukuran
 
+Setelah implementasi, satu perintah tanpa token:
+`python3 "$R/scripts/review-prep.py" <path kerja> <base> [--design]` (`--design` bila `docs.design` bukan
+`TIDAK ADA`) → menulis `pr.diff` di folder kerja PR, lalu mencetak `folder=`, `ukuran=`, `sensitif=`, dan
+`kandidat <auditor> skor=...: <bukti>` (path dan isi baris yang memicu). Ukuran dari skrip adalah **batas bawah**:
+boleh dinaikkan, tidak boleh diturunkan. Pilih auditor dari kandidat; boleh menambah auditor di luar kandidat bila
+isi diff menunjukkannya.
+
 - **Mikro**: tanpa agent conformance-reviewer.
 - **Kecil**: hanya `code-reviewer`.
 - **Sedang/Besar**: `conformance-reviewer` + `code-reviewer` + **maksimal 2** auditor dari tabel di bawah yang paling
@@ -187,22 +194,25 @@ memeriksa kebenaran logika dan kesesuaian dengan rencana.
 **Folder kerja PR** (dipakai bersama semua agent PR ini): `<git-common-dir>/clint/<branch>/`
 (`git -C <path kerja> rev-parse --path-format=absolute --git-common-dir`; di dalam `.git`, jadi tidak ikut
 ter-commit).
-- `pr.diff`: `git -C <path kerja> diff <base> > <folder>/pr.diff`; peninjau diberi **path**-nya, bukan isi diff;
+- `pr.diff` (dari `review-prep.py`): peninjau diberi **path**-nya, bukan isi diff;
 - beri hanya potongan rencana untuk PR ini, plus hasil lint/typecheck/test dari laporan
   `developer` (supaya tidak dijalankan ulang);
-- `findings.md`: gabungan temuan semua peninjau.
+- `temuan-<agent>.md`: blok keluaran tiap peninjau, ditulis peninjau sendiri (beri path folder di prompt);
+- `findings.md`: gabungan dari `merge-findings.py`.
 
 Setiap peninjau menutup laporan dengan blok seragam `VERDICT: LGTM | Needs Fix` + `TEMUAN:` berlabel
 `[Critical]`/`[Major]`/`[Minor]`/`[Low]` (`path:baris · aspek · kategori · masalah`, `sekarang`, `usulan`,
 `(luar cakupan)` bila perlu). Semua tingkat, termasuk Low, wajib diperbaiki dan menahan MR. Temuan
 `(luar cakupan)` tidak menahan PR ini apa pun tingkatnya; yang Critical/Major disebut di laporan akhir.
 
-**Kumpulkan dulu, perbaiki sekaligus.** Tunggu semua peninjau di putaran itu selesai, gabungkan ke `findings.md`
-(buang temuan ganda: lokasi + masalah sama → satu butir, sebut kedua peninjau), lalu kirim ke `developer` dalam
+**Kumpulkan dulu, perbaiki sekaligus.** Tunggu semua peninjau di putaran itu selesai, lalu gabungkan tanpa token:
+`python3 "$R/scripts/merge-findings.py" <folder> --putaran <n>` → `findings.md` (urut per tingkat, temuan ganda
+dengan path, baris, dan kategori sama digabung; luar cakupan dipisah), `verdict` per agent, jumlah per tingkat,
+dan `putaran_ulang=` (peninjau yang memberi temuan). Lalu kirim ke `developer` dalam
 **satu** pesan: path `findings.md`, semua temuan di kode yang diubah PR (kecuali luar cakupan), dan hasil lint/typecheck/test yang gagal bila ada. Jangan meneruskan temuan per peninjau begitu datang.
 SendMessage ke agent yang sama bila masih ada. Usulan yang bertentangan dengan aturan project → lewati dan sebut
 alasannya. `developer` menandai setiap butir diperbaiki/dilewati di laporannya.
-Putaran ulang: perbarui `pr.diff`, lalu jalankan **hanya** peninjau yang tadinya memberi temuan,
+Putaran ulang: jalankan ulang `review-prep.py` (memperbarui `pr.diff`), lalu **hanya** peninjau di `putaran_ulang=`,
 dengan path `findings.md` + `pr.diff`; mereka memverifikasi temuannya dan baris yang berubah karena perbaikan,
 bukan meninjau dari awal. **Maksimal 3 putaran perbaikan.** Masih ada temuan setelah itu → berhenti, laporkan
 ke user, jangan buat MR. Temuan luar cakupan dan usulan yang dilewati karena bertentangan dengan aturan project

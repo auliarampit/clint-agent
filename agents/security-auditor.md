@@ -63,7 +63,9 @@ field dengan kontrak, performa, dan desain kode bukan wilayahmu.
 Sebelum blok: satu baris kategori OWASP yang diperiksa dan dinyatakan aman. Temuan yang belum pasti
 ditandai "perlu konfirmasi" di ringkas masalah.
 
-Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
+Tutup laporan dengan blok seragam ini. Bila pemanggil memberi folder kerja PR, tulis juga blok itu ke
+`<folder>/temuan-security-auditor.md` (timpa; `merge-findings.py` menggabungkannya ke `findings.md`) dan balas pemanggil cukup
+dengan verdict dan jumlah temuan per tingkat:
 
     VERDICT: LGTM | Needs Fix
     TEMUAN:
