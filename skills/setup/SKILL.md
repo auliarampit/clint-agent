@@ -67,6 +67,11 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    atau tanya); `TIDAK ADA` bila project tidak punya.
    `docs.pic`: dokumen pembagian tugas (sprint tracker/backlog berkolom nama PIC); `TIDAK ADA` bila
    satu orang mengerjakan semuanya.
+   `docs.logbook`: folder logbook harian, `<path repo docs>/logbook` bila ada `relatedRepos` berperan `docs`,
+   selain itu `docs/logbook`; folder boleh belum ada (dibuat saat entri pertama). `TIDAK ADA` bila tim tidak memakai logbook.
+   `memory.wing`: nama project untuk mempalace, yaitu nama folder induk di layout multi-repo (mis. `magnet-rezeki`, bukan
+   `mobile`) atau nama repo di monorepo. Satu project = satu wing, termasuk sesi dari worktree. `TIDAK ADA` bila
+   user tidak memakai mempalace.
    `relatedRepos`: repo git lain di folder induk yang menjadi sumber kerja (mis. `docs`,
    `designs`, `api`); cek dengan `ls ..` lalu `git -C ../<nama> rev-parse` dan tanyakan perannya
    bila tidak jelas dari nama. Monorepo tanpa repo pendamping → `[]`.
@@ -74,7 +79,15 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    skill platform, adapter, dan `sonarqube.md` bila disalin.
 7. Belum ada `~/.config/clint/user.json` → tanya bahasa pribadi user sekali (English / Bahasa
    Indonesia) dan tulis `{"name": [], "language": "<en|id>"}`.
-8. Tampilkan ringkasan file yang dibuat. **Jangan commit**; user yang memutuskan.
+8. **mempalace** (sekali per mesin, hanya bila `memory.wing` diisi): `command -v mempalace` gagal → tawarkan
+   `uv tool install mempalace` (butuh `brew install uv`; `~/.local/bin` tidak bisa ditulis → awali dengan
+   `UV_TOOL_BIN_DIR=/opt/homebrew/bin`). `~/.mempalace/config.json` belum berisi `"embedding_model": "embeddinggemma"`
+   → tambahkan, pertahankan field lain (default mempalace `minilm` hanya bahasa Inggris; hook berjalan tanpa env,
+   jadi harus di file). Tawarkan mengisi riwayat sesi lama di latar belakang (lama: ±5 menit per transkrip 1 MB):
+   `nohup mempalace mine ~/.claude/projects/<folder sesi project> --mode convos --wing <wing> >>~/Library/Logs/clint/mempalace.log 2>&1 &`.
+   Hook clint yang menyimpan dan memuat ingatan; jangan pasang hook bawaan mempalace (wing-nya diambil dari nama
+   folder, jadi worktree dan repo `mobile` di project berbeda tercampur).
+9. Tampilkan ringkasan file yang dibuat. **Jangan commit**; user yang memutuskan.
 
 ## Mode `sync`
 
@@ -101,7 +114,7 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    Perbedaan di project bisa jadi perbaikan yang belum naik ke master. Tanya per file: tarik
    dari master, naikkan ke master, atau biarkan.
 4. File master yang belum ada di project (mis. `sonarqube.md`, `no-ai-slop.md`, field `docs.language`, `ciOnMr`,
-   `surfaces[].testRelated`, `autoReview`) → tawarkan
+   `surfaces[].testRelated`, `autoReview`, `docs.logbook`, `memory.wing`) → tawarkan
    untuk ditambahkan.
 5. **Status PR di rencana**: rencana di `docs.plans` yang punya tabel *Urutan pekerjaan* tetapi belum punya
    `## Status PR` → tunjukkan hasil `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-status.py"` dan tawarkan

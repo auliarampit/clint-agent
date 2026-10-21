@@ -259,6 +259,7 @@ Bug yang ditemukan dilaporkan dengan langkah reproduksi; perbaikannya lewat `/cl
 | `/clint:docs susun STD modul MOB-15` | STD dan test case yang menunjuk AC (`qa-analyst`) |
 | `/clint:docs rekap sprint 9 dan carry-over` | Rekap per PIC dari bukti MR/commit/Status PR, butir pindah ke sprint berikutnya (`sprint-tracker`) |
 | `/clint:docs perbarui Status PR di docs/plans/x.md dari git log` | Rencana lama tanpa status: dicocokkan dengan commit di base |
+| `/clint:docs logbook` (sebut keputusan atau kendala hari ini bila ada) | Entri hari ini di `docs/logbook/YYYY-MM.md`: dikerjakan (dari commit dan MR Anda), keputusan, kendala, rencana besok |
 
 ### `/clint:release`: build dan rilis
 
@@ -651,11 +652,12 @@ tanpa perintah; ia hanya mengabari dan menyiapkan perintahnya.
 
 | Kapan | Efek |
 |---|---|
-| sesi dimulai | 4 prinsip kerja, aturan anti AI slop, dan setelan bahasa dimuat (tidak dobel bila project sudah punya salinannya) |
+| sesi dimulai | 4 prinsip kerja, aturan anti AI slop, dan setelan bahasa dimuat (tidak dobel bila project sudah punya salinannya); bila `memory.wing` diisi, ingatan mempalace wing project ikut dimuat (±800 token) |
 | file diedit | formatter project dijalankan pada file itu, termasuk di worktree |
 | sesi selesai dengan ≥ 40 baris kode belum ditinjau | `/clint:review` jalan sendiri: tinjau + perbaiki, sekali per perubahan |
 | perintah selesai | kalimat inti dibacakan + notifikasi Mac |
 | prompt, agent mulai/selesai, sesi berakhir | status sesi untuk menu bar (`~/.config/clint/sesi/`) |
+| sesi berakhir, `memory.wing` diisi | transkrip sesi disimpan ke mempalace di wing project, di latar belakang (log: `~/Library/Logs/clint/mempalace.log`) |
 
 Hook dimuat saat proses Claude dinyalakan. Setelah memasang atau memperbarui clint, lakukan **Reload
 Window** di VS Code agar sesi baru memakai hook terbaru.
@@ -728,7 +730,9 @@ Dibuat oleh `/clint:setup` dan di-commit untuk seluruh tim:
   "docs": { "language": "en",                         // bahasa dokumen project: en / id
             "plans": "docs/plans", "requirements": "../docs", "design": "../designs/aplikasi.html",
             "feedback": "../docs/qa/feedback",        // butir feedback/bug QA
-            "pic": "docs/sprints" },                   // pembagian tugas; laporan hanya butir milik Anda
+            "pic": "docs/sprints",                     // pembagian tugas; laporan hanya butir milik Anda
+            "logbook": "../docs/logbook" },            // logbook harian, satu file per bulan
+  "memory": { "wing": "magnet-rezeki" },               // wing mempalace; satu project = satu wing
   "suara": true,
   "surfaces": [
     { "name": "mobile", "root": ".", "adapter": ".claude/mobile-stack.md",
@@ -755,6 +759,22 @@ Tidak disimpan di repo mana pun:
 Di `~/Library/Logs/clint/`: `terakhir.json` (laporan gabungan untuk menu bar; laporan satu project digabung,
 tidak menimpa project lain), `kerja/<id-sesi>.json` (kemajuan dan klaim PR setiap sesi develop), dan arsip
 laporan per tanggal.
+
+### Ingatan antar sesi: mempalace
+
+Opsional, per mesin. `/clint:setup` menawarkan pemasangannya bila `memory.wing` diisi:
+
+```bash
+brew install uv
+uv tool install mempalace        # ~/.local/bin tidak bisa ditulis → UV_TOOL_BIN_DIR=/opt/homebrew/bin uv tool install mempalace
+echo '{"embedding_model": "embeddinggemma"}' > ~/.mempalace/config.json   # multibahasa; default minilm hanya bahasa Inggris
+```
+
+Clint memakai hook sendiri, bukan hook bawaan mempalace, karena mempalace menamai wing dari nama folder
+(worktree dan repo `mobile` di project berbeda akan tercampur). Pembagian tempat: mempalace menyimpan
+percakapan verbatim untuk dicari ulang; keputusan, status, dan catatan harian tim tetap di dokumen repo (ADR,
+rencana, sprint tracker, logbook). Mine embeddinggemma lambat (±5 menit per transkrip 1 MB), jadi selalu jalan di
+latar belakang.
 
 ## Pindah dari clint v1
 
@@ -821,8 +841,8 @@ clint/
   README.md
   agents/            21 agent
   skills/            status · develop · review · test · docs · release · setup
-  hooks/             prinsip kerja + bahasa, format, review otomatis, kabar, status sesi
-  scripts/           status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
+  hooks/             prinsip kerja + bahasa, ingatan mempalace, format, review otomatis, kabar, status sesi
+  scripts/           status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), bahan logbook (logbook-draft.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
   swiftbar/          plugin menu bar (clint.py, streamable)
   kit/               master skill/rules/adapter + sonarqube.md yang DISALIN ke project (lihat kit/README.md)
   docs/images/       gambar README; sumbernya di docs/images/source (python3 build.py)
@@ -856,8 +876,8 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 6 | **v2**: nama bahasa Inggris, 7 perintah per jenis kerja, dua bahasa, standar SonarQube | selesai |
 | 6b | **v2.3**: isolasi antar project, klaim PR antar sesi, `## Status PR` di rencana, `status plan`, *Berikutnya* bertanda paralel/urutan, menutup MR Draft, format temuan peninjau seragam | selesai |
 | 7 | **Review sejajar standar Badr + skrip alur PR**: label `Critical/Major/Minor/Low` dan verdict `LGTM/Needs Fix`, semua tingkat wajib diperbaiki, temuan dikumpulkan lalu diperbaiki sekaligus (maks 3 putaran); komentar temuan di MR dengan mention author (opsional, default mati); aturan Anti-Slop digabung ke `no-ai-slop.md`; skrip `preflight`, `prepare-branch`, `review-prep`, `merge-findings`, `ship-pr` (skrip penyaring lolos uji banding di 5 MR lama + 2 cacat tanam); penanda MR menunggu peer review > 3 jam (SA) dan > 5 jam (lead) di `status` | selesai |
-| 8 | **Layout repo Badr**: repo root + repo domain (docs, design, qa, app, data-pipeline, mobile), `clint.json` di repo root, status dan `change-tracker` lintas repo domain, commit tetap per repo; `setup audit` untuk repo standard (skrip) | rencana |
-| 9 | **Logbook dan memori**: logbook/project notes di repo docs (kerangka entri dari skrip), mempalace untuk ingatan antar sesi (`embeddinggemma`, wake-up per wing project); satu fakta di satu tempat | rencana |
+| 8 | **Layout repo Badr**: repo root + repo domain (docs, design, qa, app, data-pipeline, mobile), `clint.json` di repo root, status dan `change-tracker` lintas repo domain, commit tetap per repo; `setup audit` untuk repo standard (skrip) | ditunda, menunggu standar repo Badr resmi (bentuk repo root dan isi wajib tiap repo) |
+| 9 | **Logbook dan memori**: `/clint:docs logbook` menulis entri harian per orang di `docs/logbook/YYYY-MM.md` (bahan dari skrip `logbook-draft.sh`); mempalace untuk ingatan antar sesi (`embeddinggemma`, wake-up wing project di awal sesi, transkrip disimpan saat sesi berakhir); satu fakta di satu tempat | selesai |
 | 10 | **Dokumen lengkap**: rantai dokumen per project (`docs` di `clint.json`) + template `kit/docs/` (PRD, SAD, ERD, STD, API contract OpenAPI 3.1, ADR, UAT, BAST, quick guide, sprint review); `solution-architect`: SAD dan ERD per domain; `business-analyst`: UAT dan BAST; uji terpandu `qa-analyst`; tampilan `status` per peran; skrip `trace` (AC↔TC, cascade ID) dan `sprint-evidence` | agent BA, QA, sprint-tracker sudah ada; sisanya rencana |
 | 11 | **Dokumen async**: ekspor DOCX/PDF setelah repo docs berubah, sinkron ke folder OneDrive lewat `microsoft/connector` | rencana |
 | 12 | **QA dan ops**: smoke test dan load test (`loadmeter/mcp`), template job CI untuk security test, `/clint:release` ops (preflight, backup, health check) | rencana |

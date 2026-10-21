@@ -31,7 +31,8 @@
     "requirements": "{path PRD/SAD/STD/API contract / TIDAK ADA}",
     "design": "{path prototype desain / TIDAK ADA}",
     "feedback": "{folder feedback/bug QA / TIDAK ADA}",
-    "pic": "{dokumen pembagian tugas/PIC, mis. docs/sprints / TIDAK ADA}"
+    "pic": "{dokumen pembagian tugas/PIC, mis. docs/sprints / TIDAK ADA}",
+    "logbook": "{folder logbook harian di repo docs, mis. ../docs/logbook / TIDAK ADA}"
   },
   "surfaces": [
     {
@@ -45,5 +46,8 @@
       "e2e": "bun run test:e2e",
       "formatFile": "bunx prettier --write"
     }
-  ]
+  ],
+  "memory": {
+    "wing": "{nama wing mempalace untuk project ini, mis. magnet-rezeki / TIDAK ADA}"
+  }
 }

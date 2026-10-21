@@ -1,6 +1,6 @@
 ---
 name: docs
-description: Pekerjaan dokumen tanpa mengubah kode — dokumen requirement (MoM, confirmation list, risk register, BRD, PRD) lewat business-analyst, STD dan test case lewat qa-analyst, sprint tracker (status, centang, PIC, rekap, carry-over) lewat sprint-tracker, serta status feedback/bug QA, Status PR di rencana, README, CHANGELOG, ADR, dan dokumentasi API lewat tech-writer. Pakai saat user bilang "buat PRD modul X dari MoM ini", "susun STD", "perbarui sprint tracker", "rekap sprint 9", "perbarui status feedback #8", "perbarui Status PR di rencana dari git log", "catat ADR keputusan X", "update CHANGELOG". Perubahan kode → develop.
+description: Pekerjaan dokumen tanpa mengubah kode — dokumen requirement (MoM, confirmation list, risk register, BRD, PRD) lewat business-analyst, STD dan test case lewat qa-analyst, sprint tracker (status, centang, PIC, rekap, carry-over) lewat sprint-tracker, serta status feedback/bug QA, Status PR di rencana, README, CHANGELOG, ADR, dokumentasi API, dan logbook harian lewat tech-writer. Pakai saat user bilang "buat PRD modul X dari MoM ini", "susun STD", "perbarui sprint tracker", "rekap sprint 9", "perbarui status feedback #8", "perbarui Status PR di rencana dari git log", "catat ADR keputusan X", "update CHANGELOG", "logbook", "tulis logbook hari ini". Perubahan kode → develop.
 argument-hint: <dokumen dan perubahan yang diminta>
 ---
 
@@ -30,7 +30,7 @@ atau yang disebut user), sumber (MoM/notulen/teks yang ditempel, MR, commit), da
 | MoM, confirmation list, risk register, BRD, PRD (FR/AC ber-ID), dampak perubahan requirement ke dokumen turunan | `business-analyst` |
 | STD, test case, matriks AC↔TC | `qa-analyst` |
 | Sprint tracker (`docs.pic`): status, centang, PIC, rekap, carry-over, teks ekspor | `sprint-tracker` |
-| Status feedback/bug QA, Status PR di rencana, README, CHANGELOG, ADR, catatan rencana, dokumentasi API | `tech-writer` |
+| Status feedback/bug QA, Status PR di rencana, README, CHANGELOG, ADR, catatan rencana, dokumentasi API, logbook | `tech-writer` |
 
 Tanpa peninjau kode. Permintaan yang menyentuh dua jenis (mis. PRD berubah lalu STD perlu disesuaikan) →
 agent pertama, lalu daftar dampak dari laporannya diteruskan ke agent kedua.
@@ -42,6 +42,34 @@ disarankan langkah yang sama: klaim di atas diisi `"rencana":"<rencana>","tugas"
 Ia mencocokkan dengan `git log origin/<baseBranch>` (judul commit, ID modul/requirement, file yang disentuh), lalu
 menulis bagian `## Status PR` (format: `- [x] PR-n · ✅ selesai · commit <hash>`, dipisah baris kosong). PR yang
 buktinya tidak jelas ditulis `⬜ belum mulai` dan disebut di laporan, bukan ditebak selesai.
+
+**Logbook** (`logbook [YYYY-MM-DD]`, default hari ini): satu entri per hari kerja per orang di
+`<docs.logbook>/YYYY-MM.md`, entri terbaru di atas. `docs.logbook` kosong/`TIDAK ADA` → tanya foldernya dan
+tawarkan mengisinya di `clint.json`. Tarik repo docs dulu (`git pull --ff-only`) supaya entri rekan tidak bentrok.
+Jalankan `bash "$R/scripts/logbook-draft.sh" <repo utama> <tanggal>` lalu beri `tech-writer` keluarannya, plus
+yang disampaikan user di percakapan (keputusan, kendala, rencana). Entri tanggal itu sudah ada → diperbarui,
+bukan ditambah. Format (judul bagian mengikuti `docs.language`; `en`: Done, Decisions, Blockers, Next):
+
+```markdown
+## 2026-10-21 · <git user.name>
+
+**Dikerjakan**
+- <hasil, bukan aktivitas> (!12, `a1b2c3d`)
+
+**Keputusan**
+- <keputusan singkat> → ADR-007
+
+**Kendala**
+- -
+
+**Rencana besok**
+- -
+```
+
+Isi hanya dari bukti: keluaran skrip, percakapan, `mempalace search "<topik>" --wing <memory.wing> --since <tanggal>`
+bila mempalace aktif. Bagian tanpa bahan diisi `-`, tidak dikarang. **Satu fakta di satu tempat**: keputusan yang
+sudah atau perlu jadi ADR cukup dirujuk ID-nya, status PR tetap di rencana, status tugas tetap di sprint tracker;
+logbook hanya merangkum dan menautkan.
 
 Dokumen di repo terkait (`relatedRepos`): ikuti alur git repo itu (CLAUDE.md/memori project); stage
 eksplisit, commit mengikuti gaya repo, push/MR mengikuti `mr.mode` (aturan skill `develop` langkah 5.5).
