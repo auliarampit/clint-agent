@@ -18,7 +18,8 @@ Argumen berupa **nama project lain** (mis. `/clint:status toko-online`) → cari
    sesi ini (tanpa token) `python3 "$R/scripts/plan-status.py" --session <sid>` bila `docs.plans` diatur.
 2. Susun laporan sesuai **Gaya laporan** di bawah. Isinya mencakup: update docs/design dan
    dampaknya ke kode, feedback/bug QA yang masih open untuk project ini (walau file-nya tidak
-   berubah belakangan ini), MR (pipeline gagal, komentar baru, menunggu review, **Draft** yang menunggu E2E),
+   berubah belakangan ini), MR (pipeline gagal, komentar baru, menunggu review dengan tanda ⚠ > 3 jam / 🔴 > 5 jam sesuai
+   eskalasi standar Badr, **Draft** yang menunggu E2E),
    rencana yang masih punya PR tersisa (satu baris per rencana: n/total selesai + yang siap), dan
    bersih-bersih/disk bila ada yang perlu.
 3. Simpan laporan project ini untuk menu bar tanpa menyentuh project lain: tulis JSON (bentuk di mode `all`,

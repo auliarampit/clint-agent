@@ -173,6 +173,11 @@ hanya membaca dan tidak memanggil agent, jadi cepat dan murah. Status dibaca dar
 atau kata seperti Open/In Progress/Done) dan checklist `- [ ]`. Project belum mengisi `docs.pic` → clint
 menanyakan letak sprint tracker-nya. Mengubah isi tracker (centang, status, PIC) lewat `/clint:docs`.
 
+MR yang menunggu peer review ditandai mengikuti eskalasi standar Badr: ⚠ lebih dari 3 jam (kabari SA) dan 🔴
+lebih dari 5 jam (kabari engineer lead), baik MR Anda maupun MR rekan yang reviewer-nya Anda. Hanya MR non-Draft
+tanpa approval yang dihitung, sejak MR dibuat. clint hanya menandai; notifikasi ke SA/lead tetap urusan tim atau
+bot di server.
+
 ### `/clint:develop`: mengerjakan kode sampai MR
 
 | Ketik | Hasilnya |
@@ -850,7 +855,7 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 5 | tim lengkap 18 agent + aturan tim seperlunya | selesai |
 | 6 | **v2**: nama bahasa Inggris, 7 perintah per jenis kerja, dua bahasa, standar SonarQube | selesai |
 | 6b | **v2.3**: isolasi antar project, klaim PR antar sesi, `## Status PR` di rencana, `status plan`, *Berikutnya* bertanda paralel/urutan, menutup MR Draft, format temuan peninjau seragam | selesai |
-| 7 | **Review sejajar standar Badr + skrip alur PR**: label `Critical/Major/Minor/Low` dan verdict `LGTM/Needs Fix`, semua tingkat wajib diperbaiki, temuan dikumpulkan lalu diperbaiki sekaligus (maks 3 putaran); komentar temuan di MR dengan mention author (opsional, default mati); aturan Anti-Slop digabung ke `no-ai-slop.md`; skrip `preflight`, `prepare-branch`, `review-prep`, `merge-findings`, `ship-pr` (skrip penyaring lolos uji banding di 5 MR lama + 2 cacat tanam); penanda MR menunggu review > 3 jam dan > 5 jam | selesai kecuali penanda MR menunggu review |
+| 7 | **Review sejajar standar Badr + skrip alur PR**: label `Critical/Major/Minor/Low` dan verdict `LGTM/Needs Fix`, semua tingkat wajib diperbaiki, temuan dikumpulkan lalu diperbaiki sekaligus (maks 3 putaran); komentar temuan di MR dengan mention author (opsional, default mati); aturan Anti-Slop digabung ke `no-ai-slop.md`; skrip `preflight`, `prepare-branch`, `review-prep`, `merge-findings`, `ship-pr` (skrip penyaring lolos uji banding di 5 MR lama + 2 cacat tanam); penanda MR menunggu peer review > 3 jam (SA) dan > 5 jam (lead) di `status` | selesai |
 | 8 | **Layout repo Badr**: repo root + repo domain (docs, design, qa, app, data-pipeline, mobile), `clint.json` di repo root, status dan `change-tracker` lintas repo domain, commit tetap per repo; `setup audit` untuk repo standard (skrip) | rencana |
 | 9 | **Logbook dan memori**: logbook/project notes di repo docs (kerangka entri dari skrip), mempalace untuk ingatan antar sesi (`embeddinggemma`, wake-up per wing project); satu fakta di satu tempat | rencana |
 | 10 | **Dokumen lengkap**: rantai dokumen per project (`docs` di `clint.json`) + template `kit/docs/` (PRD, SAD, ERD, STD, API contract OpenAPI 3.1, ADR, UAT, BAST, quick guide, sprint review); `solution-architect`: SAD dan ERD per domain; `business-analyst`: UAT dan BAST; uji terpandu `qa-analyst`; tampilan `status` per peran; skrip `trace` (AC↔TC, cascade ID) dan `sprint-evidence` | agent BA, QA, sprint-tracker sudah ada; sisanya rencana |
