@@ -51,7 +51,7 @@ test case.
 - **Tertunda** (perangkat, build, atau channel belum siap): laporkan langkah persis dari `e2e-tester`; MR
   tetap Draft.
 
-Fitur baru (bukan MR): bila lulus, push dan buat MR seperti skill `develop` langkah 5.5–5.6.
+Fitur baru (bukan MR): bila lulus, push dan buat MR seperti skill `develop` langkah 5.5.
 
 ## 4. Laporan
 

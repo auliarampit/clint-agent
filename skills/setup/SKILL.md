@@ -55,7 +55,7 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    Jangan mengisi dari ingatan. Baris yang tidak berlaku ditulis `TIDAK ADA`.
 5. Isi `.claude/clint.json` dari template: base branch (`git remote show origin`), CLI MR
    (`glab`/`gh` sesuai host remote), `mr.mode` (`"mr"` default; tanya user bila tim biasa
-   push langsung ke base → `"push-base"`), perintah lint/typecheck/test/e2e dari `package.json`,
+   push langsung ke base → `"push-base"`), `mr.reviewComments` (`false` default), perintah lint/typecheck/test/e2e dari `package.json`,
    `formatFile` dari formatter yang benar-benar dipakai project.
    `ciOnMr`: cek yang benar-benar dijalankan CI pada MR (baca `.gitlab-ci.yml`/`ci/*.yml`/`.github/workflows/*`:
    job dan `rules`-nya); job yang hanya jalan terjadwal/di branch utama tidak dihitung. `surfaces[].testRelated`:

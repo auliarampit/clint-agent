@@ -20,6 +20,29 @@ else
   fi
   draft="$(jq -r '.[]? | select(.draft) | "!\(.iid)"' <<<"$mrs" 2>/dev/null)"
 fi
+echo "### Menunggu peer review (standar Badr: > 3 jam eskalasi ke SA, > 5 jam ke engineer lead; dihitung sejak MR dibuat)"
+umur='def jam: ((now - (sub("\\.[0-9]+"; "") | fromdateiso8601)) / 3600 * 10 | floor) / 10;
+  def tanda(j): if j >= 5 then "🔴 > 5 jam: eskalasi ke engineer lead" elif j >= 3 then "⚠ > 3 jam: eskalasi ke SA" else "baru" end;'
+if [ "$cli" = "gh" ]; then
+  for peran in "--author @me" "--search review-requested:@me"; do
+    gh pr list $peran --json number,title,createdAt,isDraft,reviewDecision,url --limit 20 2>/dev/null |
+      jq -r "$umur"' .[] | select((.isDraft | not) and .reviewDecision != "APPROVED")
+        | (.createdAt | jam) as $j | "#\(.number) \(.title[0:60]) | menunggu \($j) jam | \(tanda($j)) | \(.url)"' |
+      sed "s/^/$( [ "$peran" = "--author @me" ] && echo "[MR Anda] " || echo "[Anda reviewer] ")/"
+  done
+else
+  for peran in "--author=@me" "--reviewer=@me"; do
+    glab mr list "$peran" -F json 2>/dev/null | jq -c '.[0:20][]? | select(.draft | not)' 2>/dev/null |
+    while read -r mr; do
+      iid="$(jq -r .iid <<<"$mr")"
+      n="$(glab api "projects/:id/merge_requests/$iid/approvals" 2>/dev/null | jq '[.approved_by[]?] | length' 2>/dev/null)"
+      [ "${n:-0}" -gt 0 ] && continue
+      label="[MR Anda]"; [ "$peran" = "--reviewer=@me" ] && label="[Anda reviewer]"
+      jq -r --arg l "$label" "$umur"' (.created_at | jam) as $j
+        | "\($l) !\(.iid) \(.title[0:60]) | menunggu \($j) jam | \(tanda($j)) | \(.web_url)"' <<<"$mr"
+    done
+  done
+fi
 echo "### MR/PR Draft milik Anda (E2E mungkin tertunda: /clint:test e2e <nomor>)"
 [ -n "$draft" ] && echo "$draft" | paste -sd' ' - || echo "(tidak ada)"
 echo "### Branch lokal tertinggal dari origin/$base"

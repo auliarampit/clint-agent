@@ -20,6 +20,7 @@ untuk rincian yang kurang.
 2. `git fetch origin --prune` lalu kumpulkan:
    - MR milik user yang masih open beserta status pipeline dan komentar yang belum dijawab
      (`glab mr list --author=@me` / `gh pr list --author @me`, lalu `view` per MR).
+   - MR non-Draft tanpa approval, milik user atau dengan user sebagai reviewer, dan lama menunggunya.
    - Branch lokal yang tertinggal dari `origin/<base>` (`git rev-list --count`).
    - `git worktree list`: worktree yang branch-nya sudah ter-push atau sudah merge.
    - `df -h ~` untuk sisa disk.
@@ -27,7 +28,10 @@ untuk rincian yang kurang.
 
 ## Keluaran (maks 15 baris)
 
-- **Perlu tindakan**: MR dengan pipeline gagal atau komentar baru, paling mendesak dulu.
+- **Perlu tindakan**: MR dengan pipeline gagal atau komentar baru, lalu MR yang menunggu peer review melewati batas
+  standar Badr (bagian *Menunggu peer review* dari pengumpul): 🔴 > 5 jam (eskalasi ke engineer lead) dulu, lalu
+  ⚠ > 3 jam (eskalasi ke SA). MR milik user → "kejar reviewer / kabari SA atau lead"; user sebagai reviewer →
+  `/clint:review !<n> --only`. Paling mendesak dulu.
 - **MR Draft milik user** (biasanya E2E tertunda): satu baris per MR, alasan dari deskripsi, dan perintah
   lanjutannya `/clint:test e2e !<n>`; lebih dari satu Draft → tutup dengan `/clint:test e2e draft`.
 - **Menunggu**: MR yang menunggu review/merge.

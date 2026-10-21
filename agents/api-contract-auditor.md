@@ -34,23 +34,28 @@ paginasi, autentikasi yang tertulis) dan perubahan yang merusak klien. Celah oto
 
 ## Keluaran
 
-Tutup laporan dengan blok seragam ini (orkestrator menggabungkannya ke `findings.md`):
+Tutup laporan dengan blok seragam ini. Bila pemanggil memberi folder kerja PR, tulis juga blok itu ke
+`<folder>/temuan-api-contract-auditor.md` (timpa; `merge-findings.py` menggabungkannya ke `findings.md`) dan balas pemanggil cukup
+dengan verdict dan jumlah temuan per tingkat:
 
-    PUTUSAN: LULUS | PERLU PERBAIKAN
+    VERDICT: LGTM | Needs Fix
     TEMUAN:
-    - [wajib|saran] <path>:<baris> · <kategori> · <ringkas masalah>
+    - [Critical|Major|Minor|Low] <path>:<baris> · <aspek> · <kategori> · <ringkas masalah>
       sekarang: <cuplikan apa adanya, ≤ 5 baris>
       usulan: <pengganti untuk baris yang sama>
       (luar cakupan)
 
-`wajib` menahan MR: implementasi berbeda dari kontrak, atau perubahan merusak yang tidak disebut di deskripsi
-PR/MR. `saran` tidak menahan, tetapi saran di baris yang diubah PR diterapkan otomatis oleh `developer`, jadi
-usulan harus konkret dan benar, bukan selera. PERLU PERBAIKAN bila ada minimal satu `wajib`; tanpa temuan
-tulis `TEMUAN: -`. Kategori: `METHOD /path <field|status|envelope|paginasi|auth|merusak>`; bila kontrak yang
-tertinggal, usulan = perbarui kontrak dan sebut klien terdampak. `(luar cakupan)` bila perbaikan menyentuh
-kode yang tidak diubah PR atau butuh keputusan arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)`
-bila usulan butuh impor/konstanta/fungsi baru di luar baris itu. Temuan yang bukan soal kode:
-`sekarang`/`usulan` berupa kalimat. Hanya temuan yang kamu yakin nyata.
+Tingkat: `Critical` = perubahan merusak yang memutus klien yang sudah rilis (mis. aplikasi mobile terpasang);
+`Major` = implementasi berbeda dari kontrak, atau perubahan merusak yang tidak disebut di deskripsi PR/MR;
+`Minor` = kontrak tertinggal dari implementasi tanpa perbedaan perilaku bagi klien; `Low` = kerapian kontrak
+(contoh, deskripsi field). Semua tingkat, termasuk `Low`, wajib diperbaiki dan menahan MR, jadi usulan harus
+konkret dan benar, bukan selera. `Needs Fix` bila ada minimal satu temuan yang bukan `(luar cakupan)`, selain
+itu `LGTM`; tanpa temuan tulis `TEMUAN: -`. Aspek: requirement. Kategori: `METHOD /path
+<field|status|envelope|paginasi|auth|merusak>`; bila kontrak yang tertinggal, usulan = perbarui kontrak dan
+sebut klien terdampak. `(luar cakupan)` bila perbaikan menyentuh kode yang tidak diubah PR atau butuh keputusan
+arsitektur/desain (hanya dicatat di deskripsi MR); `(lintas)` bila usulan butuh impor/konstanta/fungsi baru di
+luar baris itu. Temuan yang bukan soal kode: `sekarang`/`usulan` berupa kalimat. Hanya temuan yang kamu yakin
+nyata.
 
 ## Standar senior
 

@@ -18,7 +18,8 @@ Argumen berupa **nama project lain** (mis. `/clint:status toko-online`) → cari
    sesi ini (tanpa token) `python3 "$R/scripts/plan-status.py" --session <sid>` bila `docs.plans` diatur.
 2. Susun laporan sesuai **Gaya laporan** di bawah. Isinya mencakup: update docs/design dan
    dampaknya ke kode, feedback/bug QA yang masih open untuk project ini (walau file-nya tidak
-   berubah belakangan ini), MR (pipeline gagal, komentar baru, menunggu review, **Draft** yang menunggu E2E),
+   berubah belakangan ini), MR (pipeline gagal, komentar baru, menunggu review dengan tanda ⚠ > 3 jam / 🔴 > 5 jam sesuai
+   eskalasi standar Badr, **Draft** yang menunggu E2E),
    rencana yang masih punya PR tersisa (satu baris per rencana: n/total selesai + yang siap), dan
    bersih-bersih/disk bila ada yang perlu.
 3. Simpan laporan project ini untuk menu bar tanpa menyentuh project lain: tulis JSON (bentuk di mode `all`,
@@ -68,7 +69,8 @@ Dijawab langsung di sesi ini, **tanpa agent** (hanya membaca dokumen, murah).
    dikelompokkan **Terblokir/ada bug** → **Sedang dikerjakan/QA** → **Belum mulai**, satu baris per butir: ID/modul,
    PIC, kolom yang belum selesai. Butir Anda ditandai. Lebih dari ±15 butir → ringkas per epic/PIC dan tawarkan
    rinciannya.
-7. **Berikutnya** (aturan skill `develop` bagian 6): butir milik user yang paling mendesak sebagai langkah bertanda, mis.
+7. **Berikutnya** (aturan skill `develop` bagian 6): butir milik user yang paling mendesak, tanpa yang diklaim sesi lain
+   (`~/Library/Logs/clint/kerja/`), sebagai langkah bertanda, mis.
    `/clint:develop MOD-AD-04 sisa QA (docs/sprints/s09.md)` atau `/clint:test e2e !<n>`.
 
 Mode ini hanya membaca. Memperbarui tracker (centang, status, PIC) dikerjakan lewat `/clint:docs`.
@@ -94,11 +96,14 @@ Mode ini hanya membaca. Memperbarui tracker (centang, status, PIC) dikerjakan le
     "cek":[{"teks":"...","proyek":"...","sumber":"MR !123","url":"<tautan MR>"}], "tunggu":[...],
     "aman":["Pipeline aman di 2 project"], "peringatan":["Disk tinggal 18 GB"],
     "rincian":[{"proyek":"<nama>","butir":["<1 baris>"]}],
+    "rencana":[{"proyek":"<nama>","nama":"<judul pendek rencana>","selesai":6,"total":7}],
     "berikutnya":[{"proyek":"<nama>","dir":"<path absolut>","langkah":["[paralel] /clint:develop …","[urutan, setelah PR-2] …"]}]}
    ```
    Butir mengikuti gaya laporan di bawah; kelompok kosong ditulis `[]`. `gagal` = pipeline/pekerjaan
    gagal (memberi ikon merah di menu bar); `url` diisi untuk butir MR. Setiap butir wajib punya `proyek`, dan
-   `berikutnya` dipisah per project (langkah dari plan-status + butir project itu, aturan *Berikutnya*). Salinan
+   `berikutnya` dipisah per project (langkah dari plan-status + butir project itu, aturan *Berikutnya*). `rencana` diisi dari keluaran
+   `plan-status.py` (n/total per rencana yang masih berjalan atau baru selesai hari ini); sesi yang sedang berjalan
+   dibaca sendiri oleh `render-report.py` dari klaim, tidak ditulis ke JSON. Salinan
    terakhir juga ditulis ke `~/Library/Logs/clint/terakhir.json` (dibaca menu bar); mode ini memang menggantikan
    seluruh isinya karena mencakup semua project aktif.
 4. Kecuali ada `--no-screen` (dipakai sapaan pagi, yang merender sendiri): render dan buka layarnya,

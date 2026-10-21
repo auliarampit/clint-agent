@@ -173,6 +173,11 @@ hanya membaca dan tidak memanggil agent, jadi cepat dan murah. Status dibaca dar
 atau kata seperti Open/In Progress/Done) dan checklist `- [ ]`. Project belum mengisi `docs.pic` → clint
 menanyakan letak sprint tracker-nya. Mengubah isi tracker (centang, status, PIC) lewat `/clint:docs`.
 
+MR yang menunggu peer review ditandai mengikuti eskalasi standar Badr: ⚠ lebih dari 3 jam (kabari SA) dan 🔴
+lebih dari 5 jam (kabari engineer lead), baik MR Anda maupun MR rekan yang reviewer-nya Anda. Hanya MR non-Draft
+tanpa approval yang dihitung, sejak MR dibuat. clint hanya menandai; notifikasi ke SA/lead tetap urusan tim atau
+bot di server.
+
 ### `/clint:develop`: mengerjakan kode sampai MR
 
 | Ketik | Hasilnya |
@@ -402,7 +407,7 @@ Cara clint menegakkannya:
    `globalThis`), lengkap dengan contoh salah dan benar.
 2. `developer` mengikuti aturan itu saat menulis kode, menulis test untuk logika baru, dan melaporkan angka
    coverage file yang diubah (tidak pernah mengklaim "≥ 80%" tanpa angka).
-3. `code-reviewer` menjadikan pelanggaran yang akan menggagalkan gate sebagai temuan **Wajib**.
+3. `code-reviewer` menjadikan pelanggaran yang akan menggagalkan gate sebagai temuan **Major**.
 4. Gate tetap gagal di CI → `/clint:develop perbaiki pipeline !123`; `pipeline-fixer` membaca issue Sonar-nya
    dan memperbaiki kode.
 
@@ -424,10 +429,15 @@ belum punya salinannya. Berlaku untuk kode, komentar, commit, deskripsi MR, lapo
 | Commit dan MR tanpa nama agent atau "dibuat oleh AI" | Nama mengikuti pola codebase, bukan `data2`/`helper` |
 | Teks UI spesifik ("Nomor HP harus 10–13 digit"), bukan "Oops! 😅" | Pesan error menyebut apa yang gagal |
 
+Aturan dari Anti-Slop (standar AI Badr) sudah digabung ke file yang sama, bukan dipasang terpisah, supaya tidak
+ada dua aturan yang tumpang tindih: pola tulisan tambahan, batas panjang komentar, dan bagian **Tampilan** (konten
+nyata atau placeholder jujur, semua state, semua tombol berfungsi, dekorasi butuh alasan, CTA menyebut aksinya).
+Bagian kode clint tetap lebih ketat dari Anti-Slop: default tanpa komentar.
+
 `code-reviewer` memeriksa sisi kode: implementasi palsu, data contoh tertinggal, kode mati, dan **komentar baru
 yang tidak perlu** (komentar per langkah, JSDoc fungsi internal, banner, kode dikomentari) adalah temuan
-**Wajib**; kode defensif berlebih, nama generik, dan abstraksi spekulatif adalah **Saran** (tetap diterapkan
-otomatis di kode yang diubah PR). Komentar lama di luar lingkup PR tidak disentuh.
+**Minor**; kode defensif berlebih, nama generik, dan abstraksi spekulatif adalah **Low**. Keduanya wajib
+diperbaiki sebelum MR. `design-auditor` memeriksa bagian Tampilan. Komentar lama di luar lingkup PR tidak disentuh.
 
 ## Cara kerja `develop`
 
@@ -454,20 +464,23 @@ Bug yang penyebabnya belum jelas → `bug-investigator` dulu. Pipeline merah →
   Worktree memakai `node_modules` repo utama lewat tautan bila lockfile-nya sama, jadi tidak install ulang.
   Perubahan Anda yang belum di-commit tidak pernah disentuh.
 - **Klaim PR**: PR yang dipilih dicatat di file status sesi, sehingga sesi lain tidak mengambilnya.
-- **Tinjauan paralel** setelah kode ditulis. Semua peninjau memakai format temuan yang sama
-  (`PUTUSAN: LULUS | PERLU PERBAIKAN`, temuan `[wajib]`/`[saran]` dengan `path:baris`), tahu siapa saja peninjau
-  lain di putaran itu (wilayah auditor yang ikut tidak diperiksa dua kali), dan berbagi folder kerja PR
-  (`.git/clint/<branch>/`: `pr.diff`, `findings.md`). Temuan ganda digabung, lalu dikirim ke `developer`, yang
-  menandai setiap butir diperbaiki/dilewati. Putaran ulang hanya memverifikasi temuan itu, maksimal 2 putaran.
+- **Tinjauan paralel** setelah kode ditulis, dengan kategori yang sama dengan standar code review AI Badr.
+  Semua peninjau memakai format temuan yang sama (`VERDICT: LGTM | Needs Fix`, temuan
+  `[Critical]`/`[Major]`/`[Minor]`/`[Low]` dengan `path:baris` dan aspeknya: standard, performance, security,
+  best-practice, requirement), tahu siapa saja peninjau lain di putaran itu (wilayah auditor yang ikut tidak
+  diperiksa dua kali), dan berbagi folder kerja PR (`.git/clint/<branch>/`: `pr.diff`, `findings.md`).
+  Semua tingkat, termasuk Low, wajib diperbaiki sebelum MR dibuat. Temuan semua peninjau dikumpulkan dulu, digabung,
+  lalu dikirim sekaligus ke `developer`, yang menandai setiap butir diperbaiki/dilewati. Putaran ulang hanya
+  memverifikasi temuan itu dan baris yang berubah karena perbaikan, maksimal 3 putaran.
   Masih gagal → berhenti tanpa MR, perubahan disimpan sebagai commit `wip` lokal dan PR ditandai ⏸️ di rencana.
 - **E2E** dijalankan bila rencana memintanya atau bila perubahan terlihat pengguna. Project Expo dengan
   **Pratinjau E2E** di adapter menguji sebelum MR lewat EAS Update ke channel khusus simulator (tanpa
   build native lokal, QA tidak ikut menerima). Status E2E wajib tertulis (lulus / tidak perlu /
   tertunda); **tertunda → MR dibuat Draft** (mode `push-base`: tidak di-push ke base) dan muncul di
   `status` sampai `/clint:test e2e !<n>` lulus.
-- **Saran tinjauan langsung diterapkan**: saran di kode yang diubah PR ikut diperbaiki, lewat lint/test dan
+- **Temuan Low langsung diterapkan**: Low di kode yang diubah PR ikut diperbaiki, lewat lint/test dan
   tinjauan ulang, lalu di-commit terpisah (`refactor: terapkan saran tinjauan`) supaya mudah diperiksa dan
-  di-revert. Saran luar cakupan masuk deskripsi MR dengan tautan file#baris dan diff sekarang/usulan;
+  di-revert. Temuan luar cakupan masuk deskripsi MR dengan tautan file#baris dan diff sekarang/usulan;
   terapkan nanti dengan `/clint:develop terapkan saran di !<n>`.
 - **MR**: stage eksplisit (tanpa `git add -A`), tarik base lagi, push, buat MR, dan pastikan MR-nya
   benar-benar ada. PR yang bergantung dibangun di atas branch dependensinya; deskripsi MR menyebut
@@ -543,7 +556,7 @@ target yang lebih ketat dari ambang umum:
 
 - `developer` membaca acuan ini **selalu** untuk halaman, layar, atau endpoint baru, dan melaporkan angka
   sebelum/sesudah. Kalau tidak bisa diukur, laporannya "belum terukur"; target tidak pernah diklaim tanpa angka.
-- `performance-auditor` menjadikan pelanggaran aturan dan regresi target sebagai temuan **Wajib**. Regresi
+- `performance-auditor` menjadikan pelanggaran aturan dan regresi target sebagai temuan **Major** atau **Minor**. Regresi
   menahan MR sampai diperbaiki atau Anda menyetujui pengecualiannya.
 - Bagian lama yang sudah di bawah target sebelum PR tidak menahan MR, selama PR tidak memperburuknya;
   selisihnya dilaporkan sebagai utang performa.
@@ -584,19 +597,23 @@ Ikon clint di menu bar Mac (lewat SwiftBar) menampilkan kondisi kerja sepanjang 
 | Ikon | Arti |
 |---|---|
 | angka | jumlah hal yang menunggu |
-| cincin oranye + label | agent sedang bekerja, mis. `PR-2/4` |
+| `<jumlah sesi> · <tahap>` | agent sedang bekerja, mis. `2 · tinjau` |
 | `✓` | semua aman |
 | `!` | ada yang gagal |
 
-Isi menu: kemajuan PR **per sesi** (beberapa sesi develop di project berbeda tampil masing-masing dengan nama
-project-nya), *Berikutnya* per project (maks 3 project, klik untuk menyalin), setiap sesi Claude Code yang bekerja (termasuk di VS Code) beserta agent yang
-sedang jalan, hal yang menunggu (submenu *Salin perintah*, *Buka MR di browser*, *Buka project di VS
-Code*, *Tandai selesai*), dan tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project*, *Halo
-Clint*, *Pengaturan*.
+Isi menu: *Sedang berjalan*, satu baris per sesi Claude Code (termasuk di VS Code): project, tugas, dan lama
+berjalan, dengan bilah lima tahap (worktree → implementasi → tinjau → test → MR). Tahap dicatat hook dari
+agent yang mulai dan perintah `git worktree add` / `git push` / `glab mr create`, jadi realtime dan tanpa token.
+Sesi yang menunggu jawaban Anda bertitik kuning; sesi yang baru selesai bertanda ✓ selama 10 menit lalu hilang.
+Lalu hal yang menunggu (submenu *Salin perintah*, *Buka MR di browser*, *Buka project di VS Code*, *Tandai
+selesai*), *Berikutnya*, dan tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project*, *Halo Clint*,
+*Pengaturan*.
 
-Badge berkurang sendiri tanpa cek ulang: butir yang dikerjakan `develop` pindah ke *Menunggu review*;
-MR yang merged/closed hilang, termasuk butir tanpa tautan bila ID-nya (mis. `BUG-42`) disebut MR yang
-merged setelah laporan dibuat (dicek tiap 15 menit lewat `glab`/`gh`).
+Butir yang sedang dikerjakan sebuah sesi (perintahnya sama dengan tugas sesi itu) tidak tampil di hal yang
+menunggu; butir yang tugasnya baru selesai diberi ✓ sampai Anda menandainya selesai. Badge juga berkurang sendiri:
+butir yang dikerjakan `develop` pindah ke *Menunggu review*, dan MR yang merged/closed hilang, termasuk butir
+tanpa tautan bila ID-nya (mis. `BUG-42`) disebut MR yang merged setelah laporan dibuat. Status MR dicek tiap
+5 menit dan setiap giliran sesi selesai, lewat `glab`/`gh`.
 
 ```bash
 brew install --cask swiftbar
@@ -650,11 +667,16 @@ Model tidak diturunkan; yang dijaga cara kerjanya:
 - tiap perintah hanya memuat instruksi untuk jenis kerjanya (perintah dipecah per jenis kerja);
 - peninjau menerima path file diff + potongan rencana, bukan dokumen utuh;
 - hasil test `developer` diteruskan, tidak dijalankan ulang;
-- putaran perbaikan hanya memverifikasi temuan sebelumnya;
+- temuan semua peninjau dikumpulkan lalu diperbaiki sekaligus; putaran ulang hanya memverifikasi temuan sebelumnya;
 - auditor hanya jalan bila diff relevan, maksimal 2 per PR; potret layar hanya bila perlu;
 - review otomatis hanya untuk ≥ 40 baris, sekali per perubahan;
 - pemantau (`change-tracker`, `status-reporter`) mengumpulkan bahan dalam **satu panggilan skrip**
   (`scripts/collect-changes.sh`, `scripts/collect-status.sh`) alih-alih puluhan putaran `git`/`grep`;
+- langkah mekanis `develop` dijalankan skrip, model hanya menulis isi dan memutuskan: `preflight.sh` (fetch,
+  related repo, paralelisme), `prepare-branch.sh` (branch/worktree), `review-prep.py` (diff, ukuran, kandidat
+  auditor), `merge-findings.py` (gabung temuan; peninjau menulis bloknya sendiri ke file), `ship-pr.py` (commit
+  sampai MR dan bersih-bersih). Skrip penyaring lolos uji banding di 5 MR lama dan 2 cacat tanam: kandidat
+  auditor mencakup semua pilihan model, tidak ada temuan yang hilang saat digabung;
 - **lokal cepat, pipeline penuh**: lokal hanya lint, typecheck, dan test yang terkait perubahan; suite penuh,
   coverage, SonarQube, dan build yang sudah dijalankan CI pada MR (`ciOnMr`) tidak diulang lokal;
 - **tidak menunggu pihak luar**: tidak ada `sleep`/polling untuk pipeline, build EAS, atau deploy; agent
@@ -694,7 +716,8 @@ Dibuat oleh `/clint:setup` dan di-commit untuk seluruh tim:
 {
   "baseBranch": "dev",
   "mr": { "cli": "glab", "targetBranch": "dev",      // glab (GitLab) / gh (GitHub)
-          "mode": "mr" },                             // "push-base": langsung push ke baseBranch, tanpa MR
+          "mode": "mr",                               // "push-base": langsung push ke baseBranch, tanpa MR
+          "reviewComments": false },                  // true: temuan review dipasang di MR + @author
   "autoReviewMinLines": 40,                           // "autoReview": false untuk mematikan
   "ciOnMr": ["lint", "typecheck", "test", "sonar"], // cek yang dijalankan CI pada MR; tidak diulang lokal
   "worktreeRoot": "../mobile-worktrees",
@@ -832,10 +855,10 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 5 | tim lengkap 18 agent + aturan tim seperlunya | selesai |
 | 6 | **v2**: nama bahasa Inggris, 7 perintah per jenis kerja, dua bahasa, standar SonarQube | selesai |
 | 6b | **v2.3**: isolasi antar project, klaim PR antar sesi, `## Status PR` di rencana, `status plan`, *Berikutnya* bertanda paralel/urutan, menutup MR Draft, format temuan peninjau seragam | selesai |
-| 7 | rantai dokumen yang bisa diatur per project (`docs` di `clint.json`) + template dokumen di `kit/docs/` | berikutnya |
-| 8 | `business-analyst` (PM): MoM, confirmation list, risk register, BRD, PRD | agent selesai; template `kit/docs/` menunggu fase 7 |
-| 9 | `solution-architect` diperluas: SAD, API contract (OpenAPI 3.1 YAML), ADR | rencana |
-| 10 | `qa-analyst` (QA): STD dan test case, uji terpandu, regresi, laporan bug; `/clint:test` diperluas | selesai kecuali uji terpandu |
-| 11 | `sprint-tracker` + tampilan `status` per peran (PM, SA, QA, Dev, Designer) | agent selesai; tampilan per peran belum |
-| 12 | `/clint:release` diperluas: ops (preflight, backup, health check), ekspor dokumen DOCX/PDF | rencana |
-| 13 | mode adopsi: memetakan agent/skill lama di project ke clint, lalu uji di turborepo, magnet-rezeki, lajoo | rencana |
+| 7 | **Review sejajar standar Badr + skrip alur PR**: label `Critical/Major/Minor/Low` dan verdict `LGTM/Needs Fix`, semua tingkat wajib diperbaiki, temuan dikumpulkan lalu diperbaiki sekaligus (maks 3 putaran); komentar temuan di MR dengan mention author (opsional, default mati); aturan Anti-Slop digabung ke `no-ai-slop.md`; skrip `preflight`, `prepare-branch`, `review-prep`, `merge-findings`, `ship-pr` (skrip penyaring lolos uji banding di 5 MR lama + 2 cacat tanam); penanda MR menunggu peer review > 3 jam (SA) dan > 5 jam (lead) di `status` | selesai |
+| 8 | **Layout repo Badr**: repo root + repo domain (docs, design, qa, app, data-pipeline, mobile), `clint.json` di repo root, status dan `change-tracker` lintas repo domain, commit tetap per repo; `setup audit` untuk repo standard (skrip) | rencana |
+| 9 | **Logbook dan memori**: logbook/project notes di repo docs (kerangka entri dari skrip), mempalace untuk ingatan antar sesi (`embeddinggemma`, wake-up per wing project); satu fakta di satu tempat | rencana |
+| 10 | **Dokumen lengkap**: rantai dokumen per project (`docs` di `clint.json`) + template `kit/docs/` (PRD, SAD, ERD, STD, API contract OpenAPI 3.1, ADR, UAT, BAST, quick guide, sprint review); `solution-architect`: SAD dan ERD per domain; `business-analyst`: UAT dan BAST; uji terpandu `qa-analyst`; tampilan `status` per peran; skrip `trace` (AC↔TC, cascade ID) dan `sprint-evidence` | agent BA, QA, sprint-tracker sudah ada; sisanya rencana |
+| 11 | **Dokumen async**: ekspor DOCX/PDF setelah repo docs berubah, sinkron ke folder OneDrive lewat `microsoft/connector` | rencana |
+| 12 | **QA dan ops**: smoke test dan load test (`loadmeter/mcp`), template job CI untuk security test, `/clint:release` ops (preflight, backup, health check) | rencana |
+| 13 | **Adopsi AI Standard**: uji berdampingan dengan mattpocock/skills dan rtk (lalu putuskan skrip `run-checks`), `gitlab/mcp` dengan cadangan `glab`, secret dari passbolt/infisical/vault, jira opsional; skill khusus repo menang, clint tidak menduplikasi; mode adopsi dan uji di turborepo, magnet-rezeki, lajoo | rencana |
