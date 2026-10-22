@@ -117,6 +117,16 @@ Semua teks untuk user (chat, `judul`, `kalimat`, `lead`, butir JSON, kabar suara
 (baris *Bahasa clint* di konteks sesi; default English). Contoh di bawah berbahasa Indonesia; terjemahkan
 bila bahasa user English. Nama kunci JSON tetap seperti di atas.
 
+**Hanya yang valid dan milik user** (berlaku untuk chat dan semua kelompok JSON):
+- Butir masuk laporan hanya bila tindakan berikutnya ada di tangan user dan ada buktinya (status tracker, commit,
+  MR, atau `path:baris`). Butir agent tanpa bukti, atau yang bertentangan dengan status tracker (mis. "belum ada
+  commit" padahal butir 🧪), dibuang, tidak diteruskan.
+- `tunggu` hanya untuk hal yang menahan pekerjaan user sendiri (keputusan PM atas pertanyaan user, materi klien).
+  Pekerjaan user yang sudah diserahkan ke QA bukan butir `tunggu`; cukup angka di `aman`.
+- `cek` hanya untuk selisih konkret yang sudah ditemukan, bukan pertanyaan spekulatif.
+- Tidak ada butir tersisa untuk sebuah project → `judul`/kalimat chat: **"Tidak ada tugas lagi."**, dan blok
+  *Berikutnya* project itu juga kosong.
+
 **Singkat dan manusiawi.** Seperti rekan kerja mengabari lewat chat:
 
 - Buka dengan sapaan sesuai waktu lalu kalimat inti, mis. "Selamat pagi. Ada 3 hal untuk mobile

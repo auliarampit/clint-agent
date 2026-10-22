@@ -32,7 +32,29 @@ if [ -n "$fb" ] && [ "$fb" != "TIDAK ADA" ] && [ -d "$fb" ]; then
 fi
 pic="$(jq_ '.docs.pic // empty')"; nama="$(jq -r '.name[]?' "$HOME/.config/clint/user.json" 2>/dev/null | paste -sd'|' -)"
 if [ -n "$pic" ] && [ "$pic" != "TIDAK ADA" ] && [ -e "$pic" ] && [ -n "$nama" ]; then
-  f="$(ls -t "$pic"/*.md 2>/dev/null | head -1)"; [ -f "$pic" ] && f="$pic"
-  echo "### PIC — baris yang menyebut nama Anda ($f, maks 40)"
-  grep -n -i -E "$nama" "$f" 2>/dev/null | cut -c1-220 | head -40
+  if [ -f "$pic" ]; then f="$pic"; else
+    f="$(grep -l -i -E '^status: *(active|aktif)' "$pic"/*.md 2>/dev/null | grep -E '/(s|sprint-?)[0-9]+[^/]*\.md$' | sort -V | tail -1)"
+    [ -n "$f" ] || f="$(ls "$pic"/*.md 2>/dev/null | grep -E '/(s|sprint-?)[0-9]+[^/]*\.md$' | sort -V | tail -1)"
+  fi
+  base="$(jq_ '.baseBranch // "dev"')"
+  echo "### Butir Anda yang belum selesai ($f)"
+  echo "Format: ID | judul | kolom belum selesai | commit terakhir yang menyebut ID (seluruh histori origin/$base)"
+  awk -F'|' -v nama="$nama" '
+    function trim(s) { gsub(/^[ \t]+|[ \t]+$/, "", s); return s }
+    /^\|[ :-]+\|/ { hdr = prev; next }
+    /^\|/ {
+      prev = $0
+      if (tolower($0) !~ tolower(nama)) next
+      split(hdr, h, "|"); sisa = ""
+      for (i = 3; i < NF; i++) {
+        c = trim($i)
+        if (c ~ /^(⬜|🔄|🧪|🐞|🚫|Open|To Do|In Progress|Blocked|On QA|Scheduled)$/) sisa = sisa " " trim(h[i]) ":" c
+      }
+      judul = (tolower(trim($3)) ~ tolower(nama)) ? "(baris gerbang modul)" : substr(trim($4), 1, 70)
+      if (sisa != "") print trim($2) "\t" judul "\t" sisa
+    }' "$f" 2>/dev/null | head -60 | while IFS=$'\t' read -r id judul sisa; do
+      c="$(git log "origin/$base" -E --grep="${id}([^0-9A-Za-z]|$)" --format='%h %ad %s' --date=format:'%d/%m' 2>/dev/null \
+        | grep -v -E '^[0-9a-f]+ [0-9/]+ (docs|Merge)' | head -1 | cut -c1-90)"
+      echo "$id | $judul |$sisa | commit kode: ${c:--}"
+    done
 fi

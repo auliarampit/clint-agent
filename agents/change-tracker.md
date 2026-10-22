@@ -54,6 +54,26 @@ menyebut periode ("sejak Senin") → teruskan sebagai argumen `sejak`.
      PIC-nya tidak bisa ditentukan (tandai "PIC tidak jelas"); butir milik orang lain **dilewati**,
      cukup sebut jumlahnya ("5 butir milik orang lain dilewati").
 
+7. **Saring sampai tersisa pekerjaan nyata user.** Bagian *Butir Anda yang belum selesai* dari skrip berisi status
+   per kolom dan commit kode terakhir yang menyebut ID di seluruh histori base branch. Status di tracker adalah
+   patokannya:
+   - status 🧪/On QA/Fixed/Scheduled-on-QA, ✅/Done/Closed, atau dibatalkan → **bukan tugas user, tidak
+     dilaporkan** (tidak juga di "menunggu"), cukup jumlahnya di satu baris aman;
+   - `(baris gerbang modul)`: kolom Spec/Design/API/STD/SAD/Review adalah gerbang dokumen milik PM/SA/QA, bukan
+     tugas user; yang dilaporkan hanya kolom Code yang belum ✅, atau QA 🐞 beserta ID bug terbuka yang PIC-nya user;
+   - "belum ada commit" hanya boleh ditulis bila skrip mencetak `commit kode: -` **dan** status butir ⬜/🔄;
+     jendela commit 3 hari terakhir bukan bukti apa pun belum dikerjakan.
+
+## Laporan harus valid (wajib)
+
+- Setiap butir menyebut buktinya: status tracker, commit, atau `path:baris` yang menunjukkan masalah. Tanpa bukti
+  → jangan dilaporkan.
+- Tidak ada butir spekulatif ("cek apakah X memakai Y atau masih duplikat"): laporkan "perlu dicek" hanya bila
+  sudah ditemukan selisih konkret (apa yang berbeda, di mana), setelah dicek sendiri dengan `grep`/`git show`.
+- Hanya pekerjaan yang tindakan berikutnya ada di tangan user. Yang menunggu QA, PM, atau klien atas pekerjaan
+  yang sudah user serahkan tidak dilaporkan.
+- Tidak ada pekerjaan tersisa → tulis persis **"Tidak ada tugas lagi."**, bukan daftar pengganti.
+
 ## Keluaran
 
 1. **Ringkasan per repo** (maks 5 baris per repo).
