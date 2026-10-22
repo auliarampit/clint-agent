@@ -15,9 +15,9 @@ mengubah kode dan tidak membuat commit.
 yang diberikan pemanggil di prompt (tidak diberikan: `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1)`).
 Skrip itu sudah menarik repo kerja dan semua `relatedRepos[]` (pull `--ff-only` hanya bila working tree bersih
 dan di branch target; selain itu fetch dan dibandingkan dengan `origin/<branch>`), lalu mencetak commit sejak
-periode itu, ringkasan file berubah, baris feedback yang masih open, dan baris PIC. **Jangan mengulang pull,
+periode itu, ringkasan file berubah, dan *Tugas Anda* dari sumber tugas project. **Jangan mengulang pull,
 fetch, atau `git log` itu**; kerjakan langkah di bawah dari keluarannya, dan jalankan `git`/`grep` tambahan
-hanya untuk rincian yang benar-benar dibutuhkan (isi bagian feedback yang open, cek satu field di kode). User
+hanya untuk rincian yang benar-benar dibutuhkan (rincian butir `KERJAKAN`, cek satu field di kode). User
 menyebut periode ("sejak Senin") → teruskan sebagai argumen `sejak`.
 
 1. Baca `.claude/clint.json` bila perlu memetakan repo ke perannya (`relatedRepos[].role`: docs/design/api).
@@ -30,44 +30,23 @@ menyebut periode ("sejak Senin") → teruskan sebagai argumen `sejak`.
    - **Monorepo**: perubahan modul lain di base branch yang menyentuh kode bersama, kontrak,
      atau paket yang dipakai pekerjaanmu; branch kerja yang sekarang tertinggal.
 
-5. **Butir feedback/bug yang masih open** (wajib, terlepas dari tanggal perubahan) di
-   `docs.feedback` (rekursif, hanya `*.md`):
-   - baris tabel yang statusnya belum selesai:
-     `grep -rn -i -E "\| *(open|belum|sebagian|reopen|ditolak|in progress)[^|]*\|" <folder> --include=*.md`
-     (pola sama dengan skrip; keluarannya sudah memuat baris ini, ulangi hanya bila terpotong di 60 baris;
-     status selesai seperti Fixed/Diperbaiki/Diverifikasi/Passed/Closed diabaikan);
-   - saring yang menyangkut surface project ini: nama file atau kolom modul/ID memuat nama
-     surface atau kodenya (mis. `mob`, `mobile`, `MR-MOB`); abaikan milik surface lain;
-   - untuk setiap butir open, baca **bagian rinciannya** saja (cari heading/nomor butir dengan
-     `grep -n`, lalu `sed -n` sampai heading berikutnya) dan catat **setiap permintaan tindakan**
-     di dalamnya (mis. baris "Tim mobile: (1) … (2) …", "Tindak lanjut", "Diharapkan"). Satu
-     butir tabel bisa berisi beberapa pekerjaan; laporkan semuanya, jangan hanya judul butir;
-   - catat juga bila rincian menyebut tindakan itu belum ada di PRD/prototype.
-
-6. **Hanya butir milik user** (bila `~/.config/clint/user.json` ada; berisi `name`):
-   - PIC butir = kolom/field PIC, Owner, Assignee, Dev, atau Penanggung jawab pada butir itu;
-   - bila tidak ada, PIC **modul/epic** tempat butir itu berada, dari dokumen pembagian tugas:
-     `docs.pic` di clint.json bila diisi (mis. sprint tracker), selain itu cari header rencana
-     `PIC: <nama>` atau tabel modul berkolom nama di folder sprint/backlog (pakai `grep -n`, bukan
-     membaca utuh; cukup file sprint terbaru);
-   - laporkan butir yang PIC-nya cocok salah satu `name` (tidak peka huruf besar), dan butir yang
-     PIC-nya tidak bisa ditentukan (tandai "PIC tidak jelas"); butir milik orang lain **dilewati**,
-     cukup sebut jumlahnya ("5 butir milik orang lain dilewati").
-
-7. **Saring sampai tersisa pekerjaan nyata user.** Bagian *Butir Anda yang belum selesai* dari skrip berisi status
-   per kolom dan commit kode terakhir yang menyebut ID di seluruh histori base branch. Status di tracker adalah
-   patokannya:
-   - status 🧪/On QA/Fixed/Scheduled-on-QA, ✅/Done/Closed, atau dibatalkan → **bukan tugas user, tidak
-     dilaporkan** (tidak juga di "menunggu"), cukup jumlahnya di satu baris aman;
-   - `(baris gerbang modul)`: kolom Spec/Design/API/STD/SAD/Review adalah gerbang dokumen milik PM/SA/QA, bukan
-     tugas user; yang dilaporkan hanya kolom Code yang belum ✅, atau QA 🐞 beserta ID bug terbuka yang PIC-nya user;
-   - "belum ada commit" hanya boleh ditulis bila skrip mencetak `commit kode: -` **dan** status butir ⬜/🔄;
-     jendela commit 3 hari terakhir bukan bukti apa pun belum dikerjakan.
+5. **Tugas user hanya dari bagian *Tugas Anda*** keluaran skrip (`tugas-saya.py`, membaca `"tugas"` di
+   `clint.json`). Itu satu-satunya sumber butir tugas:
+   - laporkan **hanya** butir di `KERJAKAN`, satu baris per butir, dengan ID, file:baris, dan commit kode yang
+     tercetak; bila perlu rincian, baca bagian butir itu saja (`sed -n` dari baris yang tercetak);
+   - butir `DISERAHKAN`/`SELESAI` tidak dilaporkan; jumlahnya boleh disebut di satu baris aman;
+   - `STATUS TIDAK DIKENAL` dilaporkan apa adanya sebagai saran pemetaan adapter, bukan sebagai tugas;
+   - `sumber_tugas=tidak ada` → tidak ada butir tugas sama sekali; jangan mencari tugas sendiri dari isi
+     dokumen, cukup sarankan `/clint:setup sync` untuk mengisi `"tugas"`.
+6. Temuan dari perubahan docs/design (langkah 4) boleh dilaporkan hanya dengan **dua bukti**: commit atau file
+   sumber perubahan, dan `path:baris` kode yang belum sesuai, keduanya sudah dicek ada.
 
 ## Laporan harus valid (wajib)
 
 - Setiap butir menyebut buktinya: status tracker, commit, atau `path:baris` yang menunjukkan masalah. Tanpa bukti
-  → jangan dilaporkan.
+  → jangan dilaporkan. Tulis bukti itu **persis** seperti di sumbernya (ID dari `KERJAKAN`, hash commit, path
+  file yang ada) karena laporan disaring mesin (`update-report.py saring`): butir yang buktinya tidak bisa
+  diperiksa, atau ID-nya berstatus diserahkan/selesai, dibuang otomatis.
 - Tidak ada butir spekulatif ("cek apakah X memakai Y atau masih duplikat"): laporkan "perlu dicek" hanya bila
   sudah ditemukan selisih konkret (apa yang berbeda, di mana), setelah dicek sendiri dengan `grep`/`git show`.
 - Hanya pekerjaan yang tindakan berikutnya ada di tangan user. Yang menunggu QA, PM, atau klien atas pekerjaan
@@ -79,8 +58,8 @@ menyebut periode ("sejak Senin") → teruskan sebagai argumen `sejak`.
 1. **Ringkasan per repo** (maks 5 baris per repo).
 2. **Dampak ke implementasi**: tabel perubahan — sumber (repo + file/commit) — bagian kode
    terdampak — status (sesuai / perlu dikerjakan / perlu dicek).
-3. **Feedback/bug open**: satu baris per **pekerjaan** (bukan per butir tabel): ID butir — pekerjaan
-   — layar — catatan (mis. "belum ada di PRD/prototype").
+3. **Tugas Anda**: butir `KERJAKAN` dari skrip, satu baris per butir: ID — pekerjaan — `file:baris` — commit
+   kode bila ada. Kosong → "Tidak ada tugas lagi."
 4. **Saran langkah**: maks 3, mis. "update rencana PR-4 karena field X di API contract
    berganti nama".
 

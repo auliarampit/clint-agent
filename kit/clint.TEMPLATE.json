@@ -34,6 +34,17 @@
     "pic": "{dokumen pembagian tugas/PIC, mis. docs/sprints / TIDAK ADA}",
     "logbook": "{folder logbook harian di repo docs, mis. ../docs/logbook / TIDAK ADA}"
   },
+  "tugas": [
+    {
+      "jenis": "{tabel / checklist}",
+      "file": "{glob relatif project, mis. docs/sprints/s*.md / ../docs/qa/feedback/**/*mobile*.md / docs/plans/PLAN-*.md}",
+      "pilih": "{aktif = file sprint bertanda status: Active bernomor terbesar / semua}",
+      "pemilik": "{pic = hanya baris dengan nama Anda di kolom PIC / semua = project solo atau file sudah per surface}",
+      "kolom": {"id": ["ID", "#"], "pic": "PIC", "judul": ["Title", "Judul"], "status": ["Status"]},
+      "status": {"kerjakan": ["Open", "⬜", "🔄"], "diserahkan": ["Fixed", "🧪"], "selesai": ["Closed", "✅"]},
+      "idPola": "{khusus checklist: regex ID dari nama file, mis. PLAN-[A-Z0-9]+}"
+    }
+  ],
   "surfaces": [
     {
       "name": "mobile",

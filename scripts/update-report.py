@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Ubah laporan terakhir (~/Library/Logs/clint/terakhir.json) tanpa memeriksa ulang. Tanpa token.
-  update-report.py merge   <laporan.json>                     # ganti entri project yang ada di file baru saja
+  update-report.py merge   <laporan.json>                     # saring, lalu ganti entri project yang ada di file baru saja
+  update-report.py saring  <laporan.json>                     # buang butir tanpa bukti / sudah diserahkan (file diubah di tempat)
   update-report.py selesai "<sumber|teks|b64:...>" [--proyek <nama>]
   update-report.py review  "<sumber|teks|b64:...>" "<MR !N>" "<url MR>" [--proyek <nama>]
   update-report.py periksa-mr          # hapus butir MR yang sudah merged/closed (glab/gh)
@@ -84,7 +85,7 @@ def gabung(lama, baru):
 def penanda(sumber):
     """ID dari sumber butir: kode seperti ABC-1/BUG-M-02, dan nomor seperti 'UI-mobile #12' (disertai kata
     di depannya supaya '#12' milik dokumen lain tidak ikut cocok)."""
-    ids = [(i, []) for i in re.findall(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+\b", sumber)]
+    ids = [(i, []) for i in re.findall(r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+[a-z]?\b", sumber)]
     for kata, no in re.findall(r"([A-Za-z][\w-]*)\s*#(\d+)", sumber):
         ids.append((f"#{no}", [w for w in re.split(r"[-_ ]", kata.lower()) if len(w) >= 2]))
     return ids
@@ -119,6 +120,110 @@ def diklaim(x, klaim):
     return None
 
 
+def _tugas_saya():
+    import importlib.util
+    sys.dont_write_bytecode = True
+    spec = importlib.util.spec_from_file_location(
+        "tugas_saya", os.path.join(os.path.dirname(os.path.abspath(__file__)), "tugas-saya.py"))
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def _git(d, *a):
+    try:
+        return subprocess.run(["git", "-C", d, *a], capture_output=True, text=True, timeout=10)
+    except Exception:
+        return None
+
+
+def _cocok(sumber, daftar):
+    """ID di sumber butir yang ada di daftar ID tugas (termasuk '<file> #n' dari tabel bernomor)."""
+    for i, konteks in penanda(sumber):
+        for t in daftar:
+            tl = t.lower()
+            if i.startswith("#"):
+                if tl.endswith(" " + i) and (not konteks or any(w in tl for w in konteks)):
+                    return t
+            elif re.search(rf"(?<![a-z0-9]){re.escape(i.lower())}(?![0-9a-z])", tl):
+                return t
+    return None
+
+
+def _bukti(sumber, dirs):
+    """Bukti yang bisa diperiksa mesin: MR, commit yang ada, atau file yang ada di salah satu repo."""
+    if re.search(r"(^|\s)!\d+\b|https?://", sumber):
+        return "MR/tautan"
+    for h in re.findall(r"\b[0-9a-f]{7,40}\b", sumber):
+        if any((r := _git(d, "cat-file", "-e", f"{h}^{{commit}}")) and r.returncode == 0 for d in dirs):
+            return f"commit {h}"
+    for p in re.findall(r"[\w./-]+\.[A-Za-z]{1,5}(?=[:\s·,)]|$)", sumber):
+        base = os.path.basename(p)
+        if any((r := _git(d, "ls-files", f"*{base}")) and r.stdout.strip() for d in dirs):
+            return f"file {base}"
+    return None
+
+
+def _disebut(sumber, dirs):
+    """Untuk butir tunggu: ID-nya benar-benar tertulis di dokumen repo."""
+    kata = [i for i, _ in penanda(sumber) if not i.startswith("#")] or re.findall(r"[A-Z][\w-]{3,}", sumber)[:1]
+    return any((r := _git(d, "grep", "-l", "-F", k)) and r.stdout.strip() for k in kata for d in dirs)
+
+
+def saring(d):
+    """Buang butir tanpa bukti atau yang menurut sumber tugas sudah diserahkan/selesai. Dicatat di ditolak.log."""
+    ts = _tugas_saya()
+    ditolak, info = [], {}
+    for p in d.get("proyek") or []:
+        dirp = p.get("dir")
+        if not dirp or not os.path.isdir(dirp):
+            continue
+        dirs = [dirp]
+        try:
+            cfg = json.load(open(os.path.join(dirp, ".claude/clint.json"), encoding="utf-8"))
+            dirs += [os.path.normpath(os.path.join(dirp, r["path"])) for r in cfg.get("relatedRepos") or []
+                     if r.get("path")]
+        except (OSError, ValueError):
+            pass
+        t = ts.kumpulkan(dirp)
+        info[p.get("nama")] = (dirs, [x["id"] for x in t.get("kerjakan", [])],
+                               [x["id"] for k in ("diserahkan", "selesai") for x in t.get(k, [])])
+
+    def alasan_tolak(x, g):
+        if x.get("proyek") not in info:
+            return None
+        dirs, kerja, beres = info[x["proyek"]]
+        s = f"{x.get('sumber') or ''} {x.get('perintah') or ''}"
+        if (i := _cocok(s, beres)) and not _cocok(s, kerja):
+            return f"{i} sudah diserahkan/selesai menurut sumber tugas"
+        if _cocok(s, kerja) or _bukti(s, dirs) or (g == "tunggu" and _disebut(s, dirs)):
+            return None
+        return "tanpa bukti yang bisa diperiksa"
+
+    for g in GRUP:
+        tetap = []
+        for x in d.get(g) or []:
+            a = alasan_tolak(x, g)
+            (ditolak.append((g, x, a)) if a else tetap.append(x))
+        d[g] = tetap
+    for b in d.get("berikutnya") or [] if isinstance(d.get("berikutnya"), list) else []:
+        if b.get("proyek") in info:
+            beres, kerja = info[b["proyek"]][2], info[b["proyek"]][1]
+            b["langkah"] = [l for l in b.get("langkah") or [] if not (_cocok(l, beres) and not _cocok(l, kerja))]
+    if ditolak:
+        with open(os.path.expanduser("~/Library/Logs/clint/ditolak.log"), "a", encoding="utf-8") as fh:
+            for g, x, a in ditolak:
+                fh.write(f"{time.strftime('%F %T')}\t{x.get('proyek')}\t{g}\t{x.get('sumber')}\t{a}\t{x.get('teks')}\n")
+    return d, ditolak
+
+
+def judul_kosong(d):
+    if not any(d.get(g) for g in GRUP):
+        d["judul"] = d["kalimat"] = "Tidak ada tugas lagi."
+        d["lead"] = ""
+    return d
+
+
 def argumen():
     a, proyek = sys.argv[2:], None
     if "--proyek" in a:
@@ -129,10 +234,19 @@ def argumen():
 
 
 aksi = sys.argv[1] if len(sys.argv) > 1 else ""
+if aksi == "saring":
+    f = sys.argv[2]
+    d, ditolak = saring(json.load(open(f, encoding="utf-8")))
+    judul_kosong(d)
+    json.dump(d, open(f, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    for g, x, a in ditolak:
+        print(f"ditolak\t{x.get('proyek')}\t{g}\t{x.get('sumber')}\t{a}")
+    sys.exit(0)
+
 if aksi == "merge":
-    baru = json.load(open(sys.argv[2], encoding="utf-8"))
+    baru, _ = saring(json.load(open(sys.argv[2], encoding="utf-8")))
     with kunci():
-        d = gabung(baca(), baru)
+        d = judul_kosong(gabung(baca(), baru))
         d["_dibuat"] = time.time()
         simpan(d)
     sys.exit(0)

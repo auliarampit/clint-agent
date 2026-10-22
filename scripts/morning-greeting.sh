@@ -83,6 +83,7 @@ if [ ! -s "$json" ] && grep -qi "authenticate\|oauth\|login" "${json%.json}.log"
   sleep 20; jalan
 fi
 
+[ -s "$json" ] && python3 "$root/scripts/update-report.py" saring "$json" >/dev/null
 if [ -s "$json" ] && python3 "$root/scripts/render-report.py" "$json" "$html"; then
   open "$html"
   if [ -s "$kabar" ]; then teks="$(head -c 300 "$kabar")"; else teks="$(jq -r '.kalimat // empty' "$json")"; fi

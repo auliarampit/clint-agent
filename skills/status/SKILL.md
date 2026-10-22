@@ -58,7 +58,9 @@ Dijawab langsung di sesi ini, **tanpa agent** (hanya membaca dokumen, murah).
    `sprint-3*.md`); tidak disebut atau `aktif` → sprint yang `window`/tanggalnya mencakup hari ini; tidak ada → di antara
    yang bertanda `status: Active`/`Aktif`, nomor terbesar (tanda Active di sprint lama sering lupa diubah);
    tidak ada juga → nomor terbesar. Sebut file yang dipakai di laporan. Beberapa nomor → jawab per sprint.
-3. Baca hemat: frontmatter + judul + baris tabel/checklist saja (`grep -nE '^(#|\||- \[)' <file>`), bukan file
+3. `clint.json` punya `"tugas"` → jalankan `python3 "$R/scripts/tugas-saya.py" .` dan pakai keluarannya sebagai
+   daftar (filter `saya` sudah diterapkan skrip; sprint bernomor lain → baca file itu seperti langkah berikut).
+   Selain itu baca hemat: frontmatter + judul + baris tabel/checklist saja (`grep -nE '^(#|\||- \[)' <file>`), bukan file
    utuh. Butir di luar file sprint (mis. `backlog.md` yang ditandai sprint itu) dibaca hanya bila user memintanya.
 4. **Belum selesai** = baris/butir yang punya kolom status selain selesai: emoji ⬜ 🔄 🧪 🐞 🚫, kata
    Open/To Do/In Progress/Belum/Blocked/On QA, atau checklist `- [ ]`. **Selesai** = ✅, Done, Selesai, Merged,
@@ -106,7 +108,10 @@ Mode ini hanya membaca. Memperbarui tracker (centang, status, PIC) dikerjakan le
    dibaca sendiri oleh `render-report.py` dari klaim, tidak ditulis ke JSON. Salinan
    terakhir juga ditulis ke `~/Library/Logs/clint/terakhir.json` (dibaca menu bar); mode ini memang menggantikan
    seluruh isinya karena mencakup semua project aktif.
-4. Kecuali ada `--no-screen` (dipakai sapaan pagi, yang merender sendiri): render dan buka layarnya,
+4. Saring dulu (wajib, tanpa token): `python3 "$R/scripts/update-report.py" saring <json>` membuang butir tanpa
+   bukti atau yang menurut sumber tugas sudah diserahkan/selesai (dicatat di `~/Library/Logs/clint/ditolak.log`).
+   `merge` sudah menyaring sendiri. Kecuali ada `--no-screen` (dipakai sapaan pagi, yang merender sendiri): render
+   dan buka layarnya,
    `python3 "$R/scripts/render-report.py" <json> "${json%.json}.html" && open "${json%.json}.html"`,
    lalu di chat cukup kalimat inti + "laporan sudah terbuka".
 5. Kecuali ada `--no-screen`: tulis kabar suara seperti di bawah. (Sapaan pagi membacakan `kalimat` dari JSON.)
@@ -118,8 +123,9 @@ Semua teks untuk user (chat, `judul`, `kalimat`, `lead`, butir JSON, kabar suara
 bila bahasa user English. Nama kunci JSON tetap seperti di atas.
 
 **Hanya yang valid dan milik user** (berlaku untuk chat dan semua kelompok JSON):
-- Butir masuk laporan hanya bila tindakan berikutnya ada di tangan user dan ada buktinya (status tracker, commit,
-  MR, atau `path:baris`). Butir agent tanpa bukti, atau yang bertentangan dengan status tracker (mis. "belum ada
+- Butir tugas hanya dari `KERJAKAN` di `tugas-saya.py` (sumber tugas `"tugas"` di `clint.json`); project tanpa
+  adapter tidak punya butir tugas. Butir lain masuk laporan hanya bila tindakan berikutnya ada di tangan user dan
+  ada buktinya yang bisa diperiksa mesin (MR, hash commit, path file), ditulis persis. Butir agent tanpa bukti, atau yang bertentangan dengan status tracker (mis. "belum ada
   commit" padahal butir 🧪), dibuang, tidak diteruskan.
 - `tunggu` hanya untuk hal yang menahan pekerjaan user sendiri (keputusan PM atas pertanyaan user, materi klien).
   Pekerjaan user yang sudah diserahkan ke QA bukan butir `tunggu`; cukup angka di `aman`.
