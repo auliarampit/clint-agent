@@ -12,26 +12,30 @@ Argumen berupa **nama project lain** (mis. `/clint:status toko-online`) → cari
 
 
 `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi (cadangan
-`R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1)`). Teruskan `R` di prompt agent.
+`R=$(cat ~/.config/clint/root)`). Teruskan `R` di prompt agent.
 
-1. Jalankan bersamaan agent `change-tracker` (teruskan periode bila disebut) dan `status-reporter`, dan di
+1. **Tarik semua repo dulu** (tanpa token): `bash "$R/scripts/sync-repos.sh" .` menarik repo kerja dan semua
+   `relatedRepos` (docs, design, api) paralel. Repo `fetch-saja`/`gagal-tarik` disebut di laporan apa adanya.
+2. Lalu jalankan bersamaan agent `change-tracker` (teruskan periode bila disebut) dan `status-reporter`, dan di
    sesi ini (tanpa token) `python3 "$R/scripts/plan-status.py" --session <sid>` bila `docs.plans` diatur.
-2. Susun laporan sesuai **Gaya laporan** di bawah. Isinya mencakup: update docs/design dan
+   Pengumpul kedua agent memakai hasil tarikan langkah 1 (tidak menarik ulang).
+3. Susun laporan sesuai **Gaya laporan** di bawah. Isinya mencakup: update docs/design dan
    dampaknya ke kode, feedback/bug QA yang masih open untuk project ini (walau file-nya tidak
    berubah belakangan ini), MR (pipeline gagal, komentar baru, menunggu review dengan tanda ⚠ > 3 jam / 🔴 > 5 jam sesuai
    eskalasi standar Badr, **Draft** yang menunggu E2E),
    rencana yang masih punya PR tersisa (satu baris per rencana: n/total selesai + yang siap), dan
    bersih-bersih/disk bila ada yang perlu.
-3. Simpan laporan project ini untuk menu bar tanpa menyentuh project lain: tulis JSON (bentuk di mode `all`,
+4. Simpan laporan project ini untuk menu bar tanpa menyentuh project lain: tulis JSON (bentuk di mode `all`,
    satu project) ke `~/Library/Logs/clint/<YYYY-MM-DD-HHMM>-<nama>.json` dengan tool Write, lalu
    `python3 "$R/scripts/update-report.py" merge <file>`.
-4. Tutup dengan blok **Berikutnya** (lihat Gaya laporan). Jangan menyuruh user memanggil agent.
+5. Tutup dengan blok **Berikutnya** (lihat Gaya laporan). Jangan menyuruh user memanggil agent.
 
 ## Mode `plan` ("sisa tugas di rencana", "PR mana yang belum", "modul apa yang belum direncanakan")
 
 Dijawab langsung di sesi ini, **tanpa agent**.
 
-1. `python3 "$R/scripts/plan-status.py" [<rencana> ...] --session <sid>`. Tanpa argumen: semua rencana di
+1. `bash "$R/scripts/sync-repos.sh" .` dulu (rencana dan PRD bisa ada di repo docs), lalu
+   `python3 "$R/scripts/plan-status.py" [<rencana> ...] --session <sid>`. Tanpa argumen: semua rencana di
    `docs.plans`; ID/nama modul disebut → rencana yang cocok (`grep -il <ID> <docs.plans>/*.md`).
 2. **Belum direncanakan**: daftar modul di `docs.requirements` (nama file PRD/modul, mis.
    `ls <requirements>/prd*/ <requirements>/2-modules/ 2>/dev/null`, atau judul modul ber-ID di PRD), lalu
@@ -52,8 +56,8 @@ Mode ini hanya membaca. Status di file rencana ditulis oleh `develop` saat commi
 Dijawab langsung di sesi ini, **tanpa agent** (hanya membaca dokumen, murah).
 
 1. Lokasi: `docs.pic` di `.claude/clint.json`. Kosong/`TIDAK ADA` → tanya user letak sprint tracker-nya dan
-   tawarkan menyimpannya lewat `/clint:setup sync`. Bila path berada di repo terkait (`relatedRepos`), tarik
-   dulu (`git -C <repo> pull --ff-only` bila bersih).
+   tawarkan menyimpannya lewat `/clint:setup sync`. Tarik semua repo dulu: `bash "$R/scripts/sync-repos.sh" .`
+   (tracker sering ada di repo docs).
 2. Pilih file: nomor disebut (`sprint 3`, `S09`, `sprint 1 2 3 4`) → file sprint bernomor itu (mis. `s03.md`,
    `sprint-3*.md`); tidak disebut atau `aktif` → sprint yang `window`/tanggalnya mencakup hari ini; tidak ada → di antara
    yang bertanda `status: Active`/`Aktif`, nomor terbesar (tanda Active di sprint lama sering lupa diubah);
@@ -82,7 +86,9 @@ Mode ini hanya membaca. Memperbarui tracker (centang, status, PIC) dikerjakan le
 1. Daftar project: bila argumen menyebut path project, pakai **hanya** itu. Bila tidak, project aktif:
    `bash "$R/scripts/active-projects.sh" 3`
    (user boleh menyebut project tambahan atau jumlah hari lain).
-2. Untuk **setiap** project, jalankan `change-tracker` dan `status-reporter` — semuanya dalam **satu
+2. **Tarik semua repo semua project dulu** dalam satu panggilan Bash (tanpa token):
+   `for p in <path ...>; do bash "$R/scripts/sync-repos.sh" "$p" & done; wait`.
+   Lalu untuk **setiap** project, jalankan `change-tracker` dan `status-reporter` — semuanya dalam **satu
    pesan** (paralel). Beri tiap agent path project-nya dan `R`; agent bekerja dengan `git -C <path>` dan
    membaca `<path>/.claude/clint.json`. Bersamaan, di sesi ini: `python3 "$R/scripts/plan-status.py" --repo <path>`
    per project yang punya `docs.plans` (tanpa token).

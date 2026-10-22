@@ -98,8 +98,10 @@ kalimat. Hanya temuan yang kamu yakin nyata.
 
 ## Hemat token (wajib)
 
-- Baca seperlunya: `grep -n` lalu `sed -n 'a,bp'` / Read dengan offset; jangan membaca file
-  atau dokumen utuh bila hanya butuh satu bagian.
+- Sedikit panggilan, bukan potongan kecil: setiap panggilan tool membaca ulang seluruh konteks, jadi sepuluh
+  `sed -n` kecil jauh lebih mahal daripada satu bacaan utuh. Rencanakan bacaan lalu gabungkan: beberapa pola dan
+  file dalam satu `grep -n -e A -e B f1 f2`, beberapa file dalam satu pesan (Read paralel), file kode yang akan
+  disentuh dibaca utuh sekali. Potong (`grep -n` lalu `sed -n 'a,bp'`) hanya untuk dokumen besar (> ±400 baris).
 - Keluaran perintah panjang dipotong: `| tail -40`, `--quiet`, atau `grep` baris error saja.
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
 - Tidak ada `sleep`/polling untuk menunggu pihak luar (pipeline, build/update EAS, deploy, review):

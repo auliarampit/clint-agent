@@ -60,7 +60,7 @@ skrip=()
 cache="$(ls -d ~/.claude/plugins/cache/clint/clint/*/ 2>/dev/null | sort -V | tail -1)"
 for r in "$root" "${cache%/}"; do
   [ -n "$r" ] || continue
-  for s in collect-status.sh collect-changes.sh active-projects.sh; do
+  for s in sync-repos.sh collect-status.sh collect-changes.sh active-projects.sh; do
     skrip+=("Bash(bash $r/scripts/$s:*)" "Bash(bash \"$r/scripts/$s\":*)")
   done
   skrip+=("Bash(python3 $r/scripts/plan-status.py:*)" "Bash(python3 \"$r/scripts/plan-status.py\":*)")

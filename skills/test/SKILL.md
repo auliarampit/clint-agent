@@ -14,7 +14,8 @@ Kode produk **tidak** diubah di sini. Bug produk yang ditemukan dilaporkan, lalu
 - Baca `.claude/clint.json`. Tidak ada → berhenti, tawarkan `/clint:setup`.
 - **Bahasa**: laporan dan kabar suara memakai bahasa user (baris *Bahasa clint* di konteks sesi; default
   English). Sebut bahasa itu di prompt agent. Dokumen QA memakai `docs.language`.
-- `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi.
+- `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi (cadangan
+  `R=$(cat ~/.config/clint/root)`).
 - Untuk E2E: tentukan surface dari fitur/MR. Adapter surface itu menyatakan E2E `TIDAK ADA` → berhenti dan laporkan.
 
 ## 2. Jalur

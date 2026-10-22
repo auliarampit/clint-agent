@@ -44,7 +44,7 @@ hanya untuk diteruskan ke agent (beri path/potongan saja).
   di konteks sesi; default English). Sebut bahasa itu di setiap prompt agent. Dokumen project lain
   (feedback QA, README, CHANGELOG, ADR) memakai `docs.language` di `.claude/clint.json`.
 - `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi (cadangan
-  `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1)`). Teruskan `R` ke agent yang butuh skrip.
+  `R=$(cat ~/.config/clint/root)`). Teruskan `R` ke agent yang butuh skrip.
 - **Sesi lain di repo ini**: PR yang diklaim sesi lain terlihat di `plan-status.py` (🔄) dan tidak dikerjakan di
   sini. Apakah repo utama boleh dipakai ditentukan di langkah 5.1.
 - **Satu perintah, tanpa token:** `bash "$R/scripts/preflight.sh" .` → fetch, tarik `relatedRepos` yang bersih

@@ -6,7 +6,9 @@ argument-hint: [mobile|web|backend ...] | sync | language <en|id>
 
 # Setup clint di project
 
-Master ada di `${CLAUDE_PLUGIN_ROOT}/kit/`:
+`R` = path plugin dari baris *Sesi clint* di konteks sesi (cadangan `R=$(cat ~/.config/clint/root)`).
+
+Master ada di `$R/kit/`:
 
 ```
 kit/working-principles.md         → .claude/rules/working-principles.md
@@ -45,7 +47,7 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
 
 1. Deteksi surface yang ada (`app.json`/`app.config.*` → mobile; `next.config.*`/`vite.config.*`
    → web; server/API framework → backend). Konfirmasi ke user kalau ragu.
-2. Surface yang belum punya master di `kit/` (cek `ls ${CLAUDE_PLUGIN_ROOT}/kit`) → beri tahu
+2. Surface yang belum punya master di `kit/` (cek `ls $R/kit`) → beri tahu
    user bahwa kit untuk platform itu belum tersedia; pasang core saja.
 3. Salin file master. **Jangan menimpa** file yang sudah ada di project; kalau berbeda,
    tampilkan `diff` dan tanya. `sonarqube.md` disalin bila ada `sonar-project.properties` atau
@@ -76,7 +78,7 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    `designs`, `api`); cek dengan `ls ..` lalu `git -C ../<nama> rev-parse` dan tanyakan perannya
    bila tidak jelas dari nama. Monorepo tanpa repo pendamping → `[]`.
    `tugas` (sumber tugas, diisi **setelah** `docs.*`): jalankan
-   `python3 "/Users/auliarahmat/Desktop/clint/scripts/deteksi-tugas.py" .` (tanpa token, tidak menulis). Tunjukkan
+   `python3 "$R/scripts/deteksi-tugas.py" .` (tanpa token, tidak menulis). Tunjukkan
    ke user dasar usulannya, file dan kolom yang dipakai, pemetaan status, dan hasil uji coba (jumlah kerjakan /
    diserahkan / selesai + contoh butir kerjakan). Ada `STATUS BELUM DIPETAKAN` → tanyakan kelas tiap nilai
    (kerjakan = tindakan masih di user, diserahkan = menunggu QA/PM/klien, selesai) dalam **satu** pertanyaan,
@@ -124,11 +126,11 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    `surfaces[].testRelated`, `autoReview`, `docs.logbook`, `memory.wing`) → tawarkan
    untuk ditambahkan.
    **`tugas`**: belum ada → buat lewat alur `tugas` di mode setup langkah 5. Sudah ada → jalankan
-   `python3 "/Users/auliarahmat/Desktop/clint/scripts/tugas-saya.py" .`; ada `STATUS TIDAK DIKENAL` atau file sumber
+   `python3 "$R/scripts/tugas-saya.py" .`; ada `STATUS TIDAK DIKENAL` atau file sumber
    tidak cocok lagi (mis. sprint tracker pindah folder) → tunjukkan usulan baru dari `deteksi-tugas.py` dan
    tanyakan sebelum menimpa.
 5. **Status PR di rencana**: rencana di `docs.plans` yang punya tabel *Urutan pekerjaan* tetapi belum punya
-   `## Status PR` → tunjukkan hasil `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-status.py"` dan tawarkan
+   `## Status PR` → tunjukkan hasil `python3 "$R/scripts/plan-status.py"` dan tawarkan
    `--write` untuk rencana yang statusnya terbukti (mode `mr`). Rencana `push-base` yang statusnya `❔ belum
    tercatat` diarahkan ke `/clint:docs perbarui Status PR di <rencana> dari git log`.
 6. **Settings global yang bocor antar project**: `jq '.permissions.additionalDirectories, .permissions.allow' ~/.claude/settings.json`.

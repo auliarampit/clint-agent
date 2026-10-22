@@ -17,6 +17,12 @@ if [[ $input =~ \"hook_event_name\"[[:space:]]*:[[:space:]]*\"PostToolUse\" ]]; 
   f="$dir/${BASH_REMATCH[1]}.json"
   [ -f "$f" ] || exit 0
   touch "$f"
+  # Notification (izin/pertanyaan) menandai sesi "menunggu"; tool sesi utama yang selesai berarti sudah dijawab
+  # dan sesi bekerja lagi. Tool milik agent latar (ada agent_id) tidak dihitung.
+  if [[ ! $input =~ \"agent_id\" ]] && grep -q '"status": *"menunggu"' "$f"; then
+    t="$(mktemp "$f.tmp.XXXXXX")" &&
+      { jq --argjson t "$(date +%s)" '.status="bekerja" | .update=$t' "$f" > "$t" && mv "$t" "$f" || rm -f "$t"; }
+  fi
   pola='"command"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)"'
   if [[ $input =~ \"tool_name\"[[:space:]]*:[[:space:]]*\"Bash\" ]] && [[ $input =~ $pola ]]; then
     c="${BASH_REMATCH[1]}"

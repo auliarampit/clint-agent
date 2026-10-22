@@ -8,6 +8,8 @@ input="$(cat)"
 ROOT="${CLAUDE_PLUGIN_ROOT}"
 DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 CFG="$HOME/.config/clint"
+# Path plugin untuk cadangan `R` di skill/agent (konteks agent tidak memuat baris *Sesi clint*).
+[ -n "$ROOT" ] && mkdir -p "$CFG" && printf '%s' "$ROOT" > "$CFG/root"
 sid="$(jq -r '.session_id // empty' <<<"$input" 2>/dev/null)"
 
 # Pindahkan konfigurasi pribadi lama (v1: saya.json berisi "nama") ke user.json, sekali.

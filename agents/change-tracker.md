@@ -12,8 +12,8 @@ mengubah kode dan tidak membuat commit.
 
 **Mulai dengan satu panggilan pengumpul** (wajib, hemat token) untuk setiap project:
 `bash "$R/scripts/collect-changes.sh" <dir-project> "<sejak, default 3 days ago>"`, dengan `R` = path plugin
-yang diberikan pemanggil di prompt (tidak diberikan: `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1)`).
-Skrip itu sudah menarik repo kerja dan semua `relatedRepos[]` (pull `--ff-only` hanya bila working tree bersih
+yang diberikan pemanggil di prompt (tidak diberikan: `R=$(cat ~/.config/clint/root)`).
+Skrip itu sudah menarik repo kerja dan semua `relatedRepos[]` lewat `sync-repos.sh` (`--ff-only` hanya bila working tree bersih
 dan di branch target; selain itu fetch dan dibandingkan dengan `origin/<branch>`), lalu mencetak commit sejak
 periode itu, ringkasan file berubah, dan *Tugas Anda* dari sumber tugas project. **Jangan mengulang pull,
 fetch, atau `git log` itu**; kerjakan langkah di bawah dari keluarannya, dan jalankan `git`/`grep` tambahan
@@ -21,7 +21,8 @@ hanya untuk rincian yang benar-benar dibutuhkan (rincian butir `KERJAKAN`, cek s
 menyebut periode ("sejak Senin") → teruskan sebagai argumen `sejak`.
 
 1. Baca `.claude/clint.json` bila perlu memetakan repo ke perannya (`relatedRepos[].role`: docs/design/api).
-2. Keluaran skrip menandai `pull: dilewati` atau `pull: gagal` → laporkan kondisinya apa adanya.
+2. Bagian *Tarik repo* menandai `status=fetch-saja` (working tree kotor atau bukan di branch target; dibandingkan
+   dengan `origin/<branch>`) atau `status=gagal-tarik`/`tidak-ada` → laporkan kondisinya apa adanya.
 3. Rangkum per repo: commit dan file yang berubah, dikelompokkan per modul/fitur.
 4. Cocokkan dengan implementasi:
    - **Docs** (PRD/SAD/STD/API contract): requirement atau field yang berubah → cari di kode
@@ -77,8 +78,10 @@ menyebut periode ("sejak Senin") → teruskan sebagai argumen `sejak`.
 
 ## Hemat token (wajib)
 
-- Baca seperlunya: `grep -n` lalu `sed -n 'a,bp'` / Read dengan offset; jangan membaca file
-  atau dokumen utuh bila hanya butuh satu bagian.
+- Sedikit panggilan, bukan potongan kecil: setiap panggilan tool membaca ulang seluruh konteks, jadi sepuluh
+  `sed -n` kecil jauh lebih mahal daripada satu bacaan utuh. Rencanakan bacaan lalu gabungkan: beberapa pola dan
+  file dalam satu `grep -n -e A -e B f1 f2`, beberapa file dalam satu pesan (Read paralel), file kode yang akan
+  disentuh dibaca utuh sekali. Potong (`grep -n` lalu `sed -n 'a,bp'`) hanya untuk dokumen besar (> ±400 baris).
 - Keluaran perintah panjang dipotong: `| tail -40`, `--quiet`, atau `grep` baris error saja.
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
 - Tidak ada `sleep`/polling untuk menunggu pihak luar (pipeline, build/update EAS, deploy, review):

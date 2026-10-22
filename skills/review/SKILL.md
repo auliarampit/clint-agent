@@ -9,7 +9,11 @@ argument-hint: [branch | !nomor-MR] [--only]
 ## 1. Tentukan yang ditinjau
 
 Laporan memakai bahasa user (baris *Bahasa clint* di konteks sesi; default English); sebut bahasa itu di
-prompt agent. `R` = path plugin dari baris *Sesi clint* di konteks sesi.
+prompt agent. `R` = path plugin dari baris *Sesi clint* di konteks sesi (cadangan `R=$(cat ~/.config/clint/root)`).
+
+**Tarik semua repo dulu** (tanpa token): `bash "$R/scripts/sync-repos.sh" .` supaya docs, design, dan kontrak di
+`relatedRepos` yang dipakai `conformance-reviewer` dan auditor adalah versi terbaru. Repo kerja yang sedang diubah
+otomatis hanya di-fetch (working tree kotor), jadi perubahan yang ditinjau tidak tersentuh.
 
 - Tanpa argumen: perubahan di working tree (belum di-commit) **ditambah** commit branch saat ini
   yang belum ada di `origin/<baseBranch>` (`.claude/clint.json`).

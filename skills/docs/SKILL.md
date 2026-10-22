@@ -12,7 +12,8 @@ argument-hint: <dokumen dan perubahan yang diminta>
 - **Bahasa**: laporan dan kabar suara memakai bahasa user (baris *Bahasa clint* di konteks sesi; default
   English). Isi dokumen: dokumen yang sudah ada mengikuti bahasanya sendiri; dokumen baru memakai
   `docs.language` (tidak ada → English). **Pengecualian:** file rencana di `docs.plans` memakai bahasa user.
-- `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi.
+- `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi (cadangan
+  `R=$(cat ~/.config/clint/root)`).
 - Permintaan ternyata butuh perubahan kode → serahkan ke skill `develop`.
 - **Klaim** di awal setiap run (kecuali perubahan satu-dua baris yang langsung selesai) supaya sesi lain tidak
   disarankan pekerjaan yang sama, dan hapus di akhir termasuk bila gagal:

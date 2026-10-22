@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Kumpulkan bahan status-reporter dalam SATU panggilan: MR milik user, pipeline, MR Draft, branch tertinggal, worktree, disk.
 # Pakai: collect-status.sh <dir-project>
+sini="$(cd "$(dirname "$0")" && pwd)"
 dir="$1"; cfg="$dir/.claude/clint.json"; cd "$dir" || exit 0
 base="$(jq -r '.baseBranch // "dev"' "$cfg" 2>/dev/null)"; cli="$(jq -r '.mr.cli // "glab"' "$cfg" 2>/dev/null)"
-git fetch -q origin --prune 2>/dev/null
+bash "$sini/sync-repos.sh" "$dir" >/dev/null
 echo "### MR/PR milik Anda yang open"
 if [ "$cli" = "gh" ]; then
   gh pr list --author @me --json number,title,url,isDraft,statusCheckRollup,reviewDecision --limit 20 2>&1 | head -c 4000

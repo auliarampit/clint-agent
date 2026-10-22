@@ -12,19 +12,15 @@ hapus); kamu hanya melapor dan mengusulkan perintah.
 
 **Mulai dengan satu panggilan pengumpul** (wajib, hemat token):
 `bash "$R/scripts/collect-status.sh" <dir-project>`, dengan `R` = path plugin yang diberikan pemanggil di prompt
-(tidak diberikan: `R=$(ls -d ~/.claude/plugins/cache/clint/clint/*/ | sort -V | tail -1)`). Keluarannya sudah
-berisi MR milik user + pipeline + komentar, branch tertinggal, worktree, dan disk. Langkah di bawah hanya
-untuk rincian yang kurang.
+(tidak diberikan: `R=$(cat ~/.config/clint/root)`). Keluarannya sudah
+berisi MR milik user + pipeline + komentar, MR menunggu peer review, MR Draft, branch tertinggal, worktree, dan
+disk, dan repo sudah ditarik (`sync-repos.sh`). **Susun laporan langsung dari keluaran itu; jangan fetch atau
+mengumpulkan ulang.** Perintah tambahan hanya untuk bagian yang gagal atau kosong padahal seharusnya ada:
 
-1. Baca `.claude/clint.json` (base branch, CLI MR, `worktreeRoot`).
-2. `git fetch origin --prune` lalu kumpulkan:
-   - MR milik user yang masih open beserta status pipeline dan komentar yang belum dijawab
-     (`glab mr list --author=@me` / `gh pr list --author @me`, lalu `view` per MR).
-   - MR non-Draft tanpa approval, milik user atau dengan user sebagai reviewer, dan lama menunggunya.
-   - Branch lokal yang tertinggal dari `origin/<base>` (`git rev-list --count`).
-   - `git worktree list`: worktree yang branch-nya sudah ter-push atau sudah merge.
-   - `df -h ~` untuk sisa disk.
-3. Kalau CLI MR gagal (403/tidak login), laporkan apa adanya; jangan menganggap kosong.
+- `(glab gagal; lihat manual)` → coba sekali `glab mr list --author=@me`; masih gagal (403/tidak login) →
+  laporkan apa adanya, jangan menganggap kosong.
+- Komentar MR perlu dibaca (komentar > 0 dan relevan) → `glab mr view <n> --comments` / `gh pr view <n> --comments`
+  untuk MR itu saja.
 
 ## Keluaran (maks 15 baris)
 
@@ -52,8 +48,10 @@ untuk rincian yang kurang.
 
 ## Hemat token (wajib)
 
-- Baca seperlunya: `grep -n` lalu `sed -n 'a,bp'` / Read dengan offset; jangan membaca file
-  atau dokumen utuh bila hanya butuh satu bagian.
+- Sedikit panggilan, bukan potongan kecil: setiap panggilan tool membaca ulang seluruh konteks, jadi sepuluh
+  `sed -n` kecil jauh lebih mahal daripada satu bacaan utuh. Rencanakan bacaan lalu gabungkan: beberapa pola dan
+  file dalam satu `grep -n -e A -e B f1 f2`, beberapa file dalam satu pesan (Read paralel), file kode yang akan
+  disentuh dibaca utuh sekali. Potong (`grep -n` lalu `sed -n 'a,bp'`) hanya untuk dokumen besar (> ±400 baris).
 - Keluaran perintah panjang dipotong: `| tail -40`, `--quiet`, atau `grep` baris error saja.
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
 - Tidak ada `sleep`/polling untuk menunggu pihak luar (pipeline, build/update EAS, deploy, review):
