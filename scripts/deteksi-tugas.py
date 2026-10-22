@@ -5,8 +5,9 @@
       --status  koreksi pemetaan dari user (nilai=kerjakan|diserahkan|selesai), boleh berulang
       --tulis   tulis usulan (plus koreksi) ke "tugas" di clint.json
 
-Urutan sumber: tabel berkolom PIC yang memuat nama user (sprint tracker/backlog) > tabel tanpa PIC di
-docs.feedback (pemilik semua, disaring nama surface pada nama file bila ada) > checklist di docs.plans."""
+Urutan sumber utama: tabel berkolom PIC yang memuat nama user (sprint tracker/backlog) > tabel tanpa PIC di
+docs.feedback (pemilik semua, disaring nama surface pada nama file bila ada) > checklist di docs.plans. Ditambah
+jadwal sprint bila docs.requirements punya tabel rentang tanggal + ID modul surface ini."""
 import collections, glob, importlib.util, json, os, re, sys
 
 sys.dont_write_bytecode = True
@@ -95,7 +96,52 @@ def petakan(nilai, koreksi):
     return peta, tak
 
 
+def cari_jadwal(dirp, cfg, path):
+    """Tabel jadwal sprint di dokumen requirement: kolom rentang tanggal + kolom berisi ID modul surface ini."""
+    req = path("requirements")
+    if not req or not os.path.isdir(req):
+        return None
+    sf = [s.get("name", "").upper() for s in cfg.get("surfaces", []) if s.get("name")]
+    for f in sorted(glob.glob(os.path.join(req, "*.md"))):
+        for header, isi in tabel(f):
+            tg = [i for i in range(len(header)) if sum(bool(ts.rentang(c[i])) for c in isi if i < len(c)) >= 3]
+            if not tg:
+                continue
+            for i in range(len(header)):
+                ids = [m for c in isi if i < len(c) for m in re.findall(r"\b(?:[A-Z]+-)?([A-Z]{2,})-\d+\b", c[i])]
+                pref = sorted({p for p in ids if any(n.startswith(p) for n in sf)})
+                if i in tg or len(ids) < 3 or not pref:
+                    continue
+                awal = ""
+                plans = path("plans")
+                for pl in glob.glob(os.path.join(plans, "*.md")) if plans else []:
+                    m = re.match(rf"([a-z]+-){pref[0].lower()}-\d+", os.path.basename(pl))
+                    if m:
+                        awal = m.group(1).upper()
+                        break
+                src = {"jenis": "jadwal", "file": os.path.relpath(f, dirp),
+                       "kolom": {"tanggal": header[tg[0]], "modul": header[i]},
+                       "modulPola": (f"(?:{re.escape(awal)})?" if awal else "") + f"{pref[0]}-[0-9]+",
+                       "rencana": os.path.relpath(plans, dirp) if plans else "docs/plans"}
+                if awal:
+                    src["idAwalan"] = awal
+                return src
+    return None
+
+
 def usul(dirp, koreksi):
+    tugas, tak, alasan = usul_utama(dirp, koreksi)
+    cfg = json.load(open(os.path.join(dirp, ".claude/clint.json"), encoding="utf-8"))
+    docs = cfg.get("docs", {})
+    path = lambda k: os.path.normpath(os.path.join(dirp, docs[k])) if docs.get(k) not in (None, "", "TIDAK ADA") else None
+    j = cari_jadwal(dirp, cfg, path)
+    if j:
+        tugas = tugas + [j]
+        alasan = (alasan + " + " if tugas[:-1] else "") + "jadwal sprint di " + j["file"]
+    return tugas, tak, alasan
+
+
+def usul_utama(dirp, koreksi):
     cfg = json.load(open(os.path.join(dirp, ".claude/clint.json"), encoding="utf-8"))
     docs, user = cfg.get("docs", {}), ts.nama_user()
     path = lambda k: os.path.normpath(os.path.join(dirp, docs[k])) if docs.get(k) not in (None, "", "TIDAK ADA") else None

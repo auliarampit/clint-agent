@@ -43,6 +43,14 @@
       "kolom": {"id": ["ID", "#"], "pic": "PIC", "judul": ["Title", "Judul"], "status": ["Status"]},
       "status": {"kerjakan": ["Open", "⬜", "🔄"], "diserahkan": ["Fixed", "🧪"], "selesai": ["Closed", "✅"]},
       "idPola": "{khusus checklist: regex ID dari nama file, mis. PLAN-[A-Z0-9]+}"
+    },
+    {
+      "jenis": "jadwal",
+      "file": "{dokumen berisi tabel jadwal sprint, mis. ../docs/overview.md}",
+      "kolom": {"tanggal": "Target", "modul": "Scope summary"},
+      "modulPola": "{regex ID modul surface ini, mis. (?:MR-)?MOB-[0-9]+}",
+      "idAwalan": "{awalan ID seperti di nama file rencana, mis. MR-}",
+      "rencana": "{folder rencana, mis. docs/plans}"
     }
   ],
   "surfaces": [

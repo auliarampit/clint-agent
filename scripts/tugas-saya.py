@@ -5,8 +5,10 @@
 Jenis sumber:
   tabel      tabel markdown; kolom dicari dari nama header, status dipetakan lewat "status"
   checklist  baris "- [ ]" / "- [x]"; diringkas per file (jumlah terbuka + butir terbuka pertama)
+  jadwal     tabel jadwal sprint (rentang tanggal + daftar modul); modul surface ini di sprint yang sedang
+             berjalan dicocokkan dengan rencana di "rencana": belum ada rencana = kerjakan, sisa PR = kerjakan
 Tanpa "tugas" di clint.json: tidak ada butir tugas (bukan ditebak dari isi dokumen)."""
-import glob, json, os, re, subprocess, sys
+import datetime, glob, json, os, re, subprocess, sys
 
 PEMETAAN_BAWAAN = {
     "kerjakan": ["⬜", "🔄", "🐞", "open", "belum", "sebagian", "reopen", "reopened", "in progress", "to do", "todo"],
@@ -133,6 +135,84 @@ def baca_checklist(f, src):
              "status": f"{terbuka} terbuka / {terbuka + selesai}", "file": f, "baris": pertama[0]}]
 
 
+BULAN = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "mei": 5, "may": 5, "jun": 6, "jul": 7, "agu": 8, "agt": 8,
+         "aug": 8, "sep": 9, "okt": 10, "oct": 10, "nov": 11, "des": 12, "dec": 12}
+
+
+def rentang(teks):
+    """'22 Okt–3 Nov 2026', '8–22 Sep 2026', '4 Nov 2026', '2026-10-06 → 2026-10-19' → (awal, akhir)."""
+    iso = re.findall(r"\d{4}-\d{2}-\d{2}", teks)
+    if iso:
+        d = [datetime.date.fromisoformat(x) for x in iso]
+        return d[0], d[-1]
+    m = re.search(r"(\d{1,2})(?:\s+([A-Za-z]{3,}))?(?:\s+(\d{4}))?\s*[–-]\s*(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})", teks)
+    try:
+        if m:
+            b2, t2 = BULAN[m.group(5)[:3].lower()], int(m.group(6))
+            b1 = BULAN[m.group(2)[:3].lower()] if m.group(2) else b2
+            return (datetime.date(int(m.group(3) or t2), b1, int(m.group(1))),
+                    datetime.date(t2, b2, int(m.group(4))))
+        m = re.search(r"(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})", teks)
+        if m:
+            d = datetime.date(int(m.group(3)), BULAN[m.group(2)[:3].lower()], int(m.group(1)))
+            return d, d
+    except (KeyError, ValueError):
+        pass
+    return None
+
+
+def status_rencana(dirp, plan):
+    try:
+        out = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "plan-status.py"),
+                              plan, "--json"], cwd=dirp, capture_output=True, text=True, timeout=60).stdout
+        return [x.get("state") for x in json.loads(out)["plans"][0]["prs"]]
+    except (OSError, ValueError, KeyError, IndexError, subprocess.TimeoutExpired):
+        return []
+
+
+def baca_jadwal(f, src, dirp, hari=None):
+    hari = hari or datetime.date.today()
+    kol, awalan = src.get("kolom", {}), src.get("idAwalan", "")
+    pola = re.compile(src["modulPola"])
+    rencana = os.path.join(dirp, src.get("rencana", "docs/plans"))
+    hasil, header, baris = [], None, open(f, encoding="utf-8").read().splitlines()
+    for no, b in enumerate(baris):
+        if not b.startswith("|"):
+            header = None
+            continue
+        if re.match(r"^\|[\s:|-]+\|?\s*$", b):
+            header = sel(baris[no - 1]) if no else None
+            continue
+        if header is None:
+            continue
+        c = sel(b)
+        i_tg = cari_kolom(header, kol.get("tanggal", ["Target", "Tanggal", "Date", "Window"]))
+        i_md = cari_kolom(header, kol.get("modul", ["Scope summary", "Scope", "Isi", "Modul"]))
+        if not i_tg or not i_md or i_tg[0] >= len(c) or i_md[0] >= len(c):
+            continue
+        r = rentang(c[i_tg[0]])
+        if not r or not r[0] <= hari <= r[1]:
+            continue
+        for m in pola.findall(c[i_md[0]]):
+            id_ = m if m.startswith(awalan) else awalan + m
+            if any(x["id"] == id_ for x in hasil):
+                continue
+            plan = sorted(p for p in glob.glob(os.path.join(rencana, "*.md"))
+                          if os.path.basename(p).lower().startswith(id_.lower() + "-"))
+            x = {"id": id_, "judul": c[0], "file": f, "baris": no + 1}
+            if not plan:
+                x.update(kelas="kerjakan", status="belum direncanakan", perintah=f"/clint:develop {id_}")
+            else:
+                st, rel = status_rencana(dirp, plan[0]), os.path.relpath(plan[0], dirp)
+                sisa = [s for s in st if s != "done"]
+                x.update(file=plan[0], baris=1, status=f"rencana {len(st) - len(sisa)}/{len(st)} PR selesai",
+                         perintah=f"/clint:develop {rel}")
+                x["kelas"] = ("tidak_dikenal" if not st else "selesai" if not sisa
+                              else "diserahkan" if all(s in ("review", "draft") for s in sisa) else "kerjakan")
+            hasil.append(x)
+    return hasil
+
+
 def commit_kode(dirp, base, id_):
     if " #" in id_:
         return ""
@@ -159,11 +239,15 @@ def kumpulkan(dirp, sumber=None):
         peta = {k: ubah.get(k, []) + [x for x in v if norm(x) not in dipakai] for k, v in PEMETAAN_BAWAAN.items()}
         for f in pilih_file(dirp, src):
             out["file"].append(os.path.relpath(f, dirp))
-            items = baca_tabel(f, src, user, peta) if src.get("jenis") == "tabel" else baca_checklist(f, src)
+            jenis = src.get("jenis")
+            items = baca_tabel(f, src, user, peta) if jenis == "tabel" else \
+                baca_jadwal(f, src, dirp) if jenis == "jadwal" else baca_checklist(f, src)
             for x in items:
                 x["file"] = os.path.relpath(x["file"], dirp)
-                if x["kelas"] == "kerjakan" and src.get("jenis") == "tabel":
+                if x["kelas"] == "kerjakan" and jenis == "tabel":
                     x["commit"] = commit_kode(dirp, base, x["id"])
+                x.setdefault("perintah", f"/clint:develop {x['id']} {x.get('judul', '')} ({x['file']})".strip()
+                             if jenis == "tabel" else f"/clint:develop {x['file']}")
                 out[x["kelas"]].append(x)
     return out
 

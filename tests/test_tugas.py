@@ -66,6 +66,12 @@ class Dasar(unittest.TestCase):
         jadikan_repo(d, ["fix(auth): tombol daftar (BUG-1)", "docs(pm): BUG-1 ke QA", "feat(home): kartu (ENH-2a)"])
         return d
 
+    def jadwal(self):
+        d = self.salin("jadwal")
+        jadikan_repo(os.path.join(d, "docs"))
+        jadikan_repo(os.path.join(d, "mobile"))
+        return os.path.join(d, "mobile")
+
     def feedback(self):
         d = self.salin("feedback")
         jadikan_repo(os.path.join(d, "docs"))
@@ -106,6 +112,11 @@ class TugasSaya(Dasar):
         self.assertIn("Fase 1", r["kerjakan"][0]["judul"])
         self.assertEqual(self.ids(r, "selesai"), ["PLAN-01"])
 
+    def test_jadwal_modul_sprint_berjalan_tanpa_rencana(self):
+        r = self.tugas(self.jadwal())
+        self.assertEqual(self.ids(r, "kerjakan"), ["MR-MOB-08", "MR-MOB-10"], "awalan MR- disamakan, WEB dan sprint lalu tidak")
+        self.assertEqual({x["status"] for x in r["kerjakan"]}, {"belum direncanakan"})
+
     def test_tanpa_adapter_tidak_ada_tugas(self):
         d = self.salin("tanpa-sumber")
         self.assertFalse(self.tugas(d)["adapter"])
@@ -134,7 +145,8 @@ class Saring(Dasar):
             cek=[b("BUG-4", "cek apakah masih duplikat")],
             berikutnya=[{"proyek": "sp", "langkah": ["[siap] /clint:develop ENH-2a x", "[siap] /clint:develop BUG-1"]}])
         self.assertEqual([x["sumber"] for x in hasil["kerjakan"]],
-                         ["BUG-1", f"api {commit}", "src/.../register.ts:1", "MR !12"])
+                         ["BUG-1", f"api {commit}", "src/.../register.ts:1", "MR !12", "MOD-A-02 (mobile)"],
+                         "MOD-A-02 tidak ditulis agent, dilengkapi dari sumber tugas")
         self.assertEqual(hasil["cek"], [], "BUG-4 sudah selesai")
         self.assertEqual(hasil["berikutnya"][0]["langkah"], ["[siap] /clint:develop BUG-1"])
         log = baca(os.path.join(self.home, "Library/Logs/clint/ditolak.log"))
@@ -150,9 +162,32 @@ class Saring(Dasar):
         self.assertEqual([x["sumber"] for x in hasil["tunggu"]], ["MOM-M-20"])
 
     def test_semua_terbuang_berarti_tidak_ada_tugas(self):
-        d = self.sprint()
-        hasil = self.laporan([{"nama": "sp", "dir": d}], kerjakan=[{"proyek": "sp", "sumber": "ENH-2a", "teks": "x"}])
+        d = self.salin("tanpa-sumber")
+        jadikan_repo(d)
+        hasil = self.laporan([{"nama": "ts", "dir": d}], kerjakan=[{"proyek": "ts", "sumber": "QA retest", "teks": "x"}])
         self.assertEqual(hasil["judul"], "Tidak ada tugas lagi.")
+
+    def test_tugas_yang_tidak_ditulis_agent_dilengkapi(self):
+        m = self.jadwal()
+        hasil = self.laporan([{"nama": "mr", "dir": m}])
+        self.assertEqual([(x["sumber"], x["perintah"]) for x in hasil["kerjakan"]],
+                         [("MR-MOB-08", "/clint:develop MR-MOB-08"), ("MR-MOB-10", "/clint:develop MR-MOB-10")])
+        self.assertEqual(hasil["judul"], "2 tugas siap dikerjakan.")
+
+    def test_lengkapi_dibatasi_lima_sisanya_di_rincian(self):
+        d = self.salin("checklist")
+        for i in range(3, 10):
+            with open(os.path.join(d, f"docs/plans/PLAN-0{i}-x.md"), "w") as fh:
+                fh.write("- [ ] satu\n")
+        jadikan_repo(d)
+        hasil = self.laporan([{"nama": "ck", "dir": d}])
+        self.assertEqual(len(hasil["kerjakan"]), 5)
+        self.assertIn("3 tugas lain", hasil["rincian"][0]["butir"][0])
+        p = os.path.join(self.tmp, "lap.json")
+        self.jalan("update-report.py", "saring", p)
+        ulang = json.loads(baca(p))
+        self.assertEqual(len(ulang["kerjakan"]), 5, "saring dua kali tidak menambah butir")
+        self.assertEqual(len(ulang["rincian"][0]["butir"]), 1)
 
 
 class Deteksi(Dasar):
@@ -197,6 +232,16 @@ class Deteksi(Dasar):
         self.tanpa_tugas(d)
         u = self.usulan(self.jalan("deteksi-tugas.py", d))
         self.assertEqual((u["jenis"], u["file"]), ("checklist", "docs/plans/PLAN-*.md"))
+
+    def test_jadwal_terdeteksi_dengan_awalan_dari_nama_rencana(self):
+        m = self.jadwal()
+        self.tanpa_tugas(m)
+        out = self.jalan("deteksi-tugas.py", m)
+        i = out.index("{")
+        j = out.index("uji coba")
+        u = json.loads(out[i:j])["tugas"][-1]
+        self.assertEqual((u["jenis"], u["idAwalan"], u["kolom"]["tanggal"]), ("jadwal", "MR-", "Target"))
+        self.assertIn("kerjakan 2", out)
 
     def test_tanpa_sumber_tidak_mengusulkan(self):
         self.assertIn("usulan=tidak ada", self.jalan("deteksi-tugas.py", self.salin("tanpa-sumber")))

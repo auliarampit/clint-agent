@@ -175,7 +175,9 @@ menanyakan letak sprint tracker-nya. Mengubah isi tracker (centang, status, PIC)
 
 **Sumber tugas dan saringan laporan.** Tugas Anda tidak ditebak dari isi dokumen. Setiap project menyebut di
 `"tugas"` (`.claude/clint.json`) di mana tugas dicatat dan arti tiap status: tabel sprint tracker berkolom PIC,
-tabel feedback QA tanpa PIC, atau checklist `- [ ]` di rencana (contoh di `kit/clint.TEMPLATE.json`).
+tabel feedback QA tanpa PIC, checklist `- [ ]` di rencana, atau tabel jadwal sprint (rentang tanggal + daftar
+modul; modul surface ini di sprint yang sedang berjalan yang belum punya rencana, atau rencananya masih punya PR
+tersisa, menjadi tugas). Contoh di `kit/clint.TEMPLATE.json`.
 `scripts/tugas-saya.py <project>` membacanya dan membagi butir menjadi kerjakan, diserahkan (di QA/fixed), dan
 selesai, lengkap dengan commit kode yang menyebut ID-nya di seluruh histori base branch. Hanya butir kerjakan
 yang menjadi tugas; status yang tidak ada di adapter ditandai "tidak dikenal", bukan ditebak. Project tanpa
@@ -194,7 +196,8 @@ dan project tanpa sumber), termasuk kartu halu yang pernah lolos ke laporan. Jal
 
 Sebelum laporan tampil, `update-report.py saring` (juga dijalankan otomatis oleh `merge` dan sapaan pagi) membuang
 butir yang ID-nya sudah diserahkan/selesai dan butir yang buktinya tidak bisa diperiksa mesin (ID tugas, MR,
-hash commit yang ada, atau file yang ada). Butir yang dibuang dicatat di `~/Library/Logs/clint/ditolak.log`
+hash commit yang ada, atau file yang ada), lalu melengkapi tugas dari sumber tugas yang tidak ditulis agent
+(maksimal 5 per project, sisanya di rincian). Butir yang dibuang dicatat di `~/Library/Logs/clint/ditolak.log`
 supaya ketahuan bila agent melapor tanpa dasar. Tidak ada yang tersisa → "Tidak ada tugas lagi."
 
 MR yang menunggu peer review ditandai mengikuti eskalasi standar Badr: ⚠ lebih dari 3 jam (kabari SA) dan 🔴

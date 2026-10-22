@@ -173,7 +173,7 @@ def _disebut(sumber, dirs):
 def saring(d):
     """Buang butir tanpa bukti atau yang menurut sumber tugas sudah diserahkan/selesai. Dicatat di ditolak.log."""
     ts = _tugas_saya()
-    ditolak, info = [], {}
+    ditolak, info, tugas = [], {}, {}
     for p in d.get("proyek") or []:
         dirp = p.get("dir")
         if not dirp or not os.path.isdir(dirp):
@@ -188,6 +188,8 @@ def saring(d):
         t = ts.kumpulkan(dirp)
         info[p.get("nama")] = (dirs, [x["id"] for x in t.get("kerjakan", [])],
                                [x["id"] for k in ("diserahkan", "selesai") for x in t.get(k, [])])
+        if t.get("adapter"):
+            tugas[p.get("nama")] = t.get("kerjakan", [])
 
     def alasan_tolak(x, g):
         if x.get("proyek") not in info:
@@ -206,6 +208,7 @@ def saring(d):
             a = alasan_tolak(x, g)
             (ditolak.append((g, x, a)) if a else tetap.append(x))
         d[g] = tetap
+    lengkapi(d, tugas)
     for b in d.get("berikutnya") or [] if isinstance(d.get("berikutnya"), list) else []:
         if b.get("proyek") in info:
             beres, kerja = info[b["proyek"]][2], info[b["proyek"]][1]
@@ -215,6 +218,34 @@ def saring(d):
             for g, x, a in ditolak:
                 fh.write(f"{time.strftime('%F %T')}\t{x.get('proyek')}\t{g}\t{x.get('sumber')}\t{a}\t{x.get('teks')}\n")
     return d, ditolak
+
+
+def lengkapi(d, tugas, maks=5):
+    """Butir KERJAKAN dari sumber tugas yang tidak ditulis agent dimasukkan, supaya tugas nyata tidak hilang.
+    Judul dihitung ulang dari isi akhir, bukan dipercaya dari agent."""
+    for proyek, xs in tugas.items():
+        ada = " ".join(f"{x.get('sumber') or ''} {x.get('perintah') or ''}" for g in GRUP for x in d.get(g) or []
+                       if x.get("proyek") == proyek)
+        kurang = [x for x in xs if not _cocok(ada, [x["id"]]) and x["id"].lower() not in ada.lower()]
+        boleh = max(0, maks - (len(xs) - len(kurang)))
+        for x in kurang[:boleh]:
+            d.setdefault("kerjakan", []).append({
+                "teks": f"{x['id']}: {x.get('judul') or ''} ({x['status']})".replace(":  (", " (").strip(),
+                "proyek": proyek, "sumber": x["id"], "perintah": x.get("perintah", "")})
+        r = next((r for r in d.setdefault("rincian", []) if r.get("proyek") == proyek), None)
+        if r:
+            r["butir"] = [b for b in r.get("butir") or [] if "tugas lain dari sumber tugas" not in b]
+        if len(kurang) > boleh:
+            if r is None:
+                r = {"proyek": proyek, "butir": []}
+                d["rincian"].append(r)
+            r["butir"].append(f"{len(kurang) - boleh} tugas lain dari sumber tugas: " +
+                              ", ".join(x["id"] for x in kurang[boleh:]))
+    if tugas and d.get("kerjakan"):
+        n = len(d["kerjakan"])
+        d["judul"] = d["kalimat"] = f"{n} tugas siap dikerjakan."
+        d["lead"] = ", ".join(f"{p}: {sum(x.get('proyek') == p for x in d['kerjakan'])}"
+                              for p in dict.fromkeys(x.get("proyek") for x in d["kerjakan"]))
 
 
 def judul_kosong(d):

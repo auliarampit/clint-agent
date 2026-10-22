@@ -1,0 +1,10 @@
+{
+  "baseBranch": "dev",
+  "relatedRepos": [{"name": "docs", "path": "../docs", "role": "docs"}],
+  "docs": {"requirements": "../docs", "plans": "docs/plans", "pic": "TIDAK ADA", "feedback": "TIDAK ADA"},
+  "surfaces": [{"name": "mobile"}],
+  "tugas": [
+    {"jenis": "jadwal", "file": "../docs/overview.md", "modulPola": "(?:MR-)?MOB-[0-9]+", "idAwalan": "MR-",
+     "rencana": "docs/plans"}
+  ]
+}
