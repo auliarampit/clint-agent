@@ -25,5 +25,7 @@ case "$1" in
   sapaan-nyala) jq -n '{aktif:true}' > "$cfg/sapaan.json"; diam "$(t "Sapaan pagi dinyalakan, Senin sampai Jumat jam 08.00." "Morning greeting on, Monday to Friday at 08.00.")" ;;
   vscode) if [ -n "$2" ]; then open -a "Visual Studio Code" "$2"; else open -a "Visual Studio Code"; fi ;;
   buka)   open "$2" ;;
+  bersihkan) rm -f "$log/terakhir.json" "$log/terakhir.json.lock" "$log"/kerja/*.json "$cfg/proyek-aktif.txt"
+           diam "$(t "Menu dibersihkan." "Menu cleared.")" ;;
   selesai) python3 "$root/scripts/update-report.py" selesai "$2" ${3:+--proyek "$3"}; diam "$(t "Ditandai selesai." "Marked as done.")" ;;
 esac

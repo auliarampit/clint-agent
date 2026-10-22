@@ -624,21 +624,23 @@ Ikon clint di menu bar Mac (lewat SwiftBar) menampilkan kondisi kerja sepanjang 
 
 | Ikon | Arti |
 |---|---|
-| angka | jumlah hal yang menunggu |
-| `<jumlah sesi> · <tahap>` | agent sedang bekerja, mis. `2 · tinjau` |
+| angka | jumlah project yang punya pekerjaan |
+| `<jumlah sesi> · <tahap>` | agent sedang bekerja, mis. `2 · tinjau`; bilah biru di bawah avatar mengalir |
 | `✓` | semua aman |
 | `!` | ada yang gagal |
 
-Isi menu: *Sedang berjalan*, satu baris per sesi Claude Code (termasuk di VS Code): project, tugas, dan lama
-berjalan, dengan bilah lima tahap (worktree → implementasi → tinjau → test → MR). Tahap dicatat hook dari
-agent yang mulai dan perintah `git worktree add` / `git push` / `glab mr create`, jadi realtime dan tanpa token.
-Sesi yang menunggu jawaban Anda bertitik kuning; sesi yang baru selesai bertanda ✓ selama 10 menit lalu hilang.
-Lalu hal yang menunggu (submenu *Salin perintah*, *Buka MR di browser*, *Buka project di VS Code*, *Tandai
-selesai*), *Berikutnya*, dan tombol *Buka laporan terakhir*, *Cek semua project*, *Cek project*, *Halo Clint*,
-*Pengaturan*.
+Isi menu: sesi Claude Code yang berjalan (termasuk di VS Code) tampil dengan judul tugas, lama berjalan, bilah
+lima tahap (worktree → kode → tinjau → test → MR), lalu project dan agent yang sedang jalan; klik membuka
+VS Code. Tahap dicatat hook dari agent yang mulai dan perintah `git worktree add` / `git push` /
+`glab mr create`, jadi realtime dan tanpa token. Sesi yang menunggu jawaban Anda bertitik kuning; sesi yang baru
+selesai bertanda ✓ selama 10 menit lalu hilang. Lalu *Perlu dikerjakan*: satu butir paling mendesak per project
+(yang gagal lebih dulu); klik membuka laporan HTML, tempat rincian lengkap, MR yang menunggu review, dan tombol
+*Salin perintah* / *Buka MR*. Terakhir tombol *Buka laporan terakhir*, *Cek semua project*, *Halo Clint*,
+*Cek project*, dan *Pengaturan* (di dalamnya ada *Bersihkan menu* untuk mengosongkan hal yang menunggu dan
+klaim kerja lama).
 
-Butir yang sedang dikerjakan sebuah sesi (perintahnya sama dengan tugas sesi itu) tidak tampil di hal yang
-menunggu; butir yang tugasnya baru selesai diberi ✓ sampai Anda menandainya selesai. Badge juga berkurang sendiri:
+Butir yang sedang dikerjakan sebuah sesi (perintahnya sama dengan tugas sesi itu) tidak tampil di *Perlu
+dikerjakan*; butir yang tugasnya baru selesai diberi ✓. Badge juga berkurang sendiri:
 butir yang dikerjakan `develop` pindah ke *Menunggu review*, dan MR yang merged/closed hilang, termasuk butir
 tanpa tautan bila ID-nya (mis. `BUG-42`) disebut MR yang merged setelah laporan dibuat. Status MR dicek tiap
 5 menit dan setiap giliran sesi selesai, lewat `glab`/`gh`.
@@ -649,7 +651,7 @@ mkdir -p ~/.config/clint/swiftbar && ln -sf ~/Desktop/clint/swiftbar/clint.py ~/
 defaults write com.ameba.SwiftBar PluginDirectory -string "$HOME/.config/clint/swiftbar" && open -a SwiftBar
 ```
 
-Avatar dan ikon cincin (opsional): taruh gambar persegi di `~/.config/clint/avatar.jpg`, lalu
+Avatar dan bingkai animasi (opsional): taruh gambar persegi di `~/.config/clint/avatar.jpg`, lalu
 `python3 scripts/make-icon.py` (butuh Pillow). Gambar pribadi ini sengaja tidak disimpan di repo.
 Setelah file plugin diubah, jalankan ulang SwiftBar.
 

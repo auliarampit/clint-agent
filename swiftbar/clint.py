@@ -8,7 +8,7 @@
 # <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
 """Menu bar clint (SwiftBar, streamable). Membaca file lokal saja, tanpa jaringan dan tanpa token:
 ~/Library/Logs/clint/terakhir.json (laporan), kerja/<sid>.json (kemajuan develop per sesi), ~/.config/clint/sesi/
-(sesi Claude Code). Saat agent bekerja, cincin avatar berputar."""
+(sesi Claude Code). Saat agent bekerja, bilah biru di bawah avatar mengalir."""
 import base64, datetime, io, json, os, re, subprocess, sys, time
 
 HOME = os.path.expanduser("~")
@@ -16,7 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 LOG = os.path.join(HOME, "Library/Logs/clint")
 CFG = os.path.join(HOME, ".config/clint")
 AKSI = os.path.join(ROOT, "scripts/clint-action.sh")
-ORANYE, HIJAU, MERAH, KUNING, ABU = "#F0954A", "#3DBB7E", "#E55B5B", "#D9A93A", "#8A94A3"
+ORANYE, HIJAU, MERAH, KUNING, ABU, BIRU = "#F0954A", "#3DBB7E", "#E55B5B", "#D9A93A", "#8A94A3", "#6AA8FF"
 
 
 def b64(path):
@@ -41,19 +41,27 @@ def titik(warna):
     return _titik[warna]
 
 
-TAHAP = ("worktree", "implementasi", "tinjau", "test", "MR")
+TAHAP = ("worktree", "kode", "tinjau", "test", "MR")
 _bilah = {}
 def bilah(langkah):
-    """Bilah lima tahap: hijau = lewat, hijau muda = sedang, abu = belum."""
+    """Bilah lima tahap dengan nama tahap di bawahnya: biru = lewat, biru pudar = sedang, abu = belum.
+    Nama tahap yang sedang berjalan ikut biru; teks abu terbaca di menu gelap maupun terang."""
     if langkah not in _bilah:
         try:
-            from PIL import Image, ImageDraw
-            im = Image.new("RGBA", (5 * 28 + 4 * 6, 8), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+            from PIL import Image, ImageDraw, ImageFont
+            im = Image.new("RGBA", (5 * 68 + 4 * 8, 40), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+            try:
+                font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 18)
+            except OSError:
+                font = None
             for i in range(5):
-                c = (61, 187, 126, 255) if i < langkah else (159, 216, 174, 255) if i == langkah else (138, 148, 163, 110)
-                d.rounded_rectangle((i * 34, 0, i * 34 + 27, 7), radius=3, fill=c)
+                c = (106, 168, 255, 255) if i < langkah else (106, 168, 255, 115) if i == langkah else (138, 148, 163, 90)
+                d.rounded_rectangle((i * 76, 0, i * 76 + 67, 7), radius=3, fill=c)
+                if font:
+                    d.text((i * 76, 16), TAHAP[i], font=font,
+                           fill=(106, 168, 255, 255) if i == langkah else (138, 148, 163, 255))
             buf = io.BytesIO(); im.save(buf, "PNG")
-            _bilah[langkah] = f"image={base64.b64encode(buf.getvalue()).decode()} width=82 height=4"
+            _bilah[langkah] = f"image={base64.b64encode(buf.getvalue()).decode()} width=186 height=20"
         except Exception:
             _bilah[langkah] = ""
     return _bilah[langkah]
@@ -218,133 +226,92 @@ def render():
     """Kembalikan (bekerja?, teks menu tanpa baris judul, judul (label, warna))."""
     lap, waktu, semua_kerja, sesi = baca()
     L = lambda key: (lap or {}).get(key) or []
-    gagal, kerjakan, cek, tunggu = L("gagal"), L("kerjakan"), L("cek"), L("tunggu")
+    gagal, kerjakan = L("gagal"), L("kerjakan")
     klaim = {k["_sid"]: k for k in semua_kerja}
     aktif = [x for x in sesi if x["status"] in ("bekerja", "latar")]
     cek_jalan = [k for k in semua_kerja if k["_sid"].startswith("cek-")]
     bekerja = bool(aktif or cek_jalan)
     # Perintah yang sedang dipegang sesi (tugas yang diketik, atau `perintah` di klaimnya): butir laporan yang sama
-    # tampil di baris sesi itu, bukan di "Hal yang menunggu". Butir yang tugasnya baru selesai diberi tanda ✓.
+    # tampil di baris sesi itu, bukan di "Perlu dikerjakan". Butir yang tugasnya baru selesai diberi tanda ✓.
     dipegang = {p for x in sesi if x["status"] in ("bekerja", "latar", "menunggu")
                 for p in (x.get("tugas"), (klaim.get(x["_sid"]) or {}).get("perintah")) if p}
     sama = lambda cmd, ps: bool(cmd) and any(cmd[:90] == p[:90] for p in ps)
     gagal, kerjakan = [[x for x in xs if not sama(x.get("perintah"), dipegang)] for xs in (gagal, kerjakan)]
-    menunggu = len(gagal) + len(kerjakan) + len(cek)
-    DIR = {p.get("nama"): p.get("dir") for p in L("proyek") if p.get("dir")}
+    # Satu butir paling mendesak per project (yang gagal lebih dulu). Butir review dan rincian lain ada di
+    # laporan HTML, jadi menu tidak memuat submenu per butir.
+    urgen = {}
+    for x in gagal + kerjakan:
+        urgen.setdefault(x.get("proyek") or "", x)
     out = []; o = out.append
-    ava = b64(os.path.join(CFG, "ikon.png"))
-    ava_img = f"image={ava} width=34 height=34" if ava else "sfimage=person.crop.circle"
     sesi_utama = (aktif or sesi or [{}])[0].get("cwd", "")
 
     # ---- kepala ----
     if bekerja:
         n = len(aktif) + len(cek_jalan)
-        o(f"Sedang bekerja | {ava_img} size=15 font=HelveticaNeue-Bold {aksi('vscode', sesi_utama)}")
-        o(f"{n} sesi berjalan{f' · {menunggu} hal menunggu Anda' if menunggu else ''} | size=12 color={ABU}")
+        o(f"clint · {n} berjalan | size=15 font=HelveticaNeue-Bold {aksi('vscode', sesi_utama)}")
         tahap = next((x["tahap"].split(" · ")[0] for x in aktif if x.get("tahap")), "" if aktif else "cek")
-        badge = (f"{n} · {tahap or 'bekerja'}", ORANYE)
+        badge = (f"{n} · {tahap or 'bekerja'}", BIRU)
     elif gagal:
-        o(f"Ada yang gagal | {ava_img} size=15 font=HelveticaNeue-Bold {aksi('laporan')}")
+        o(f"Ada yang gagal | size=15 font=HelveticaNeue-Bold {aksi('laporan')}")
         o(f"{bersih(gagal[0].get('teks'), 50)} | size=12 color={ABU}")
         badge = ("!", MERAH)
     else:
-        o(f"{sapa()} | {ava_img} size=15 font=HelveticaNeue-Bold {aksi('laporan')}")
+        o(f"{sapa()} | size=15 font=HelveticaNeue-Bold {aksi('laporan')}")
         if lap is None:
             o(f"Belum ada laporan | size=12 color={ABU}"); badge = ("", None)
         else:
-            ket = f"{menunggu} hal menunggu" if menunggu else "Semua aman"
-            o(f"{ket} · cek terakhir {waktu} | size=12 color={ABU}")
-            badge = (str(menunggu), ORANYE) if menunggu else ("✓", HIJAU)
+            o(f"cek terakhir {waktu} | size=12 color={ABU}")
+            badge = (str(len(urgen)), ORANYE) if urgen else ("✓", HIJAU)
     o("---")
 
-    # ---- sesi: berjalan dengan bilah tahap, menunggu Anda, baru selesai ----
-    if sesi or cek_jalan:
-        o(f"Sedang berjalan | size=12 color={ABU}")
-        for k in cek_jalan:
-            o(f"{bersih(k.get('judul'), 50)} — sejak {k.get('mulai', '')} | {titik(ORANYE)}")
-            if k.get("tahap"):
-                o(f"{bersih(k['tahap'], 60)} | size=12 color={ABU}")
-        for x in sesi:
-            st, cwd, k = x["status"], x.get("cwd", ""), klaim.get(x["_sid"]) or {}
-            buka = k.get("path") or cwd
-            teks = f"{nama_proyek(cwd)} · {k.get('judul') or tugas_pendek(x.get('tugas')) or 'sesi'}"
-            warna, ekor = {"bekerja": (ORANYE, durasi(time.time() - x.get("mulai", time.time()))),
-                           "latar": (ORANYE, "agent di latar"), "menunggu": (KUNING, "menunggu jawaban Anda"),
+    # ---- sesi: yang berjalan dengan bilah tahap, sisanya satu baris; klik membuka VS Code ----
+    for k in cek_jalan:
+        o(f"{bersih(k.get('judul'), 46)} — sejak {k.get('mulai', '')} | {titik(BIRU)} font=HelveticaNeue-Bold")
+        if k.get("tahap"):
+            o(f"{bersih(k['tahap'], 60)} | size=12 color={ABU}")
+    for x in sesi:
+        st, cwd, k = x["status"], x.get("cwd", ""), klaim.get(x["_sid"]) or {}
+        klik = aksi("vscode", k.get("path") or cwd)
+        nama = k.get("judul") or tugas_pendek(x.get("tugas")) or "sesi"
+        if st in ("bekerja", "latar"):
+            ekor = durasi(time.time() - x.get("mulai", time.time())) if st == "bekerja" else "di latar"
+            if k.get("pr") and k.get("total") and k["total"] > 1:
+                ekor = f"PR {k['pr']}/{k['total']} · {ekor}"
+            o(f"{bersih(nama, 40)} — {ekor} | {titik(BIRU)} font=HelveticaNeue-Bold {klik}")
+            if isinstance(x.get("langkah"), int) and bilah(x["langkah"]):
+                o(f" | {bilah(x['langkah'])} {klik}")
+            ag = ", ".join(sorted(set(a.split(":")[-1] for a in (x.get("agents") or {}).values())))
+            o(f"{bersih(' · '.join(p for p in (nama_proyek(cwd), ag or x.get('tahap')) if p), 60)} | size=12 color={ABU} {klik}")
+        else:
+            warna, ekor = {"menunggu": (KUNING, "perlu jawaban Anda"),
                            "selesai": (HIJAU, f"selesai {durasi(x['umur'])} lalu"),
-                           "diam": (ABU, f"tanpa aktivitas {durasi(x.get('diam', 0))}")}[st]
-            o(f"{'✓ ' if st == 'selesai' else ''}{bersih(teks, 46)} — {ekor} | {titik(warna)} {aksi('vscode', buka)}")
-            ag = sorted(set(a.split(":")[-1] for a in (x.get("agents") or {}).values()))
-            if ag:
-                o(f"--Agent: {bersih(', '.join(ag), 80)}")
-            if x.get("tugas"):
-                o(f"--Tugas: {bersih(x['tugas'], 80)} | color={ABU}")
-            if k.get("catatan"):
-                o(f"--{bersih(k['catatan'], 80)} | color={ABU}")
-            o(f"--Buka di VS Code | {aksi('vscode', buka)}")
-            if st in ("bekerja", "latar"):
-                ket = x.get("tahap") or ", ".join(ag)
-                if k.get("pr") and k.get("total") and k["total"] > 1:
-                    ket = f"PR {k['pr']}/{k['total']}" + (f" · {ket}" if ket else "")
-                gambar = bilah(x["langkah"]) if isinstance(x.get("langkah"), int) else ""
-                if ket or gambar:
-                    o(f"{bersih(ket, 60) or ' '} | {gambar} size=12 color={ABU} {aksi('vscode', buka)}")
+                           "diam": (ABU, f"diam {durasi(x.get('diam', 0))}")}[st]
+            o(f"{'✓ ' if st == 'selesai' else ''}{bersih(f'{nama_proyek(cwd)} · {nama}', 46)} — {ekor} | {titik(warna)} {klik}")
+    if sesi or cek_jalan:
         o("---")
 
-    # ---- hal yang menunggu ----
-    def butir(x, warna, pre=""):
-        tadi = sama(x.get("perintah"), tugas_selesai)
-        o(f"{pre}{'✓ ' if tadi else ''}{bersih(x.get('teks'), 58)} | {titik(HIJAU if tadi else warna)}")
-        o(f"{pre}--{bersih(x.get('proyek'))} · {bersih(x.get('sumber'))} | color={ABU}")
-        if tadi:
-            o(f"{pre}--Sudah dikerjakan sesi tadi: cek hasilnya, lalu Tandai selesai | color={HIJAU}")
-        if x.get("perintah"):
-            o(f"{pre}--Salin perintah | {aksi('salin', x['perintah'], x.get('proyek'))} sfimage=doc.on.doc")
-        if x.get("url"):
-            o(f"{pre}--Buka MR di browser | {aksi('buka', x['url'])} sfimage=safari")
-        if DIR.get(x.get("proyek")):
-            o(f"{pre}--Buka project di VS Code | {aksi('vscode', DIR[x['proyek']])} sfimage=chevron.left.forwardslash.chevron.right")
-        ident = "b64:" + base64.urlsafe_b64encode(str(x.get("sumber") or x.get("teks") or "").encode()).decode().rstrip("=")
-        o(f"{pre}--Tandai selesai | {aksi('selesai', ident, x.get('proyek') or '', refresh=True)} sfimage=checkmark")
-
-    grup = (("Perlu perhatian", gagal, MERAH), ("Perlu dikerjakan", kerjakan, ORANYE), ("Menunggu review Anda", cek, KUNING))
-    if bekerja and menunggu:   # saat bekerja menu fokus ke kemajuan; tugas diringkas
-        o(f"Hal yang menunggu ({menunggu}) | sfimage=tray.full")
-        for judul, xs, warna in grup:
-            for x in xs[:6]:
-                butir(x, warna, pre="--")
-    elif not bekerja:
-        for judul, xs, warna in grup:
-            if xs:
-                o(f"{judul} | size=12 color={ABU}")
-                for x in xs[:6]:
-                    butir(x, warna)
-                o("---")
-        if lap is not None and not menunggu:
-            o(f"Tidak ada yang perlu ditindaklanjuti. | color={ABU}")
-
-    nx = (lap or {}).get("berikutnya") or ""
-    langkah = []
-    for b in (nx if isinstance(nx, list) else [{"proyek": "", "langkah": [nx]}] if nx.strip() else []):
-        for t in b.get("langkah") or []:
-            cmd = t[t.find("/"):] if "/" in t else ""
-            if not (sama(cmd, dipegang) or sama(cmd, tugas_selesai)):
-                langkah.append((b.get("proyek") or "", t, cmd))
-    for proyek, t, cmd in langkah[:1 if bekerja else 3]:
-        if cmd:
-            o(f"Berikutnya{' · ' + bersih(proyek, 20) if proyek else ''}: {bersih(t, 48)} | {aksi('salin', cmd, proyek or 'project terkait')} sfimage=arrow.right.circle")
-        else:
-            o(f"{bersih(t, 60)} | sfimage=checkmark.seal color={ABU}")
-    if out[-1] != "---":
+    # ---- perlu dikerjakan: satu per project; klik membuka laporan HTML ----
+    if urgen:
+        o(f"Perlu dikerjakan | size=12 color={ABU}")
+        for proyek, x in urgen.items():
+            tadi = sama(x.get("perintah"), tugas_selesai)
+            warna = HIJAU if tadi else MERAH if x in gagal else ORANYE
+            o(f"{'✓ ' if tadi else ''}{bersih(x.get('teks'), 50)} | {titik(warna)} {aksi('laporan')}")
+            if proyek:
+                o(f"{bersih(proyek, 50)} | size=12 color={ABU} {aksi('laporan')}")
+        o("---")
+    elif lap is not None and not bekerja:
+        o(f"Tidak ada yang perlu ditindaklanjuti. | color={ABU}")
         o("---")
 
     # ---- tombol cepat ----
     o(f"Buka laporan terakhir | {aksi('laporan')} sfimage=doc.text")
     aktif_p = proyek_aktif()
     o(f"Cek semua project ({len(aktif_p)} aktif) | {aksi('cek-semua', refresh=True)} sfimage=arrow.clockwise")
+    o(f"Halo Clint (perintah suara) | {aksi('halo')} sfimage=mic")
     o("Cek project | sfimage=folder")
     for d in aktif_p:
         o(f"--{nama_proyek(d)} | {aksi('cek', d, refresh=True)}")
-    o(f"Halo Clint (perintah suara) | {aksi('halo')} sfimage=mic")
     o("---")
     diam, bisu = os.path.exists(os.path.join(CFG, "diam")), os.path.exists(os.path.join(CFG, "bisu-sampai"))
     o("Pengaturan | sfimage=gearshape")
@@ -352,6 +319,7 @@ def render():
     sp = sapaan_cfg()
     o(f"--Sapaan pagi: {sp['jam']:02d}.{sp['menit']:02d} Sen–Jum {'✓' if sp['aktif'] else '(mati)'} | {aksi('sapaan-mati' if sp['aktif'] else 'sapaan-nyala')}")
     o(f"--{'Nyalakan kabar lagi' if bisu else 'Bisukan sampai besok'} | {aksi('bunyikan' if bisu else 'bisu')}")
+    o(f"--Bersihkan menu (hal menunggu & klaim kerja) | {aksi('bersihkan', refresh=True)} sfimage=trash")
 
     # Status MR dicek tiap 5 menit di latar dan setiap giliran sesi selesai (hook Stop), lewat glab/gh tanpa token.
     cap = os.path.join(CFG, "mr-dicek")
@@ -379,9 +347,9 @@ def tanda():
     return tuple((f, os.path.getmtime(f)) for f in fs if os.path.exists(f))
 
 
-# Saat bekerja ikon memakai cincin diam (bingkai 0). Animasi tidak dipakai: setiap bingkai mengirim ulang
-# seluruh menu dan membuat menu yang sedang dibuka berkedip serta tidak bisa diklik.
-cincin = b64(os.path.join(CFG, "putar", "0.png"))
+# Saat bekerja bilah biru di bawah avatar mengalir (bingkai alir/0..11, dibuat scripts/make-icon.py). Konsekuensi
+# yang diterima: setiap bingkai mengirim ulang seluruh menu, jadi menu yang sedang dibuka berkedip selama agent bekerja.
+bingkai = [f for f in (b64(os.path.join(CFG, "alir", f"{i}.png")) for i in range(12)) if f]
 
 
 def sapaan_cfg():
@@ -412,9 +380,9 @@ def sapaan_pagi():
 
 
 if "--sekali" in sys.argv:            # untuk uji: cetak satu kali lalu keluar
-    b, teks, badge = render(); print(judul(badge, cincin if b else None)); print("---"); print(teks); sys.exit(0)
+    b, teks, badge = render(); print(judul(badge, bingkai[0] if b and bingkai else None)); print("---"); print(teks); sys.exit(0)
 
-terakhir_tanda, terakhir_render, keluaran_lalu, cek_sapaan = None, 0, None, 0
+terakhir_tanda, terakhir_render, keluaran_lalu, cek_sapaan, langkah = None, 0, None, 0, 0
 while True:
     if time.time() - cek_sapaan > 60:
         cek_sapaan = time.time()
@@ -425,7 +393,9 @@ while True:
     t = tanda()
     if t != terakhir_tanda or time.time() - terakhir_render > 30:
         bekerja, teks, badge = render(); terakhir_tanda, terakhir_render = t, time.time()
-        keluaran = judul(badge, cincin if bekerja else None) + "\n---\n" + teks
-        if keluaran != keluaran_lalu:      # kirim hanya bila berubah: menu yang terbuka tidak berkedip
-            sys.stdout.write("~~~\n" + keluaran + "\n"); sys.stdout.flush(); keluaran_lalu = keluaran
-    time.sleep(1)
+    alir = bekerja and bingkai
+    keluaran = judul(badge, bingkai[langkah % len(bingkai)] if alir else None) + "\n---\n" + teks
+    if keluaran != keluaran_lalu:          # kirim hanya bila berubah: saat diam menu yang terbuka tidak berkedip
+        sys.stdout.write("~~~\n" + keluaran + "\n"); sys.stdout.flush(); keluaran_lalu = keluaran
+    langkah += 1
+    time.sleep(0.15 if alir else 1)
