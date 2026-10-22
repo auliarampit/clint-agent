@@ -174,6 +174,12 @@ class Saring(Dasar):
                          [("MR-MOB-08", "/clint:develop MR-MOB-08"), ("MR-MOB-10", "/clint:develop MR-MOB-10")])
         self.assertEqual(hasil["judul"], "2 tugas siap dikerjakan.")
 
+    def test_kartu_gabungan_agent_tidak_digandakan(self):
+        m = self.jadwal()
+        kartu = {"proyek": "mr", "sumber": "../docs/overview.md", "teks": "Belum direncanakan: MR-MOB-08, MR-MOB-10"}
+        hasil = self.laporan([{"nama": "mr", "dir": m}], kerjakan=[kartu])
+        self.assertEqual(len(hasil["kerjakan"]), 1)
+
     def test_lengkapi_dibatasi_lima_sisanya_di_rincian(self):
         d = self.salin("checklist")
         for i in range(3, 10):

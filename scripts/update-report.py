@@ -224,7 +224,8 @@ def lengkapi(d, tugas, maks=5):
     """Butir KERJAKAN dari sumber tugas yang tidak ditulis agent dimasukkan, supaya tugas nyata tidak hilang.
     Judul dihitung ulang dari isi akhir, bukan dipercaya dari agent."""
     for proyek, xs in tugas.items():
-        ada = " ".join(f"{x.get('sumber') or ''} {x.get('perintah') or ''}" for g in GRUP for x in d.get(g) or []
+        ada = " ".join(f"{x.get('sumber') or ''} {x.get('perintah') or ''} {x.get('teks') or ''}"
+                       for g in GRUP for x in d.get(g) or []
                        if x.get("proyek") == proyek)
         kurang = [x for x in xs if not _cocok(ada, [x["id"]]) and x["id"].lower() not in ada.lower()]
         boleh = max(0, maks - (len(xs) - len(kurang)))
