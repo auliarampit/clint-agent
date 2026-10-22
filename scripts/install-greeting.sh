@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atur sapaan pagi (dijalankan oleh plugin menu bar clint, Senin–Jumat). Tanpa SwiftBar, sapaan tidak jalan.
+# Atur sapaan pagi (dijalankan oleh aplikasi menu bar clint, Senin–Jumat). Tanpa aplikasi itu, sapaan tidak jalan.
 # Pakai: install-greeting.sh <jam> <menit>   |   install-greeting.sh --cabut
 # (Jadwal launchd lama dicabut: macOS melarang launchd membuka folder Desktop.)
 cfg="$HOME/.config/clint"; mkdir -p "$cfg"

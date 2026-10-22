@@ -598,7 +598,7 @@ target yang lebih ketat dari ambang umum:
 Senin–Jumat jam 08.00, clint memeriksa **semua project aktif** (punya `.claude/clint.json` dan dibuka di
 Claude Code 3 hari terakhir) dalam satu sesi, mode baca saja (`/clint:status all`). Begitu siap, layar
 laporan terbuka, kalimat inti dibacakan, dan notifikasi muncul bersamaan. Jadwalnya dijalankan oleh menu
-bar (SwiftBar), sekali per hari sebelum jam 13.00: laptop tidur jam 08.00 → jalan saat dibuka.
+bar (aplikasi Clint), sekali per hari sebelum jam 13.00: laptop tidur jam 08.00 → jalan saat dibuka.
 
 - Butir dikelompokkan per tindakan: *Perlu perhatian*, *Perlu dikerjakan*, *Perlu Anda cek*,
   *Menunggu pihak lain*.
@@ -620,7 +620,7 @@ disimpan bila gagal.
 
 ![Menu bar clint](docs/images/menu-bar.png)
 
-Ikon clint di menu bar Mac (lewat SwiftBar) menampilkan kondisi kerja sepanjang hari:
+Ikon clint di menu bar Mac (aplikasi kecil di `menubar/`) menampilkan kondisi kerja sepanjang hari:
 
 | Ikon | Arti |
 |---|---|
@@ -629,14 +629,15 @@ Ikon clint di menu bar Mac (lewat SwiftBar) menampilkan kondisi kerja sepanjang 
 | `✓` | semua aman |
 | `!` | ada yang gagal |
 
-Isi menu: sesi Claude Code yang berjalan (termasuk di VS Code) tampil dengan judul tugas, lama berjalan, bilah
-lima tahap (worktree → kode → tinjau → test → MR), lalu project dan agent yang sedang jalan; klik membuka
-VS Code. Tahap dicatat hook dari agent yang mulai dan perintah `git worktree add` / `git push` /
+Klik ikon membuka panel. Sesi Claude Code yang berjalan (termasuk di VS Code) tampil sebagai kartu: judul tugas,
+lama berjalan, bilah lima tahap (worktree → kode → tinjau → test → MR), lalu project dan agent. Klik kartu
+membuka daftar agent yang sedang jalan (tugas, tipe, lama berjalan, token konteks, dibaca dari
+`~/.claude/projects/…/subagents/` tanpa memakai token) dan tombol *Buka di VS Code*. Tahap dicatat hook dari agent yang mulai dan perintah `git worktree add` / `git push` /
 `glab mr create`, jadi realtime dan tanpa token. Sesi yang menunggu jawaban Anda bertitik kuning; sesi yang baru
 selesai bertanda ✓ selama 10 menit lalu hilang. Lalu *Perlu dikerjakan*: satu butir paling mendesak per project
 (yang gagal lebih dulu); klik membuka laporan HTML, tempat rincian lengkap, MR yang menunggu review, dan tombol
-*Salin perintah* / *Buka MR*. Terakhir tombol *Buka laporan terakhir*, *Cek semua project*, *Halo Clint*,
-*Cek project*, dan *Pengaturan* (di dalamnya ada *Bersihkan menu* untuk mengosongkan hal yang menunggu dan
+*Salin perintah* / *Buka MR*. Terakhir ubin *Laporan*, *Cek semua*, *Halo Clint*, lalu
+*Cek project* dan *Pengaturan* (di dalamnya ada *Bersihkan menu* untuk mengosongkan hal yang menunggu dan
 klaim kerja lama).
 
 Butir yang sedang dikerjakan sebuah sesi (perintahnya sama dengan tugas sesi itu) tidak tampil di *Perlu
@@ -646,14 +647,16 @@ tanpa tautan bila ID-nya (mis. `BUG-42`) disebut MR yang merged setelah laporan 
 5 menit dan setiap giliran sesi selesai, lewat `glab`/`gh`.
 
 ```bash
-brew install --cask swiftbar
-mkdir -p ~/.config/clint/swiftbar && ln -sf ~/Desktop/clint/swiftbar/clint.py ~/.config/clint/swiftbar/
-defaults write com.ameba.SwiftBar PluginDirectory -string "$HOME/.config/clint/swiftbar" && open -a SwiftBar
+bash menubar/build.sh     # butuh Xcode Command Line Tools; pasang ke ~/Applications/Clint.app, jalan saat login
 ```
 
-Avatar dan bingkai animasi (opsional): taruh gambar persegi di `~/.config/clint/avatar.jpg`, lalu
-`python3 scripts/make-icon.py` (butuh Pillow). Gambar pribadi ini sengaja tidak disimpan di repo.
-Setelah file plugin diubah, jalankan ulang SwiftBar.
+Aplikasinya (`menubar/ClintBar.swift`) menjalankan `menubar/data.py` tiap 2 detik untuk data menu (JSON) dan
+menampilkan `menubar/panel.html` di web view; tombolnya memanggil `scripts/clint-action.sh`. Perubahan
+`panel.html` dan `data.py` langsung terpakai saat panel dibuka berikutnya; perubahan `ClintBar.swift` perlu
+`bash menubar/build.sh` lagi. Saat pertama jalan macOS meminta izin akses folder Desktop untuk Clint.
+
+Avatar (opsional): taruh gambar persegi di `~/.config/clint/avatar.jpg`, lalu `python3 scripts/make-icon.py`
+(butuh Pillow). Gambar pribadi ini sengaja tidak disimpan di repo.
 
 Catatan: teks menu bar dan layar laporan saat ini masih berbahasa Indonesia.
 
@@ -871,8 +874,8 @@ clint/
   agents/            21 agent
   skills/            status · develop · review · test · docs · release · setup
   hooks/             prinsip kerja + bahasa, ingatan mempalace, format, review otomatis, kabar, status sesi
-  scripts/           status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), bahan logbook (logbook-draft.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
-  swiftbar/          plugin menu bar (clint.py, streamable)
+  scripts/           tarik repo kerja + relatedRepos (sync-repos.sh), status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), bahan logbook (logbook-draft.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
+  menubar/           aplikasi menu bar (ClintBar.swift), panel (panel.html), data (data.py), build.sh
   kit/               master skill/rules/adapter + sonarqube.md yang DISALIN ke project (lihat kit/README.md)
   docs/images/       gambar README; sumbernya di docs/images/source (python3 build.py)
   .claude-plugin/    plugin.json + marketplace.json (jangan dihapus atau dipindah)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Aksi menu bar clint (dipanggil SwiftBar). Pakai: clint-action.sh <aksi> [arg...]
+# Aksi menu bar clint (dipanggil aplikasi menu bar). Pakai: clint-action.sh <aksi> [arg...]
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 root="$(cd "$(dirname "$0")/.." && pwd)"; cfg="$HOME/.config/clint"; log="$HOME/Library/Logs/clint"
 mkdir -p "$cfg"
