@@ -181,6 +181,12 @@ selesai, lengkap dengan commit kode yang menyebut ID-nya di seluruh histori base
 yang menjadi tugas; status yang tidak ada di adapter ditandai "tidak dikenal", bukan ditebak. Project tanpa
 `"tugas"` tidak punya butir tugas di laporan.
 
+Adapter ini tidak perlu ditulis tangan. `/clint:setup` (dan `sync` bila belum ada) menjalankan
+`scripts/deteksi-tugas.py`, yang mencari tabel ber-ID dan ber-Status atau checklist di `docs.pic`, `docs.feedback`,
+dan `docs.plans` (urutannya: tabel berkolom PIC dengan nama Anda, tabel feedback tanpa PIC, lalu checklist
+rencana), mengusulkan file, kolom, dan pemetaan statusnya, lalu menguji coba hasilnya. Status yang tidak dikenal
+ditanyakan ke Anda sekali, baru usulan ditulis (`--status "nilai=kelas" --tulis`).
+
 Sebelum laporan tampil, `update-report.py saring` (juga dijalankan otomatis oleh `merge` dan sapaan pagi) membuang
 butir yang ID-nya sudah diserahkan/selesai dan butir yang buktinya tidak bisa diperiksa mesin (ID tugas, MR,
 hash commit yang ada, atau file yang ada). Butir yang dibuang dicatat di `~/Library/Logs/clint/ditolak.log`

@@ -75,6 +75,13 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    `relatedRepos`: repo git lain di folder induk yang menjadi sumber kerja (mis. `docs`,
    `designs`, `api`); cek dengan `ls ..` lalu `git -C ../<nama> rev-parse` dan tanyakan perannya
    bila tidak jelas dari nama. Monorepo tanpa repo pendamping → `[]`.
+   `tugas` (sumber tugas, diisi **setelah** `docs.*`): jalankan
+   `python3 "/Users/auliarahmat/Desktop/clint/scripts/deteksi-tugas.py" .` (tanpa token, tidak menulis). Tunjukkan
+   ke user dasar usulannya, file dan kolom yang dipakai, pemetaan status, dan hasil uji coba (jumlah kerjakan /
+   diserahkan / selesai + contoh butir kerjakan). Ada `STATUS BELUM DIPETAKAN` → tanyakan kelas tiap nilai
+   (kerjakan = tindakan masih di user, diserahkan = menunggu QA/PM/klien, selesai) dalam **satu** pertanyaan,
+   jangan ditebak. Setelah user setuju, jalankan ulang dengan `--status "<nilai>=<kelas>" ... --tulis`. Usulan
+   `tidak ada` → biarkan tanpa `tugas` dan sebutkan bahwa laporan project ini tidak akan memuat butir tugas.
 6. Tambahkan rujukan ke `CLAUDE.md` project (buat kalau belum ada): prinsip kerja, `no-ai-slop.md`,
    skill platform, adapter, dan `sonarqube.md` bila disalin.
 7. Belum ada `~/.config/clint/user.json` → tanya bahasa pribadi user sekali (English / Bahasa
@@ -116,6 +123,10 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
 4. File master yang belum ada di project (mis. `sonarqube.md`, `no-ai-slop.md`, field `docs.language`, `ciOnMr`,
    `surfaces[].testRelated`, `autoReview`, `docs.logbook`, `memory.wing`) → tawarkan
    untuk ditambahkan.
+   **`tugas`**: belum ada → buat lewat alur `tugas` di mode setup langkah 5. Sudah ada → jalankan
+   `python3 "/Users/auliarahmat/Desktop/clint/scripts/tugas-saya.py" .`; ada `STATUS TIDAK DIKENAL` atau file sumber
+   tidak cocok lagi (mis. sprint tracker pindah folder) → tunjukkan usulan baru dari `deteksi-tugas.py` dan
+   tanyakan sebelum menimpa.
 5. **Status PR di rencana**: rencana di `docs.plans` yang punya tabel *Urutan pekerjaan* tetapi belum punya
    `## Status PR` → tunjukkan hasil `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-status.py"` dan tawarkan
    `--write` untuk rencana yang statusnya terbukti (mode `mr`). Rencana `push-base` yang statusnya `❔ belum

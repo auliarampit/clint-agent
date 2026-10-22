@@ -45,8 +45,17 @@ def kelas(nilai, peta):
     kata = sorted(((norm(x), k) for k in ("kerjakan", "diserahkan", "selesai") for x in peta.get(k, [])),
                   key=lambda t: -len(t[0]))
     for kw, k in kata:
-        if v == kw or re.match(rf"{re.escape(kw)}(?=[\s(,;:])", v):
+        if v == kw or re.match(rf"{re.escape(kw)}(?=[\s(,;:.])", v):
             return k
+    return None
+
+
+def kata_kunci(nilai, peta):
+    """Kata kunci status yang cocok dengan nilai (yang terpanjang), atau None."""
+    v = norm(nilai)
+    for kw in sorted({norm(x) for k in peta for x in peta[k]}, key=len, reverse=True):
+        if v == kw or re.match(rf"{re.escape(kw)}(?=[\s(,;:.])", v):
+            return kw
     return None
 
 
@@ -134,12 +143,12 @@ def commit_kode(dirp, base, id_):
     return kode[0][:90] if kode else ""
 
 
-def kumpulkan(dirp):
+def kumpulkan(dirp, sumber=None):
     try:
         cfg = json.load(open(os.path.join(dirp, ".claude/clint.json"), encoding="utf-8"))
     except (OSError, ValueError):
         return {"adapter": False, "alasan": "tidak ada .claude/clint.json"}
-    sumber = cfg.get("tugas")
+    sumber = sumber if sumber is not None else cfg.get("tugas")
     if not sumber:
         return {"adapter": False, "alasan": 'clint.json belum punya "tugas"'}
     user, base = nama_user(), cfg.get("baseBranch", "dev")
