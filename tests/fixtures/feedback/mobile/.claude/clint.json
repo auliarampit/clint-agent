@@ -1,0 +1,13 @@
+{
+  "baseBranch": "dev",
+  "relatedRepos": [{"name": "docs", "path": "../docs", "role": "docs"}],
+  "docs": {"feedback": "../docs/qa/feedback", "pic": "TIDAK ADA", "plans": "TIDAK ADA"},
+  "surfaces": [{"name": "mobile"}],
+  "tugas": [
+    {
+      "jenis": "tabel", "file": "../docs/qa/feedback/**/*mobile*.md", "pemilik": "semua",
+      "kolom": {"id": ["#", "ID"], "judul": ["Bagian"], "status": ["Status"]},
+      "status": {"selesai": ["Belum berlaku"]}
+    }
+  ]
+}

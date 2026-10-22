@@ -1,0 +1,11 @@
+{
+  "baseBranch": "dev",
+  "docs": {"pic": "docs/sprints", "feedback": "TIDAK ADA", "plans": "TIDAK ADA"},
+  "tugas": [
+    {
+      "jenis": "tabel", "file": "docs/sprints/s*.md", "pilih": "aktif",
+      "kolom": {"id": ["ID", "Module"], "pic": "PIC", "judul": ["Title"], "status": ["Status", "Code"]},
+      "status": {"kerjakan": ["⬜", "🔄", "🐞"], "diserahkan": ["🧪"], "selesai": ["✅", "—"]}
+    }
+  ]
+}

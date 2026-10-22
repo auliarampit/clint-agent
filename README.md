@@ -187,6 +187,11 @@ dan `docs.plans` (urutannya: tabel berkolom PIC dengan nama Anda, tabel feedback
 rencana), mengusulkan file, kolom, dan pemetaan statusnya, lalu menguji coba hasilnya. Status yang tidak dikenal
 ditanyakan ke Anda sekali, baru usulan ditulis (`--status "nilai=kelas" --tulis`).
 
+Ketiga skrip ini punya test di `tests/test_tugas.py` dengan fixture project mini per jenis sumber
+(`tests/fixtures/`: sprint tracker berkolom PIC, feedback tanpa PIC di repo docs terpisah, checklist rencana,
+dan project tanpa sumber), termasuk kartu halu yang pernah lolos ke laporan. Jalankan sebelum mengubah skrip itu:
+`python3 -m unittest discover -s tests` (tanpa dependensi; repo git dan `HOME` dibuat sementara).
+
 Sebelum laporan tampil, `update-report.py saring` (juga dijalankan otomatis oleh `merge` dan sapaan pagi) membuang
 butir yang ID-nya sudah diserahkan/selesai dan butir yang buktinya tidak bisa diperiksa mesin (ID tugas, MR,
 hash commit yang ada, atau file yang ada). Butir yang dibuang dicatat di `~/Library/Logs/clint/ditolak.log`

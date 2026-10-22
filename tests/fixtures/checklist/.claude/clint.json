@@ -1,0 +1,5 @@
+{
+  "baseBranch": "dev",
+  "docs": {"plans": "docs/plans", "pic": "TIDAK ADA", "feedback": "TIDAK ADA"},
+  "tugas": [{"jenis": "checklist", "file": "docs/plans/PLAN-*.md", "pemilik": "semua", "idPola": "PLAN-[A-Z0-9]+"}]
+}
