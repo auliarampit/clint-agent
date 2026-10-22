@@ -1,7 +1,7 @@
 ---
 name: review
-description: Meninjau perubahan kode lalu langsung memperbaikinya sampai bersih — kesesuaian dokumen/aturan, clean code & arsitektur, keamanan, dan desain. Terpicu otomatis oleh hook setelah sesi selesai mengubah kode; bisa juga dipanggil manual ("cek dulu sebelum MR"). Untuk MR orang lain hanya meninjau tanpa mengubah.
-argument-hint: [branch | !nomor-MR] [--only]
+description: Meninjau perubahan kode lalu langsung memperbaikinya sampai bersih — kesesuaian dokumen/aturan, clean code & arsitektur, keamanan, dan desain. Mode `fitur` memeriksa fitur/layar yang sudah ada tanpa diff ("cek layar X sudah sesuai prototipe?", "modul Y ada bug?"). Terpicu otomatis oleh hook setelah sesi selesai mengubah kode; bisa juga dipanggil manual ("cek dulu sebelum MR"). Untuk MR orang lain hanya meninjau tanpa mengubah.
+argument-hint: [branch | !nomor-MR | fitur "<nama fitur/layar>" [--desain]] [--only]
 ---
 
 # Review: tinjau dan perbaiki
@@ -18,8 +18,32 @@ otomatis hanya di-fetch (working tree kotor), jadi perubahan yang ditinjau tidak
 - Tanpa argumen: perubahan di working tree (belum di-commit) **ditambah** commit branch saat ini
   yang belum ada di `origin/<baseBranch>` (`.claude/clint.json`).
 - Branch/MR disebut: `git fetch`, tinjau diff branch itu terhadap base.
+- `fitur "<nama>"`: fitur atau layar yang sudah ada di base branch, tanpa diff → ikuti **Mode fitur** di bawah,
+  bukan langkah 2–4.
 - **Mode hanya-tinjau** bila argumen `--only`, atau MR milik orang lain
   (`glab mr view` / `gh pr view` → author bukan user). Mode ini tidak mengubah apa pun.
+
+## Mode fitur
+
+Memeriksa fitur yang sudah berjalan (selisih dengan prototipe, bug, kesesuaian dengan dokumen) tanpa diff.
+Repo sudah ditarik di atas.
+
+1. Cakupan, tanpa token:
+   `python3 "$R/scripts/review-prep.py" . --fitur "<nama>" --kata <kata1,kata2> [--design]`.
+   `--kata` = nama fitur di kode, yang biasanya berbahasa Inggris (folder fitur, komponen, route), dipisah koma;
+   tebak dari nama fitur, atau satu `ls`/`git grep -il` singkat bila belum tahu. `--design` bila `docs.design` bukan
+   `TIDAK ADA`. Cakupan meleset (kosong atau berisi fitur lain) → perbaiki `--kata` dan jalankan ulang; jangan
+   menelusuri kode sendiri.
+2. Peninjau, bersamaan dalam satu pesan. Masing-masing diberi path `cakupan.txt`, baris `rujukan` yang sesuai
+   perannya (dokumen untuk `conformance-reviewer`, desain untuk `design-auditor`, api untuk `api-contract-auditor`),
+   dan daftar peninjau lain:
+   - `--desain` → hanya `design-auditor`;
+   - selain itu → `code-reviewer` + `conformance-reviewer` + `design-auditor` (bila ada kandidatnya) + maksimal 2
+     auditor lain dengan skor kandidat tertinggi yang memang relevan dengan isi fitur.
+3. Gabungkan tanpa token: `python3 "$R/scripts/merge-findings.py" <folder> --putaran 1` → `findings.md`.
+4. `--only` → laporan (bagian 5) lalu berhenti. Selain itu perbaikan lewat alur `develop`, karena kode di base
+   branch perlu branch, test, dan MR: jalankan skill `clint:develop` dengan tugas
+   `perbaiki temuan review fitur <nama> (<path findings.md>)`. Bagian 3–4 di bawah tidak dipakai.
 
 ## 2. Pilih peninjau sesuai ukuran diff (hemat token)
 

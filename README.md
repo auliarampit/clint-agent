@@ -252,6 +252,8 @@ bentrok saat merge (baris tabel yang berdempetan bentrok). Status 🚫 dan ✅ y
 | `/clint:review !123` | MR milik rekan: hanya temuan dengan baris kode dan usulan, kode tidak diubah |
 | `/clint:review feat/checkout-ulang` | Branch tertentu terhadap base branch |
 | `/clint:review !123 --only` | Hanya temuan, walaupun MR milik Anda sendiri |
+| `/clint:review fitur "Inbox"` | Fitur yang sudah ada di base branch (tanpa diff): bug, kesesuaian dokumen, selisih dengan prototype; perbaikannya lewat `develop` (branch, test, MR) |
+| `/clint:review fitur "Inbox" --desain` | Hanya selisih tampilan dengan prototype |
 
 ### `/clint:test`: menguji tanpa mengubah kode produk
 
@@ -321,6 +323,7 @@ Rilis yang berdampak ke orang lain (kanal QA, store, produksi) hanya dijalankan 
 | "Kenapa pipeline MR ini merah?" | `/clint:develop perbaiki pipeline !123` |
 | "Kodingan saya sudah layak MR belum?" | `/clint:review` |
 | "Tolong review MR teman saya" | `/clint:review !124` |
+| "Layar ini sudah sesuai prototype belum?" / "Modul ini ada bug?" | `/clint:review fitur "<nama layar/modul>"` |
 | "Fitur X sudah bisa diuji?" | `/clint:test X` |
 | "Bug ini sudah beres, tolong update dokumen QA" | `/clint:docs tandai <ID> diperbaiki di !<n>` |
 | "Butuh APK buat UAT" | `/clint:release build APK UAT Android` |
@@ -385,6 +388,7 @@ Lihat [Peta jalan](#peta-jalan).
 ```
 /clint:status                                 → layar yang berubah di prototype dan dampaknya ke kode
 /clint:review !123                            → selisih tampilan dengan prototype (design-auditor)
+/clint:review fitur "Riwayat Transaksi" --desain → layar yang sudah jadi vs prototype, diperbaiki lewat develop
 ```
 
 ## Bahasa

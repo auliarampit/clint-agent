@@ -80,5 +80,38 @@ class SyncRepos(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(self.d, "docs", "b.txt")))
 
 
+class ReviewFitur(unittest.TestCase):
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        kerja, docs = os.path.join(self.d, "app"), os.path.join(self.d, "docs")
+        berkas = {"src/features/inbox/InboxScreen.tsx": "export function InboxScreen() { return <View/> }\n",
+                  "src/features/inbox/useInbox.ts": "export const useInbox = () => fetch('/inbox')\n",
+                  "src/features/inbox/__tests__/InboxScreen.test.tsx": "test('inbox', () => {})\n",
+                  "src/home/Home.tsx": "export const Home = () => null\n",
+                  ".claude/clint.json": json.dumps({"relatedRepos": [{"name": "docs", "path": "../docs", "role": "docs"}]})}
+        for rel, isi in berkas.items():
+            os.makedirs(os.path.dirname(os.path.join(kerja, rel)), exist_ok=True)
+            open(os.path.join(kerja, rel), "w").write(isi)
+        git("init", "-q", kerja, cwd=self.d); git("add", ".", cwd=kerja); git("commit", "-q", "-m", "a", cwd=kerja)
+        os.makedirs(docs)
+        open(os.path.join(docs, "prd-inbox.md"), "w").write("# PRD Inbox\n")
+        open(os.path.join(docs, "prd-home.md"), "w").write("# PRD Home\n")
+
+    def tearDown(self):
+        shutil.rmtree(self.d)
+
+    def test_cakupan_fitur_dan_rujukan(self):
+        out = subprocess.run(["python3", os.path.join(SKRIP, "review-prep.py"), os.path.join(self.d, "app"),
+                              "--fitur", "Inbox", "--json"], capture_output=True, text=True, check=True).stdout
+        h = json.loads(out)
+        cakupan = open(h["cakupan"]).read().split()
+        nama = [os.path.relpath(p, os.path.join(self.d, "app")) for p in cakupan]
+        self.assertEqual(nama[-1], "src/features/inbox/__tests__/InboxScreen.test.tsx")   # test di belakang
+        self.assertIn("src/features/inbox/InboxScreen.tsx", nama)
+        self.assertIn("src/features/inbox/useInbox.ts", nama)
+        self.assertNotIn("src/home/Home.tsx", nama)
+        self.assertEqual([os.path.basename(p) for p in h["rujukan"]["docs"]], ["prd-inbox.md"])
+
+
 if __name__ == "__main__":
     unittest.main()

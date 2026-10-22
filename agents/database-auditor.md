@@ -28,6 +28,9 @@ kode. Kamu tidak mengubah file dan tidak menjalankan migrasi di database bersama
 ## Masukan
 
 - Diff dibaca dari path `pr.diff` yang diberikan pemanggil; tanpa path baru pakai `git -C <path kerja> diff <base>`.
+- **Mode fitur** (pemanggil memberi `cakupan.txt` dan rujukan dokumen/desain, bukan `pr.diff`): tinjau file di
+  cakupan itu sebagai satu fitur yang sudah berjalan, utuh, bukan hanya baris berubah. Baca beberapa file sekaligus;
+  rujukan dibaca bagian yang relevan dengan fitur saja. Temuan tetap ditulis `path:baris`.
 - Putaran ulang (pemanggil memberi `findings.md`): verifikasi hanya temuanmu sebelumnya (ditutup atau belum)
   dan baris yang berubah sejak putaran itu. Temuan baru hanya dari baris tersebut; jangan meninjau ulang PR utuh.
 
