@@ -83,8 +83,9 @@ def petakan(nilai, koreksi):
     """Pemetaan status berisi kata kunci saja (mis. 'fixed', bukan 'fixed 20 okt 2026')."""
     peta, tak = {k: [] for k in KELAS}, []
     for v, n in nilai.most_common():
-        if v in koreksi:
-            k, kw = koreksi[v], v
+        kk = ts.kata_kunci(v, {"x": list(koreksi)}) if koreksi else None
+        if kk:
+            k, kw = koreksi[kk], kk
         else:
             k, kw = ts.kelas(v, ts.PEMETAAN_BAWAAN), ts.kata_kunci(v, ts.PEMETAAN_BAWAAN)
         if not k:
