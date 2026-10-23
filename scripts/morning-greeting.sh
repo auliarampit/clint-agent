@@ -4,6 +4,9 @@
 # Pakai: morning-greeting.sh [--uji] [<dir-project> ...]   (tanpa dir: semua project aktif)
 # Log dibersihkan otomatis: laporan > 3 hari dihapus, log teknis hanya disimpan bila gagal.
 root="$(cd "$(dirname "$0")/.." && pwd)"
+# Menu bar menjalankan skrip ini hanya dengan PATH dan HOME. Tanpa USER, claude tidak menemukan
+# kredensialnya di Keychain dan menjawab "Not logged in".
+export USER="${USER:-$(id -un)}" LOGNAME="${LOGNAME:-$(id -un)}"
 lang="$(jq -r '.language // "en"' "$HOME/.config/clint/user.json" 2>/dev/null)"
 t(){ if [ "$lang" = "id" ]; then printf '%s' "$1"; else printf '%s' "$2"; fi; }
 
