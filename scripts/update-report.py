@@ -5,7 +5,8 @@
   update-report.py selesai "<sumber|teks|b64:...>" [--proyek <nama>]
   update-report.py review  "<sumber|teks|b64:...>" "<MR !N>" "<url MR>" [--proyek <nama>]
   update-report.py periksa-mr          # hapus butir MR yang sudah merged/closed (glab/gh)
-  update-report.py langkah --dir <repo> [--session <sid>]   # butir siap ketik project ini, tanpa yang diklaim sesi lain"""
+  update-report.py langkah --dir <repo> [--session <sid>]   # butir siap ketik project ini, tanpa yang diklaim sesi lain
+  update-report.py cek-berikutnya --dir <repo> [--session <sid>] < pesan.txt   # langkah di blok Berikutnya yang diklaim sesi lain"""
 import base64, contextlib, fcntl, glob, json, os, re, subprocess, sys, tempfile, time
 
 P = os.path.expanduser("~/Library/Logs/clint/terakhir.json")
@@ -67,13 +68,15 @@ def gabung(lama, baru):
 
     d = dict(lama)
     for k, v in baru.items():
-        if k not in GRUP + ("proyek", "berikutnya", "rincian"):
+        if k not in GRUP + ("proyek", "berikutnya", "rincian", "rencana"):
             d[k] = v
     d["proyek"] = [p for p in lama.get("proyek") or [] if p.get("dir") not in dirs] + list(baru.get("proyek") or [])
     for g in GRUP:
         d[g] = [x for x in lama.get(g) or [] if milik_lain(x, "proyek")] + list(baru.get(g) or [])
-    d["rincian"] = [r for r in lama.get("rincian") or [] if r.get("proyek") not in nama_baru] + \
-        list(baru.get("rincian") or [])
+    # Nama project bisa ditulis beda antar laporan ("mobile" vs "magnet-rezeki/mobile"): cocokkan lewat dir juga.
+    for k in ("rincian", "rencana"):
+        d[k] = [r for r in lama.get(k) or [] if r.get("proyek") not in nama_baru and milik_lain(r, "proyek")] + \
+            list(baru.get(k) or [])
     nl, nb = lama.get("berikutnya"), baru.get("berikutnya")
     if isinstance(nb, list):
         d["berikutnya"] = [b for b in (nl if isinstance(nl, list) else []) if milik_lain(b, "proyek")] + nb
@@ -280,10 +283,12 @@ if aksi == "merge":
     with kunci():
         d = judul_kosong(gabung(baca(), baru))
         d["_dibuat"] = time.time()
+        # Jam di "tanggal" ditulis agent dan pernah meleset (11.30 untuk laporan 13.46): pakai jam merge.
+        d["tanggal"] = re.sub(r"\d{1,2}[.:]\d{2}\s*$", time.strftime("%H.%M"), d.get("tanggal") or "")
         simpan(d)
     sys.exit(0)
 
-if not os.path.exists(P):
+if not os.path.exists(P) and aksi != "cek-berikutnya":   # klaim sesi lain tidak butuh laporan
     sys.exit(0)
 
 if aksi == "selesai":
@@ -436,6 +441,22 @@ elif aksi == "periksa-mr":
                 d.setdefault("cek", []).append(pindah)
         if berubah:            # simpan hanya bila ada butir yang berubah (mtime tetap jujur)
             simpan(d)
+elif aksi == "cek-berikutnya":
+    # Dipanggil hook Stop: langkah siap ketik di jawaban akhir yang ternyata sedang dipegang sesi lain.
+    a = sys.argv[2:]
+    opsi = lambda n: a[a.index(n) + 1] if n in a and a.index(n) + 1 < len(a) else ""
+    klaim = klaim_lain(opsi("--dir") or os.getcwd(), opsi("--session"))
+    for m in re.finditer(r"\[(siap|paralel|urutan[^\]]*|lanjutkan|E2E)\]\s*(/clint:[^`\n]+)", sys.stdin.read()):
+        cmd = m.group(2).strip()
+        rencana = re.search(r"([\w.-]+)\.md\s+((?:PR-\d+,?)+)", cmd)
+        if rencana:   # langkah rencana: diklaim hanya bila rencana sama dan PR-nya beririsan
+            prs = set(rencana.group(2).strip(",").split(","))
+            k = next((k for k in klaim if rencana.group(1) in str(k.get("rencana") or k.get("perintah") or "")
+                      and prs & set(k.get("prs") or [])), None)
+        else:
+            k = diklaim({"perintah": cmd, "sumber": cmd}, klaim)
+        if k:
+            print(f"{cmd}\t{k.get('judul') or k.get('perintah')} ({k.get('tahap') or 'berjalan'})")
 elif aksi == "langkah":
     a = sys.argv[2:]
     opsi = lambda n: a[a.index(n) + 1] if n in a and a.index(n) + 1 < len(a) else ""

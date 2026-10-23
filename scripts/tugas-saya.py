@@ -3,7 +3,8 @@
   tugas-saya.py <dir-project> [--json]
 
 Jenis sumber:
-  tabel      tabel markdown; kolom dicari dari nama header, status dipetakan lewat "status"
+  tabel      tabel markdown; kolom dicari dari nama header, status dipetakan lewat "status"; "idPola" (opsional)
+             hanya membaca baris ber-ID cocok, untuk file bersama lintas surface (mis. M-1, W-1, A-1 dalam satu file)
   checklist  baris "- [ ]" / "- [x]"; diringkas per file (jumlah terbuka + butir terbuka pertama)
   jadwal     tabel jadwal sprint (rentang tanggal + daftar modul); modul surface ini di sprint yang sedang
              berjalan dicocokkan dengan rencana di "rencana": belum ada rencana = kerjakan, sisa PR = kerjakan
@@ -91,6 +92,8 @@ def baca_tabel(f, src, user, peta):
         get = lambda i: c[i] if i < len(c) else ""
         id_ = get(i_id[0])
         if not id_ or norm(id_) == norm(header[i_id[0]]):
+            continue
+        if src.get("idPola") and not re.fullmatch(src["idPola"], id_):
             continue
         if re.fullmatch(r"\d+", id_):
             id_ = f"{stem} #{id_}"

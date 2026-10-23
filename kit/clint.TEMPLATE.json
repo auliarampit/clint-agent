@@ -42,7 +42,7 @@
       "pemilik": "{pic = hanya baris dengan nama Anda di kolom PIC / semua = project solo atau file sudah per surface}",
       "kolom": {"id": ["ID", "#"], "pic": "PIC", "judul": ["Title", "Judul"], "status": ["Status"]},
       "status": {"kerjakan": ["Open", "⬜", "🔄"], "diserahkan": ["Fixed", "🧪"], "selesai": ["Closed", "✅"]},
-      "idPola": "{khusus checklist: regex ID dari nama file, mis. PLAN-[A-Z0-9]+}"
+      "idPola": "{checklist: regex ID dari nama file, mis. PLAN-[A-Z0-9]+ / tabel: hanya baris ber-ID cocok, mis. M-[0-9]+ untuk file feedback bersama}"
     },
     {
       "jenis": "jadwal",

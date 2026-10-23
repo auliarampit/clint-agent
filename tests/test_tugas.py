@@ -105,6 +105,23 @@ class TugasSaya(Dasar):
         self.assertEqual(self.ids(r, "tidak_dikenal"), ["MOM-M-20", "feedback-mobile #6"])
         self.assertNotIn("feedback-web #1", [x["id"] for x in r["kerjakan"]], "file web bukan surface ini")
 
+    def test_file_bersama_disaring_id_pola(self):
+        d = self.salin("feedback")
+        with open(os.path.join(d, "docs/qa/feedback/feedback-review-sprint-3.md"), "w", encoding="utf-8") as fh:
+            fh.write("| # | Tim | Status |\n|---|---|---|\n| 1 | Mobile | Open |\n\n"
+                     "| # | Feedback | Status |\n|---|---|---|\n| M-1 | Jenis kelamin | Open. **Bisa dikerjakan** |\n"
+                     "| M-3 | Tadabbur | Diperbaiki di c183cd1 |\n\n"
+                     "| # | Feedback | Status |\n|---|---|---|\n| W-1 | Inquiry | Open |\n")
+        cfg = json.loads(baca(os.path.join(d, "mobile/.claude/clint.json")))
+        cfg["tugas"] = [{"jenis": "tabel", "file": "../docs/qa/feedback/feedback-review-*.md", "pemilik": "semua",
+                         "idPola": "M-[0-9]+", "kolom": {"id": ["#"], "judul": ["Feedback"], "status": ["Status"]}}]
+        tulis(os.path.join(d, "mobile/.claude/clint.json"), cfg)
+        jadikan_repo(os.path.join(d, "docs"))
+        jadikan_repo(os.path.join(d, "mobile"))
+        r = self.tugas(os.path.join(d, "mobile"))
+        self.assertEqual(self.ids(r, "kerjakan"), ["M-1"], "W-1 dan baris ringkasan '#1' bukan milik mobile")
+        self.assertEqual(self.ids(r, "diserahkan"), ["M-3"])
+
     def test_checklist_diringkas_per_rencana(self):
         r = self.tugas(self.salin("checklist"))
         self.assertEqual(self.ids(r, "kerjakan"), ["PLAN-02"])
@@ -194,6 +211,45 @@ class Saring(Dasar):
         ulang = json.loads(baca(p))
         self.assertEqual(len(ulang["kerjakan"]), 5, "saring dua kali tidak menambah butir")
         self.assertEqual(len(ulang["rincian"][0]["butir"]), 1)
+
+
+class Gabung(Dasar):
+    def test_merge_rincian_rencana_per_dir_dan_jam_merge(self):
+        m = self.jadwal()
+        log = os.path.join(self.home, "Library/Logs/clint")
+        tulis(os.path.join(log, "terakhir.json"), {
+            "tanggal": "Jumat, 23 Oktober 2026 · 08.00",
+            "proyek": [{"nama": "magnet-rezeki/mobile", "dir": m}, {"nama": "web", "dir": "/x/web"}],
+            "rincian": [{"proyek": "magnet-rezeki/mobile", "butir": ["lama"]}, {"proyek": "web", "butir": ["w"]}],
+            "rencana": [{"proyek": "web", "nama": "w", "selesai": 1, "total": 2}]})
+        baru = os.path.join(self.tmp, "baru.json")
+        tulis(baru, {"tanggal": "Jumat, 23 Oktober 2026 · 11.30", "proyek": [{"nama": "mobile", "dir": m}],
+                     "rincian": [{"proyek": "mobile", "butir": ["baru"]}],
+                     "rencana": [{"proyek": "mobile", "nama": "m", "selesai": 0, "total": 7}]})
+        self.jalan("update-report.py", "merge", baru)
+        d = json.loads(baca(os.path.join(log, "terakhir.json")))
+        self.assertEqual([r["proyek"] for r in d["rincian"]], ["web", "mobile"], "nama beda, dir sama: tidak ganda")
+        self.assertEqual([r["proyek"] for r in d["rencana"]], ["web", "mobile"], "rencana project lain tetap")
+        self.assertNotIn("11.30", d["tanggal"])
+
+
+class Berikutnya(Dasar):
+    def test_langkah_yang_diklaim_sesi_lain_ditandai(self):
+        repo = self.salin("tanpa-sumber")
+        os.makedirs(os.path.join(self.home, "Library/Logs/clint/kerja"))
+        os.makedirs(os.path.join(self.home, ".config/clint/sesi"))
+        tulis(os.path.join(self.home, ".config/clint/sesi/s2.json"), {})
+        tulis(os.path.join(self.home, "Library/Logs/clint/kerja/s2.json"),
+              {"dir": repo, "rencana": "docs/plans/a.md", "prs": ["PR-1"], "judul": "develop M-9",
+               "perintah": "/clint:develop M-9 ayat harian (x.md)"})
+        pesan = ("- `[siap] /clint:develop M-9 ayat harian (x.md)`\n- `[siap] /clint:develop M-1 jenis kelamin`\n"
+                 "- `[paralel] /clint:develop docs/plans/b.md PR-1`\n- `[siap] /clint:develop docs/plans/a.md PR-1,PR-2`\n"
+                 "- `[terblokir] /clint:develop M-9 x`")
+        out = subprocess.run([sys.executable, os.path.join(SKRIP, "update-report.py"), "cek-berikutnya", "--dir", repo,
+                              "--session", "s1"], input=pesan, capture_output=True, text=True, env=self.env).stdout
+        self.assertEqual([l.split("\t")[0] for l in out.splitlines()],
+                         ["/clint:develop M-9 ayat harian (x.md)", "/clint:develop docs/plans/a.md PR-1,PR-2"],
+                         "PR-1 rencana lain dan langkah [terblokir] tidak ikut")
 
 
 class Deteksi(Dasar):

@@ -9,7 +9,9 @@ kabar(){ bash "$root/hooks/notify.sh" "$1"; }
 diam(){ CLINT_SUARA=0 bash "$root/hooks/notify.sh" "$1"; }   # notifikasi saja
 case "$1" in
   salin)  printf '%s' "$2" | pbcopy; diam "$(t "Perintah disalin. Tempel di Claude Code, project $3." "Command copied. Paste it in Claude Code, project $3.")" ;;
-  laporan) f="$(ls -t "$log"/*.html 2>/dev/null | head -1)"
+  # Render ulang dari terakhir.json: hasil merge /clint:status di sesi tidak membuat HTML sendiri.
+  laporan) f="$log/terakhir.html"
+           [ -s "$log/terakhir.json" ] && python3 "$root/scripts/render-report.py" "$log/terakhir.json" "$f" || f="$(ls -t "$log"/*.html 2>/dev/null | head -1)"
            [ -n "$f" ] && open "$f" || diam "$(t "Belum ada laporan. Klik Cek semua project." "No report yet. Click Check all projects.")" ;;
   cek-semua) nohup bash "$root/scripts/morning-greeting.sh" >/dev/null 2>&1 &
            kabar "$(t "Siap, saya periksa semua project yang aktif. Laporannya menyusul." "OK, checking all active projects. The report will follow.")" ;;

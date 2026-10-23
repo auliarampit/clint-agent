@@ -65,15 +65,34 @@ gagal = [x for x in gagal if x.get("teks") not in klaim_teks]
 
 perintah_ada = {x.get("perintah") for x in (d.get("gagal") or []) + (d.get("kerjakan") or [])}
 klaim_pr = [(os.path.splitext(os.path.basename(k.get("rencana") or ""))[0], set(k.get("prs") or [])) for k in sesi]
+
+
+def langkah_diklaim(b):
+    """Langkah Berikutnya yang sedang dipegang sesi lain (rencana maupun butir feedback), dicek skrip yang sama
+    dengan hook Stop."""
+    dirp = b.get("dir") or next((p.get("dir") for p in proyek if p.get("nama") == b.get("proyek")), None)
+    if not dirp:
+        return set()
+    try:
+        r = subprocess.run(["python3", os.path.join(ROOT, "scripts/update-report.py"), "cek-berikutnya", "--dir", dirp],
+                           input="\n".join(b.get("langkah") or []), capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return set()
+    return {l.split("\t")[0] for l in r.splitlines()}
+
+
 langkah_rencana = []
 nx = d.get("berikutnya") or []
 for b in nx if isinstance(nx, list) else [{"proyek": "", "langkah": [nx]}]:
+    lain = langkah_diklaim(b)
     for t in b.get("langkah") or []:
         m = re.match(r"^\[([^\]]*)\]\s*(/\S.*?)(?:\s+·\s+(.*))?$", t.strip())
-        if not m or m.group(2) in perintah_ada:
+        if not m or m.group(2) in perintah_ada or m.group(1).startswith("terblokir"):
             continue
         cmd = m.group(2)
-        if any(slug and slug in cmd and prs & set(re.findall(r"PR-\d+", cmd)) for slug, prs in klaim_pr):
+        if cmd.strip() in lain or \
+                any(slug and slug in cmd and prs & set(re.findall(r"PR-\d+", cmd)) for slug, prs in klaim_pr):
+            dipegang += 1
             continue
         langkah_rencana.append({"teks": re.sub(r"^/clint:\w+\s+", "", cmd), "proyek": b.get("proyek"),
                                 "sumber": m.group(1), "perintah": cmd, "ket": m.group(3)})
