@@ -52,6 +52,10 @@ Repo sudah ditarik di atas.
 kandidat titik awal). Isi diff yang menyentuh auth, token, query, atau pembayaran = area sensitif walaupun nama
 filenya netral.
 
+Lalu sekali, sebelum peninjau dipanggil: `python3 "$R/scripts/run-checks.py" <path> --base <base>` → `checks.md`
+di folder kerja PR (lint file berubah, typecheck, test terkait, paralel). Peninjau membaca hasilnya, tidak
+menjalankan ulang.
+
 | Diff | Peninjau |
 |---|---|
 | ≤ ~30 baris di area biasa | **tanpa agent**; periksa sendiri dengan checklist skill platform |
@@ -71,7 +75,9 @@ Pemicu auditor:
 Jalankan yang terpilih **bersamaan** (satu pesan). Input ke setiap peninjau:
 - path diff dan folder kerja PR dari `review-prep.py`, bukan isi diff (folder itu di dalam `.git`, tidak ikut
   ter-commit); peninjau menulis bloknya sendiri ke `<folder>/temuan-<agent>.md`;
-- potongan rencana bila branch ini berasal dari rencana (`grep -l <branch> <docs.plans>/*.md`), selain itu tidak ada;
+- potongan rencana bila branch ini berasal dari rencana (`grep -l <branch> <docs.plans>/*.md`):
+  `python3 "$R/scripts/plan-slice.py" <rencana> PR-<n> --dir <path>` → path `potongan=`, selain itu tidak ada;
+- path `checks.md`;
 - daftar peninjau lain di putaran ini, supaya wilayah auditor yang ikut tidak diperiksa ulang.
 
 Setiap peninjau menutup laporannya dengan `VERDICT: LGTM | Needs Fix` dan `TEMUAN:` berlabel
@@ -89,6 +95,8 @@ Tunggu semua peninjau selesai, baru gabungkan tanpa token: `python3 "$R/scripts/
   worktree (aturan skill `develop` langkah 5.1).
 - Putaran ulang: jalankan ulang `review-prep.py`, lalu **hanya** peninjau di `putaran_ulang=`, dengan
   path `findings.md`; mereka memverifikasi temuannya dan baris yang berubah karena perbaikan. Maksimal 3 putaran.
+  Temuan Low tidak memicu putaran ulang (aturan skill `develop` 5.3): `hanya_low=ya` → cukup `run-checks.py`
+  lulus dan laporan `developer` menandai setiap butir.
 
 ## 4. Tandai sudah ditinjau
 

@@ -59,6 +59,7 @@
       "root": ".",
       "adapter": ".claude/mobile-stack.md",
       "lint": "bun run lint",
+      "lintRelated": "{lint untuk file yang berubah, mis. bunx eslint --max-warnings=0 / TIDAK ADA}",
       "typecheck": "bun run typecheck",
       "test": "bun run test",
       "testRelated": "{mis. bunx jest --findRelatedTests / bunx vitest related --run / TIDAK ADA}",

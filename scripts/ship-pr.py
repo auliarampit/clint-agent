@@ -15,7 +15,7 @@
 Mode MR dibaca dari .claude/clint.json (`mr.mode`, `mr.cli`, `mr.targetBranch`).
 Keluaran key=value; exit ≠ 0 dengan `error=` saat berhenti. Tidak pernah force push.
 """
-import argparse, json, os, subprocess, sys
+import argparse, json, os, subprocess, sys, time
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UJI = False
@@ -29,6 +29,19 @@ def jalan(args, cwd, cek=True, inp=None):
     if cek and r.returncode != 0:
         henti(f"{' '.join(args[:4])} gagal: {(r.stderr or r.stdout).strip()[:300]}")
     return r.stdout.strip()
+
+
+def catat(data):
+    """Satu baris per PR terkirim di ~/Library/Logs/clint/pr.jsonl, dibaca audit-usage.py."""
+    if UJI:
+        return
+    log = os.path.expanduser("~/Library/Logs/clint/pr.jsonl")
+    try:
+        os.makedirs(os.path.dirname(log), exist_ok=True)
+        with open(log, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"t": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "jadi": "kirim", **data}) + "\n")
+    except OSError:
+        pass
 
 
 def mr_terbuka(lihat, cwd):
@@ -114,6 +127,7 @@ def main():
             henti(f"push ke {base} ditolak; commit ada di {base} lokal, jalankan `git push origin {base}`: "
                   f"{r.stderr.strip()[:200]}", 5)
         print(f"push={base}")
+        catat({"repo": repo, "branch": branch, "mr": None, "mode": mode, "plan": a.plan, "pr": a.pr, "draft": False})
         if a.worktree:
             jalan(["git", "worktree", "remove", kerja], repo)
         jalan(["git", "branch", "-q", "-D", branch], repo)
@@ -141,6 +155,8 @@ def main():
             henti(f"MR tidak ditemukan setelah dibuat; buat manual dari branch {branch}", 6)
         nomor, url = mr or ("?", "")
         print(f"mr=!{nomor} {url}" + (" draft" if a.draft else ""))
+        catat({"repo": repo, "branch": branch, "mr": nomor, "mode": mode, "plan": a.plan, "pr": a.pr,
+               "draft": bool(a.draft)})
 
     if a.saran and os.path.getsize(a.saran) > 2:
         blok = jalan(["python3", f"{R}/scripts/mr-suggestions.py", str(nomor), a.saran, "--deskripsi"], kerja)

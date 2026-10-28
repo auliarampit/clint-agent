@@ -19,7 +19,7 @@ bila ia menambah nilai yang tidak bisa didapat murah di sesi ini. **Tugas kecil 
 
 | Ukuran | Ciri | Tim |
 |---|---|---|
-| **Mikro** | 1–2 file, ≤ ~30 baris, area biasa (teks, warna, testID, satu kondisi, konfigurasi kecil) | **Tanpa subagent.** Kerjakan langsung di sesi ini mengikuti skill platform → lint/typecheck/test → commit → MR. Cocokkan sendiri dengan checklist skill |
+| **Mikro** | 1–2 file, ≤ ~30 baris, area biasa (teks, warna, testID, satu kondisi, konfigurasi kecil) | **Tanpa subagent.** Kerjakan langsung di sesi ini mengikuti skill platform → `run-checks.py` → commit → MR. Cocokkan sendiri dengan checklist skill |
 | **Kecil** | 1 PR, ≤ ~150 baris, area biasa | `developer` + **satu** peninjau: `code-reviewer` (clean code + aturan project) |
 | **Sedang** | 1 PR > ~150 baris, atau menyentuh area sensitif (auth, token/penyimpanan data sensitif, query/data/migrasi, kontrak API, pembayaran), dinilai dari **isi** diff, bukan hanya nama file | `developer` + `conformance-reviewer` + `code-reviewer` + **maksimal 2** auditor paling relevan (tabel 5.3) |
 | **Besar** | modul / > 1 PR / lintas platform / arsitektur atau teknologi baru | `solution-architect` sekali (tinjau rencana) → `planner` → setiap PR ditangani sesuai ukurannya sendiri |
@@ -50,7 +50,8 @@ hanya untuk diteruskan ke agent (beri path/potongan saja).
 - **Satu perintah, tanpa token:** `bash "$R/scripts/preflight.sh" .` → fetch, tarik `relatedRepos` yang bersih
   (dokumen dan desain terbaru), lalu cetak `base`, `mr_mode`, `surface=...`, status tiap related repo, dan
   `paralel=` (sisa disk ≥ 20 GB → 3 PR sekaligus; 5–20 GB → 1). Exit 1 = belum ada `.claude/clint.json` →
-  tawarkan `/clint:setup`; exit 2 = disk < 5 GB → berhenti dan laporkan.
+  tawarkan `/clint:setup`; exit 2 = disk < 5 GB → berhenti dan laporkan. `adapter_besar=` → kerja tetap jalan;
+  sebut di laporan akhir dan sarankan `/clint:setup sync` untuk memindahkan isi jurnal adapter.
 - Cocokkan tugas dengan `surfaces[]` (dari path/app yang disebut, atau dari rencana). Tugas
   menyentuh app yang tidak ada di `surfaces[]` (mis. backend/web saat clint baru dipasang
   untuk mobile) → berhenti, sebut surface yang tidak tercakup, dan sarankan mengerjakannya
@@ -148,7 +149,9 @@ Di langkah berikutnya, `<path kerja>` = repo utama atau path worktree tersebut.
 Bug yang penyebabnya belum jelas: panggil `bug-investigator` dulu dan sertakan diagnosisnya ke `developer`.
 
 
-Beri: `<path kerja>` (absolut), teks lengkap bagian rencana PR, surface yang terlibat.
+Potongan rencana tanpa token: `python3 "$R/scripts/plan-slice.py" <rencana> PR-<n> --dir <path kerja>` →
+`potongan=<path>` (bagian umum + baris tabel dan rincian PR ini saja, di folder kerja PR).
+Beri: `<path kerja>` (absolut), path potongan itu (bukan teks atau file rencana utuh), surface yang terlibat, `R`.
 Tunggu laporannya. Kalau `developer` berhenti dengan pertanyaan (teknis atau situasi
 wajib-tanya dari skill platform):
 
@@ -158,7 +161,7 @@ wajib-tanya dari skill platform):
    tertahan menunggu.
 3. Setelah user menjawab, lanjutkan **agent developer yang sama** dengan SendMessage berisi
    jawaban user (konteks dan pekerjaannya tetap). Agent sudah tidak tersedia → panggil
-   `developer` baru dengan bagian rencana + jawaban user + daftar file yang sudah diubah.
+   `developer` baru dengan path potongan rencana + jawaban user + daftar file yang sudah diubah.
 
 ### 5.3 Tinjauan sesuai ukuran
 
@@ -195,14 +198,15 @@ memeriksa kebenaran logika dan kesesuaian dengan rencana.
 (`git -C <path kerja> rev-parse --path-format=absolute --git-common-dir`; di dalam `.git`, jadi tidak ikut
 ter-commit).
 - `pr.diff` (dari `review-prep.py`): peninjau diberi **path**-nya, bukan isi diff;
-- beri hanya potongan rencana untuk PR ini, plus hasil lint/typecheck/test dari laporan
-  `developer` (supaya tidak dijalankan ulang);
+- `rencana-PR-<n>.md` (dari `plan-slice.py`) dan `checks.md` (dari `run-checks.py` yang dijalankan `developer`):
+  peninjau diberi path keduanya, tidak membaca rencana utuh dan tidak menjalankan ulang lint/typecheck/test;
 - `temuan-<agent>.md`: blok keluaran tiap peninjau, ditulis peninjau sendiri (beri path folder di prompt);
 - `findings.md`: gabungan dari `merge-findings.py`.
 
 Setiap peninjau menutup laporan dengan blok seragam `VERDICT: LGTM | Needs Fix` + `TEMUAN:` berlabel
 `[Critical]`/`[Major]`/`[Minor]`/`[Low]` (`path:baris · aspek · kategori · masalah`, `sekarang`, `usulan`,
-`(luar cakupan)` bila perlu). Semua tingkat, termasuk Low, wajib diperbaiki dan menahan MR. Temuan
+`(luar cakupan)` bila perlu). Semua tingkat, termasuk Low, wajib diperbaiki dan menahan MR,
+tetapi Low tidak memicu putaran ulang (lihat di bawah). Temuan
 `(luar cakupan)` tidak menahan PR ini apa pun tingkatnya; yang Critical/Major disebut di laporan akhir.
 
 **Kumpulkan dulu, perbaiki sekaligus.** Tunggu semua peninjau di putaran itu selesai, lalu gabungkan tanpa token:
@@ -214,7 +218,10 @@ SendMessage ke agent yang sama bila masih ada. Usulan yang bertentangan dengan a
 alasannya. `developer` menandai setiap butir diperbaiki/dilewati di laporannya.
 Putaran ulang: jalankan ulang `review-prep.py` (memperbarui `pr.diff`), lalu **hanya** peninjau di `putaran_ulang=`,
 dengan path `findings.md` + `pr.diff`; mereka memverifikasi temuannya dan baris yang berubah karena perbaikan,
-bukan meninjau dari awal. **Maksimal 3 putaran perbaikan.** Masih ada temuan setelah itu → berhenti, laporkan
+bukan meninjau dari awal. `putaran_ulang=` hanya memuat peninjau dengan temuan Critical/Major/Minor; peninjau
+yang hanya memberi Low tidak dipanggil lagi. `hanya_low=ya` → setelah `developer` memperbaiki, cukup
+`run-checks.py` lulus dan laporannya menandai setiap butir `diperbaiki`/`dilewati`, tanpa tinjauan ulang.
+**Maksimal 3 putaran perbaikan.** Masih ada temuan setelah itu → berhenti, laporkan
 ke user, jangan buat MR. Temuan luar cakupan dan usulan yang dilewati karena bertentangan dengan aturan project
 dicantumkan di deskripsi MR.
 
@@ -319,7 +326,11 @@ Tindak lanjut yang tidak menghasilkan MR baru (mis. perbaikan di MR yang sama) �
 
 - Jangan membaca dokumen/rencana utuh di sesi utama; cukup tabel *Urutan pekerjaan* dan potongan
   bagian tiap PR (`grep -n` + `sed -n`). Agent yang butuh detail membacanya sendiri.
-- Teruskan ke setiap agent hanya potongan yang relevan untuk PR-nya.
+- Teruskan ke setiap agent hanya potongan yang relevan untuk PR-nya (`plan-slice.py`), berupa path.
+- Sesi utama tidak menjalankan ulang lint/typecheck/test: hasilnya di `checks.md`. Pengecualian: `--check` di
+  `ship-pr.py` (hanya berjalan bila branch di-rebase).
+- Sesi utama tidak membuka screenshot, log E2E, atau keluaran tool besar yang tersimpan ke file (`tool-results`):
+  kegagalan E2E diserahkan ke `e2e-tester`/`bug-investigator`, file besar cukup di-`grep` untuk baris yang perlu.
 - Minta setiap agent melapor ringkas (±25 baris). Simpan hanya verdict, daftar file, dan temuan yang tersisa;
   jangan menyalin ulang laporan panjang ke pesan berikutnya.
 - Tidak ada `sleep`/polling untuk pipeline, build, atau pihak luar lain (lihat aturan agent).

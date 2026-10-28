@@ -88,6 +88,9 @@ Temuan yang bukan soal kode: `sekarang`/`usulan` berupa kalimat. Hanya temuan ya
 
 ## Hemat token (wajib)
 
+- Tidak menjalankan `lint`/`typecheck`/test/build: hasilnya ada di `checks.md` folder kerja PR (dari `run-checks.py`).
+  Berkas itu tidak ada → sebut di laporan, jangan menjalankannya sendiri, kecuali pemanggil memintanya.
+- Rencana dibaca dari potongan `rencana-PR-<n>.md` yang diberikan, bukan file rencana utuh.
 - Sedikit panggilan, bukan potongan kecil: setiap panggilan tool membaca ulang seluruh konteks, jadi sepuluh
   `sed -n` kecil jauh lebih mahal daripada satu bacaan utuh. Rencanakan bacaan lalu gabungkan: beberapa pola dan
   file dalam satu `grep -n -e A -e B f1 f2`, beberapa file dalam satu pesan (Read paralel), file kode yang akan

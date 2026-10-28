@@ -62,7 +62,9 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    `ciOnMr`: cek yang benar-benar dijalankan CI pada MR (baca `.gitlab-ci.yml`/`ci/*.yml`/`.github/workflows/*`:
    job dan `rules`-nya); job yang hanya jalan terjadwal/di branch utama tidak dihitung. `surfaces[].testRelated`:
    perintah test untuk file yang berubah dari test runner project (jest `--findRelatedTests`, vitest `related --run`),
-   `TIDAK ADA` bila runner tidak mendukung.
+   `TIDAK ADA` bila runner tidak mendukung. `surfaces[].lintRelated`: perintah lint yang menerima daftar file, dengan
+   opsi yang sama dengan skrip `lint` di `package.json` (mis. `eslint . --max-warnings=0` →
+   `bunx eslint --max-warnings=0`); dipakai `run-checks.py` supaya lint tidak memeriksa seluruh project setiap kali.
    `docs.language`: bahasa dokumen yang sudah ada di `docs.requirements` (`id` atau `en`); belum ada
    dokumen → `en`. Sebutkan nilainya di ringkasan supaya user bisa mengubahnya.
    `docs.feedback`: folder feedback/bug QA (cari `ls -d ../docs/qa/feedback docs/qa 2>/dev/null`
@@ -123,7 +125,7 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    Perbedaan di project bisa jadi perbaikan yang belum naik ke master. Tanya per file: tarik
    dari master, naikkan ke master, atau biarkan.
 4. File master yang belum ada di project (mis. `sonarqube.md`, `no-ai-slop.md`, field `docs.language`, `ciOnMr`,
-   `surfaces[].testRelated`, `autoReview`, `docs.logbook`, `memory.wing`) → tawarkan
+   `surfaces[].testRelated`, `surfaces[].lintRelated`, `autoReview`, `docs.logbook`, `memory.wing`) → tawarkan
    untuk ditambahkan.
    **`tugas`**: belum ada → buat lewat alur `tugas` di mode setup langkah 5. Sudah ada → jalankan
    `python3 "$R/scripts/tugas-saya.py" .`; ada `STATUS TIDAK DIKENAL` atau file sumber

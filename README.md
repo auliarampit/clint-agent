@@ -703,9 +703,13 @@ Window** di VS Code agar sesi baru memakai hook terbaru.
 Model tidak diturunkan; yang dijaga cara kerjanya:
 
 - tiap perintah hanya memuat instruksi untuk jenis kerjanya (perintah dipecah per jenis kerja);
-- peninjau menerima path file diff + potongan rencana, bukan dokumen utuh;
-- hasil test `developer` diteruskan, tidak dijalankan ulang;
-- temuan semua peninjau dikumpulkan lalu diperbaiki sekaligus; putaran ulang hanya memverifikasi temuan sebelumnya;
+- `developer` dan peninjau menerima path potongan rencana dari `plan-slice.py` (bagian umum + baris PR itu saja,
+  ±50% dari rencana utuh), bukan rencana utuh;
+- cek lokal lewat `run-checks.py`: lint hanya file yang berubah (`surfaces[].lintRelated`), typecheck, dan test
+  terkait, paralel; keluaran lengkap ke `checks.md`, yang tercetak hanya ringkasan. Peninjau dan sesi utama
+  membaca `checks.md`, tidak menjalankan ulang;
+- temuan semua peninjau dikumpulkan lalu diperbaiki sekaligus; putaran ulang hanya memverifikasi temuan sebelumnya,
+  dan temuan Low (tetap wajib diperbaiki) tidak memicu putaran ulang;
 - auditor hanya jalan bila diff relevan, maksimal 2 per PR; potret layar hanya bila perlu;
 - review otomatis hanya untuk ≥ 40 baris, sekali per perubahan;
 - pemantau (`change-tracker`, `status-reporter`) mengumpulkan bahan dalam **satu panggilan skrip**
@@ -720,7 +724,8 @@ Model tidak diturunkan; yang dijaga cara kerjanya:
 - **tidak menunggu pihak luar**: tidak ada `sleep`/polling untuk pipeline, build EAS, atau deploy; agent
   melapor "tertunda" dan hasilnya muncul di `/clint:status`;
 - **adapter ramping**: maksimal 300 baris / 25 KB, karena dibaca di setiap tugas; catatan keputusan per modul
-  disimpan di ADR atau rencana (`/clint:setup sync` memperingatkan adapter yang membengkak);
+  disimpan di ADR atau rencana (`preflight.sh` mencetak `adapter_besar=`, `/clint:setup sync` menawarkan
+  pemindahannya);
 - **maksimal 3 PR per run** dan laporan agent ringkas, supaya konteks sesi tidak membengkak;
 - `e2e-tester` hanya menjalankan flow fitur yang diuji (ditambah smoke), mengulang hanya yang gagal, dan tidak
   membuka potret layar kecuali log teks tidak cukup;
@@ -741,8 +746,15 @@ Bagian ini tidak bisa dipaksakan oleh clint, karena yang mengatur sesi adalah An
 | **Setelah istirahat > 1 jam, mulai sesi baru** (`/clint:status`), jangan melanjutkan sesi besar | Cache sudah kedaluwarsa, jadi seluruh percakapan ditulis ulang dengan harga 2× |
 | Ikuti baris *Berikutnya* | Bila menyebut "sesi baru", ketik `/clear` dulu |
 
-Ukur ulang kapan saja dengan script laporan token di turborepo
-(`apps/docs/99-ai-dlc/token/ai-usage-report.py --role dev --person <nama> --all-projects`).
+### Mengukur
+
+`python3 scripts/audit-usage.py [--sejak YYYY-MM-DD] [--sampai YYYY-MM-DD] [--proyek <kata>] [--json <file>]`
+(default 7 hari terakhir) membaca transkrip sesi Claude Code dan `~/Library/Logs/clint/pr.jsonl`, lalu
+mencetak token per perintah dan per agent (termasuk ukuran konteks awal → rata-rata), menit aktif dan token per
+PR, putaran tinjauan, subagent dan waktu cek per PR, per modul (rencana), serta total waktu lint/typecheck/test/E2E.
+`pr.jsonl` diisi otomatis: `prepare-branch.sh` (mulai, dengan id sesi), `merge-findings.py` (setiap putaran),
+`ship-pr.py` (MR atau push). PR yang dibuat di luar alur itu tidak terhitung per PR, tetapi tokennya tetap
+masuk total per perintah.
 
 ## Konfigurasi
 
@@ -774,7 +786,8 @@ Dibuat oleh `/clint:setup` dan di-commit untuk seluruh tim:
     { "name": "mobile", "root": ".", "adapter": ".claude/mobile-stack.md",
       "lint": "bun run lint", "typecheck": "bun run typecheck", "test": "bun run test",
       "e2e": "bun run test:e2e", "formatFile": "bunx prettier --write",
-      "testRelated": "bunx jest --findRelatedTests" }   // test untuk file yang berubah
+      "testRelated": "bunx jest --findRelatedTests",    // test untuk file yang berubah
+      "lintRelated": "bunx eslint --max-warnings=0" }   // lint untuk file yang berubah
   ]
 }
 ```
@@ -878,7 +891,7 @@ clint/
   agents/            21 agent
   skills/            status · develop · review · test · docs · release · setup
   hooks/             prinsip kerja + bahasa, ingatan mempalace, format, review otomatis, kabar, status sesi
-  scripts/           tarik repo kerja + relatedRepos (sync-repos.sh), status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), bahan logbook (logbook-draft.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
+  scripts/           tarik repo kerja + relatedRepos (sync-repos.sh), status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), cek lokal (run-checks.py), potongan rencana (plan-slice.py), audit pemakaian (audit-usage.py), bahan logbook (logbook-draft.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
   menubar/           aplikasi menu bar (ClintBar.swift), panel (panel.html), data (data.py), build.sh
   kit/               master skill/rules/adapter + sonarqube.md yang DISALIN ke project (lihat kit/README.md)
   docs/images/       gambar README; sumbernya di docs/images/source (python3 build.py)
@@ -912,9 +925,10 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 6 | **v2**: nama bahasa Inggris, 7 perintah per jenis kerja, dua bahasa, standar SonarQube | selesai |
 | 6b | **v2.3**: isolasi antar project, klaim PR antar sesi, `## Status PR` di rencana, `status plan`, *Berikutnya* bertanda paralel/urutan, menutup MR Draft, format temuan peninjau seragam | selesai |
 | 7 | **Review sejajar standar Badr + skrip alur PR**: label `Critical/Major/Minor/Low` dan verdict `LGTM/Needs Fix`, semua tingkat wajib diperbaiki, temuan dikumpulkan lalu diperbaiki sekaligus (maks 3 putaran); komentar temuan di MR dengan mention author (opsional, default mati); aturan Anti-Slop digabung ke `no-ai-slop.md`; skrip `preflight`, `prepare-branch`, `review-prep`, `merge-findings`, `ship-pr` (skrip penyaring lolos uji banding di 5 MR lama + 2 cacat tanam); penanda MR menunggu peer review > 3 jam (SA) dan > 5 jam (lead) di `status` | selesai |
+| 7b | **v2.15 lebih cepat dan hemat** (dari audit 19–28 Okt): `run-checks.py` (lint file berubah, paralel, hasil dipakai ulang peninjau), `plan-slice.py` (potongan rencana per PR), temuan Low tanpa putaran ulang, sesi utama tidak membuka screenshot/keluaran besar, peringatan adapter > 25 KB, `audit-usage.py` + `pr.jsonl` untuk mengukur per PR | selesai |
 | 8 | **Layout repo Badr**: repo root + repo domain (docs, design, qa, app, data-pipeline, mobile), `clint.json` di repo root, status dan `change-tracker` lintas repo domain, commit tetap per repo; `setup audit` untuk repo standard (skrip) | ditunda, menunggu standar repo Badr resmi (bentuk repo root dan isi wajib tiap repo) |
 | 9 | **Logbook dan memori**: `/clint:docs logbook` menulis entri harian per orang di `docs/logbook/YYYY-MM.md` (bahan dari skrip `logbook-draft.sh`); mempalace untuk ingatan antar sesi (`embeddinggemma`, wake-up wing project di awal sesi, transkrip disimpan saat sesi berakhir); satu fakta di satu tempat | selesai |
 | 10 | **Dokumen lengkap**: rantai dokumen per project (`docs` di `clint.json`) + template `kit/docs/` (PRD, SAD, ERD, STD, API contract OpenAPI 3.1, ADR, UAT, BAST, quick guide, sprint review); `solution-architect`: SAD dan ERD per domain; `business-analyst`: UAT dan BAST; uji terpandu `qa-analyst`; tampilan `status` per peran; skrip `trace` (AC↔TC, cascade ID) dan `sprint-evidence` | agent BA, QA, sprint-tracker sudah ada; sisanya rencana |
 | 11 | **Dokumen async**: ekspor DOCX/PDF setelah repo docs berubah, sinkron ke folder OneDrive lewat `microsoft/connector` | rencana |
 | 12 | **QA dan ops**: smoke test dan load test (`loadmeter/mcp`), template job CI untuk security test, `/clint:release` ops (preflight, backup, health check) | rencana |
-| 13 | **Adopsi AI Standard**: uji berdampingan dengan mattpocock/skills dan rtk (lalu putuskan skrip `run-checks`), `gitlab/mcp` dengan cadangan `glab`, secret dari passbolt/infisical/vault, jira opsional; skill khusus repo menang, clint tidak menduplikasi; mode adopsi dan uji di turborepo, magnet-rezeki, lajoo | rencana |
+| 13 | **Adopsi AI Standard**: uji berdampingan dengan mattpocock/skills dan rtk (`run-checks` sudah ada sejak v2.15), `gitlab/mcp` dengan cadangan `glab`, secret dari passbolt/infisical/vault, jira opsional; skill khusus repo menang, clint tidak menduplikasi; mode adopsi dan uji di turborepo, magnet-rezeki, lajoo | rencana |

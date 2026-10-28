@@ -9,6 +9,11 @@ R="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo" || exit 1
 git fetch -q origin --prune
 
+# Awal PR untuk audit-usage.py (pasangannya baris "kirim" dari ship-pr.py).
+log="$HOME/Library/Logs/clint/pr.jsonl"
+mkdir -p "${log%/*}" 2>/dev/null && jq -cn --arg t "$(date +%Y-%m-%dT%H:%M:%S%z)" --arg sid "$sid" \
+  --arg repo "$(pwd)" --arg branch "$branch" '{t:$t, jadi:"mulai", sid:$sid, repo:$repo, branch:$branch}' >>"$log" 2>/dev/null
+
 if [ -z "$paksa" ] && sibuk="$(bash "$R/scripts/repo-busy.sh" . "$sid")"; then
   asal="$(git branch --show-current)"
   git switch -q -c "$branch" "$base" || exit 1

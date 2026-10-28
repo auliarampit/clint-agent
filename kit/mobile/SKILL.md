@@ -913,7 +913,7 @@ Lokal hanya cek **cepat** yang terkait perubahan; yang dijalankan CI pada MR (`c
 
 | Cek | Lokal | Pipeline |
 |---|---|---|
-| format + lint file yang diubah, typecheck | selalu | ya |
+| format + lint file yang diubah (`surfaces[].lintRelated`), typecheck, lewat `run-checks.py` | selalu | ya |
 | test **terkait perubahan** (`surfaces[].testRelated` + file yang diubah; tanpa itu: test yang ditambah/diubah dan test di folder modul yang disentuh) | selalu | — |
 | suite test penuh, coverage, SonarQube, build | hanya bila **tidak** ada di `ciOnMr` | bila ada di `ciOnMr` |
 

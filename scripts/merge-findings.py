@@ -6,9 +6,11 @@
 Masukan: <folder>/temuan-<agent>.md, masing-masing berisi blok `VERDICT:` + `TEMUAN:` (format seragam peninjau).
 Temuan ganda hanya digabung bila path, baris, dan kategori sama persis; selain itu semua temuan tetap ada.
 Keluaran: <folder>/findings.md dan ringkasan di stdout (verdict per agent, jumlah per tingkat, agent yang
-perlu ikut putaran ulang).
+perlu ikut putaran ulang). Temuan Low tetap wajib diperbaiki, tetapi tidak memicu putaran ulang: peninjau yang
+hanya memberi Low tidak dipanggil lagi (`hanya_low=ya` bila semua temuan Low). Setiap putaran dicatat ke
+~/Library/Logs/clint/pr.jsonl untuk audit-usage.py.
 """
-import glob, os, re, sys
+import glob, json, os, re, sys, time
 
 TINGKAT = ["Critical", "Major", "Minor", "Low"]
 ITEM = re.compile(r"^\s*- \[(Critical|Major|Minor|Low)\]\s+(.+)$")
@@ -92,13 +94,28 @@ def main():
         f.write("\n".join(out))
 
     hitung = {t: sum(1 for i in dalam if i["tingkat"] == t) for t in TINGKAT}
-    ulang = sorted({a for i in dalam for a in i["agents"]})
+    ulang = sorted({a for i in dalam if i["tingkat"] != "Low" for a in i["agents"]})
     print(f"findings={os.path.join(folder, 'findings.md')}")
     for a, (v, k) in verdicts.items():
         print(f"verdict {a}={v} temuan={k}")
     print("jumlah " + " ".join(f"{t}={c}" for t, c in hitung.items()) + f" luar_cakupan={len(luar)}"
           + f" digabung={sum(len(i['agents']) - 1 for i in semua)}")
     print("putaran_ulang=" + (",".join(ulang) or "-"))
+    if dalam and not ulang:
+        print("hanya_low=ya")
+    common, _, branch = os.path.abspath(folder).partition(f"{os.sep}clint{os.sep}")
+    catat({"jadi": "tinjau", "repo": os.path.dirname(common), "branch": branch, "putaran": int(putaran), "jumlah": hitung,
+           "peninjau": sorted(verdicts), "ulang": ulang})
+
+
+def catat(data):
+    log = os.path.expanduser("~/Library/Logs/clint/pr.jsonl")
+    try:
+        os.makedirs(os.path.dirname(log), exist_ok=True)
+        with open(log, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"t": time.strftime("%Y-%m-%dT%H:%M:%S%z"), **data}) + "\n")
+    except OSError:
+        pass
 
 
 if __name__ == "__main__":
