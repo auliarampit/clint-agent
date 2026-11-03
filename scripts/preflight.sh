@@ -15,6 +15,19 @@ jq -r '.surfaces[]? | "surface=\(.name) root=\(.root // ".")"' "$cfg"
 jq -r '.surfaces[]?.adapter // empty' "$cfg" | while read -r ad; do
   [ -f "$ad" ] && kb=$(( $(wc -c <"$ad") / 1024 )) && [ "$kb" -gt 25 ] && echo "adapter_besar=$ad ${kb}KB"
 done
+# Gerbang mesin quality-gates.md §1 yang belum terpasang (penolakan tertulis di adapter tidak dihitung) dan harness ukur.
+jq -r '.surfaces[]? | "\(.root // ".")\t\(.adapter // "")"' "$cfg" | while IFS=$'\t' read -r root ad; do
+  pj="$root/package.json"; [ -f "$pj" ] || continue
+  kurang=""
+  for g in eslint-plugin-sonarjs:sonarjs jscpd:jscpd knip:knip; do
+    paket="${g%%:*}"; nama="${g##*:}"
+    grep -q "\"$paket\"" "$pj" && continue
+    [ -f "$ad" ] && grep -qiE "$nama.*ditolak" "$ad" && continue
+    kurang="$kurang $nama"
+  done
+  [ -n "$kurang" ] && echo "gerbang_kurang=$root:$kurang"
+  [ -f "$root/docs/performa/baseline.md" ] || [ -f docs/performa/baseline.md ] || echo "harness=tidak ada ($root)"
+done
 bash "$sini/sync-repos.sh" "$dir" | sed 's/^repo=/related=/'
 gb="$(df -g ~ | awk 'NR==2 {print $4}')"
 if [ "$gb" -ge 20 ]; then par=3; elif [ "$gb" -ge 5 ]; then par=1; else par=0; fi

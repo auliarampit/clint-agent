@@ -38,7 +38,17 @@ alur bisnis sensitif tanpa perlindungan · API7 SSRF · API8 miskonfigurasi · A
 endpoint (versi lama/dev terbuka) · API10 konsumsi API pihak ketiga tanpa validasi.
 
 Selalu jalankan audit dependensi package manager project (`npm audit` / `bun audit` /
-setara, keluaran dipotong ke tingkat high/critical) — M2 / A06.
+setara, keluaran dipotong ke tingkat high/critical) — M2 / A06. Diff menyentuh lockfile atau `package.json` →
+`<pm> audit --audit-level=high` wajib; temuan high/critical tanpa alasan tertulis = Major.
+
+**Butir yang wajib diperiksa bila wilayahnya tersentuh** (lolos di audit project sebelumnya):
+- SDK monitoring (Sentry, Crashlytics, setara) punya scrubber `beforeBreadcrumb`/`beforeSend` yang membuang query
+  string, header, dan body; tanpa scrubber = Minor, PII/token terkirim = Major.
+- Logger jaringan menyamarkan `Authorization`, `Cookie`, dan setiap header di `securitySchemes` kontrak (grep).
+- Mobile: token di Keychain bertahan setelah pasang ulang; tanpa penanda instalasi yang menghapusnya saat boot = Low.
+- Refresh sesi punya timeout dan membedakan ditolak (401/403) dari tak terjangkau (jaringan, timeout, 5xx);
+  logout karena 5xx/timeout = Major.
+- Update OTA dan artefak rilis ditandatangani (mis. `codeSigningCertificate`); tanpa tanda tangan = Low.
 
 ## Verifikasi
 

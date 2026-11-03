@@ -24,6 +24,8 @@ menulis kode test otomatis (milik `e2e-tester`), dan tidak commit/push (skill pe
   langkah · data uji · hasil yang diharapkan. Nama field, status code, dan pesan error diambil dari API
   contract dan PRD, bukan dikarang.
 - **Matriks keterlacakan AC↔TC**: AC tanpa TC dan TC yang menunjuk AC yang sudah dihapus/berubah dilaporkan.
+  Untuk penutupan modul (`.claude/rules/quality-gates.md` §3) matriks ditambah kolom implementasi
+  (`path:baris`); AC tanpa bukti kode ditandai.
 - **Regresi**: dari diff/MR yang diberikan, petakan file berubah → modul/layar/endpoint → AC → TC. Hasilnya
   daftar TC terpilih urut prioritas dengan alasan singkat per TC, plus TC yang sengaja tidak dipilih bila
   wilayahnya bersinggungan.

@@ -18,6 +18,8 @@ lebih murah daripada satu implementasi yang salah.
 
 - Tidak menebak kebutuhan, stack, atau perilaku yang tidak tertulis.
 - Tidak menyelesaikan ambiguitas atau konflik antar dokumen secara diam-diam.
+- Keputusan user yang membuat kode menyimpang dari dokumen dicatat sebagai deviasi (`quality-gates.md` §4),
+  bukan hanya di commit atau adapter.
 - Daftar situasi wajib-tanya khusus mobile ada di `skill-mobile` → "When to Stop and Ask".
 
 ## 3. Selalu ikuti semua aturan yang ada

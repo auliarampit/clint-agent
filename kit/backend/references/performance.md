@@ -61,15 +61,17 @@ kosong. Adapter §11 boleh menetapkan angka lebih ketat, tidak boleh lebih longg
 - Tidak ada pekerjaan berat saat aplikasi start yang memperlambat deploy/scale-out; inisialisasi
   koneksi dilakukan sekali dan dipakai ulang.
 
-## 6. Cara mengukur dan melapor
+## 6. Cara mengukur dan melapor (wajib)
 
-1. Query baru/berubah pada tabel besar: lampirkan ringkasan rencana eksekusi (indeks dipakai, perkiraan
-   baris) di laporan/MR.
-2. Endpoint baru atau di jalur panas: ukur latensi (log timing, APM, atau load test di adapter §11, mis.
-   k6/Artillery) dan jumlah query per permintaan; angka **sebelum dan sesudah** bila mengubah yang sudah ada.
-3. Tidak bisa diukur → tulis "performa belum terukur" beserta alasannya. **Jangan pernah mengklaim target
-   tercapai tanpa angka.**
-4. Regresi terhadap target di bagian 1 menahan MR sampai diperbaiki atau user menyetujui pengecualiannya.
-5. Bagian lama yang **sudah** di bawah target sebelum PR ini: PR tidak boleh memperburuknya, dan selisihnya
+1. Harness adapter §11: uji beban (`k6`/`autocannon`/setara) p50/p95/p99 dan galat per endpoint panas, RSS dan
+   heap setelah 10.000 permintaan (naik < 10% setelah pemanasan, `quality-gates.md` §2.2), `EXPLAIN` query jalur
+   panas. Harness belum ada → buat dulu sesuai `quality-gates.md` §2.1.
+2. Query baru/berubah pada tabel besar: ringkasan rencana eksekusi (indeks dipakai, perkiraan baris) di MR.
+3. Endpoint baru atau di jalur panas, job, ekspor/impor: angka **sebelum dan sesudah** (latensi, jumlah query per
+   permintaan, memori) di MR dan di `docs/performa/baseline.md`.
+4. Tidak bisa diukur → MR **Draft** dengan status "performa belum terukur" beserta alasannya
+   (`quality-gates.md` §2.4). **Jangan pernah mengklaim target tercapai tanpa angka.**
+5. Regresi terhadap target di bagian 1 menahan MR sampai diperbaiki atau user menyetujui pengecualiannya.
+6. Bagian lama yang **sudah** di bawah target sebelum PR ini: PR tidak boleh memperburuknya, dan selisihnya
    dilaporkan sebagai utang performa (angka + penyebab dugaan), bukan penahan MR. Bila PR memang menyentuh
    penyebabnya, perbaiki sekalian selama masih dalam lingkup; bila tidak, sarankan tugas terpisah.

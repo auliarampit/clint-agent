@@ -156,7 +156,8 @@ menunggu atau memantau pipeline; hasilnya muncul di `/clint:status`.
 - [ ] Migrasi bisa dijalankan pada data yang ada; transaksi dan indeks sesuai kebutuhan query.
 - [ ] Test: aturan bisnis (unit) + endpoint/repository (integrasi, adapter §11) + kasus error utama.
 - [ ] Tidak ada rahasia/data pribadi di log; panggilan keluar punya timeout.
-- [ ] `references/performance.md` dipenuhi: tanpa N+1, query di tabel besar memakai indeks, kerja lambat di job; latensi/rencana query diukur (angka, atau "belum terukur").
+- [ ] `references/performance.md` dipenuhi: tanpa N+1, query di tabel besar memakai indeks, kerja lambat di job; latensi, memori, dan rencana query diukur dengan harness adapter §11 (angka; tidak terukur → MR Draft).
+- [ ] `.claude/rules/quality-gates.md` wajib diikuti di setiap task: gerbang mesin di MR, pengukuran (performa, memori, ukuran) dengan harness adapter §11, penutupan modul, dan deviasi.
 - [ ] Yang belum dikerjakan atau belum terverifikasi dilaporkan apa adanya.
 
 ---

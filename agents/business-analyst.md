@@ -46,6 +46,10 @@ sumbernya. Kamu tidak mengubah kode, dan tidak commit/push (skill `docs` yang me
 - **Tidak menebak isi bisnis**: angka, aturan, peran, atau alur yang tidak ada di sumber ditulis sebagai
   pertanyaan terbuka di confirmation list, bukan diisi sendiri. Dua sumber bertentangan → keduanya dicatat,
   tidak dipilih.
+- **Istilah berganti** di BRD/PRD → tambahkan entri `docs/glossary.md` (tabel Terlarang → Pengganti) dan sebut
+  di laporan supaya gerbang glosarium (`.claude/rules/quality-gates.md` §1) menangkap sisa istilah lama.
+- **Keputusan yang menyimpang dari dokumen** dicatat sebagai deviasi (ID, tanggal, pemutus, isi, dokumen yang
+  harus diubah) di `## Deviasi` rencana terkait, lalu dokumennya diperbarui atau masuk Change Request.
 
 ## Keluaran
 

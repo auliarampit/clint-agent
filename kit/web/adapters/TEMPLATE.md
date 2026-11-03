@@ -17,6 +17,8 @@ Terakhir diverifikasi: `{YYYY-MM-DD}` oleh `{nama}`
 | `{lintCmd}` · `{typecheckCmd}` · `{testCmd}` · `{formatCmd}` | | §2, §10 |
 | `{e2eCmd}` · `{e2ePath}` | | §11 |
 
+Baris WAJIB di §10 (gerbang mesin) dan §11 (harness ukur) juga wajib diisi (`quality-gates.md` §1–§2).
+
 ## 1. App web di project ini
 
 Verifikasi: `ls -d */ apps/*/ 2>/dev/null` lalu cari file config framework di tiap app.
@@ -120,6 +122,21 @@ Verifikasi: `ls {featuresRoot}; find {featuresRoot}/<feature-contoh> -maxdepth 2
 
 Satu formatter saja; formatter yang **tidak** dipakai: …
 
+**Gerbang mesin wajib** (`.claude/rules/quality-gates.md` §1). Semua baris WAJIB diisi; dijalankan oleh
+skrip lint supaya ikut `ciOnMr`. Ditolak user → `TIDAK ADA (ditolak <tanggal>, <alasan>)`.
+
+Verifikasi: `grep -n -E "sonarjs|jscpd|knip|no-restricted-(paths|imports)|dependency-cruiser|audit|glossary" package.json eslint.config.* .jscpd.json knip.json 2>/dev/null`
+
+| Gerbang | Perintah / config |
+|---|---|
+| Rule Sonar (`eslint-plugin-sonarjs` atau job sonar MR) | `{config / TIDAK ADA (ditolak <tanggal>)}` |
+| Duplikasi ≤ 3% (`jscpd --min-tokens 50 --threshold 3`) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Kode mati (`knip` atau padanan bahasa) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Batas lapisan (komponen UI tidak mengimpor klien API/store mentah; fitur tidak mengimpor fitur lain; kode server tidak masuk bundle klien) | `{rule + lokasi / TIDAK ADA (ditolak <tanggal>)}` |
+| Audit dependensi (`<pm> audit --audit-level=high`) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Glosarium istilah terlarang (`docs/glossary.md`) | `{perintah grep / TIDAK ADA}` |
+
+
 ## 11. Testing
 
 | Hal | Nilai |
@@ -130,6 +147,12 @@ Satu formatter saja; formatter yang **tidak** dipakai: …
 | Fixture login / seed data | |
 | Pemeriksa aksesibilitas otomatis | ya/TIDAK ADA |
 | Analisis bundle / audit performa (alat + perintah) | ya/TIDAK ADA |
+| Harness: Lighthouse CI build produksi (LCP, CLS, TBT) (WAJIB) | perintah |
+| Harness: INP (`web-vitals`) (WAJIB) | perintah/lokasi pelaporan |
+| Harness: JS awal per route (WAJIB) | perintah |
+| Harness: heap setelah 10× navigasi (WAJIB) | perintah + ambang (default < 10%) |
+| Perangkat/profil acuan | mis. Moto G Power throttling Lighthouse default |
+| Dokumen angka | `docs/performa/baseline.md` |
 | Target performa khusus project | hanya bila lebih ketat dari `references/performance.md` / TIDAK ADA |
 
 ## 12. Dokumen & desain

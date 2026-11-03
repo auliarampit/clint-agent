@@ -14,8 +14,9 @@ Argumen berupa **nama project lain** (mis. `/clint:status toko-online`) → cari
 `R` = path plugin dan `<sid>` = id sesi, dari baris *Sesi clint* di konteks sesi (cadangan
 `R=$(cat ~/.config/clint/root)`). Teruskan `R` di prompt agent.
 
-1. **Tarik semua repo dulu** (tanpa token): `bash "$R/scripts/sync-repos.sh" .` menarik repo kerja dan semua
+1. **Tarik semua repo dulu** (tanpa token): `bash "$R/scripts/preflight.sh" .` menarik repo kerja dan semua
    `relatedRepos` (docs, design, api) paralel. Repo `fetch-saja`/`gagal-tarik` disebut di laporan apa adanya.
+   Baris `gerbang_kurang=` dan `harness=` dicatat untuk langkah 3.
 2. Lalu jalankan bersamaan agent `change-tracker` (teruskan periode bila disebut) dan `status-reporter`, dan di
    sesi ini (tanpa token) `python3 "$R/scripts/plan-status.py" --session <sid>` bila `docs.plans` diatur.
    Pengumpul kedua agent memakai hasil tarikan langkah 1 (tidak menarik ulang).
@@ -23,8 +24,10 @@ Argumen berupa **nama project lain** (mis. `/clint:status toko-online`) → cari
    dampaknya ke kode, feedback/bug QA yang masih open untuk project ini (walau file-nya tidak
    berubah belakangan ini), MR (pipeline gagal, komentar baru, menunggu review dengan tanda ⚠ > 3 jam / 🔴 > 5 jam sesuai
    eskalasi standar Badr, **Draft** yang menunggu E2E),
-   rencana yang masih punya PR tersisa (satu baris per rencana: n/total selesai + yang siap), dan
-   bersih-bersih/disk bila ada yang perlu.
+   rencana yang masih punya PR tersisa (satu baris per rencana: n/total selesai + yang siap),
+   **kesehatan kualitas** (`quality-gates.md`: gerbang mesin atau harness yang belum terpasang, audit dependensi
+   high/critical, deviasi di `## Deviasi` rencana yang lebih dari 14 hari belum diturunkan ke dokumen, dokumen
+   turunan yang `basedOnPRDVersion`-nya tertinggal dari PRD), dan bersih-bersih/disk bila ada yang perlu.
 4. Simpan laporan project ini untuk menu bar tanpa menyentuh project lain: tulis JSON (bentuk di mode `all`,
    satu project) ke `~/Library/Logs/clint/<YYYY-MM-DD-HHMM>-<nama>.json` dengan tool Write, lalu
    `python3 "$R/scripts/update-report.py" merge <file>`.

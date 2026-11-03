@@ -50,6 +50,13 @@ Selain tabel:
   pertanyaan **teknis** yang tidak terjawab dokumen yang dibawa ke user.
 - Kalau backend belum siap, rencanakan lapisan mock sejak PR awal, PR E2E terhadap mock, lalu
   PR terpisah untuk mencabut mock dan memasang endpoint asli sesuai API contract.
+- Bagian **`## Deviasi`** wajib ada (kosong ditulis `-`): setiap keputusan yang membuat kode berbeda dari dokumen
+  atau prototipe, dengan ID, tanggal, pemutus, isi, dan dokumen yang harus diubah (`.claude/rules/quality-gates.md` §4).
+- Performa (`quality-gates.md` §2): project belum punya harness ukur → PR pertama rencana `chore/perf-baseline`.
+  PR yang menyentuh daftar, startup, animasi, aset, dependensi, query, atau endpoint panas menulis metrik dan
+  perintah harness yang dipakai untuk angka sebelum/sesudah.
+- PR terakhir modul adalah **penutupan modul** (`quality-gates.md` §3): matriks FR/AC → kode, review fitur
+  terhadap prototipe terbaru, sapu duplikasi/kode mati, dan harness dijalankan ulang.
 
 Bagian **`## Status PR`** wajib menjadi bagian terakhir file, satu butir per PR, dipisah baris kosong
 (PR paralel yang mengubah butirnya masing-masing tidak bentrok saat merge, sedangkan baris yang berdempetan

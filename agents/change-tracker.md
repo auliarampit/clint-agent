@@ -28,6 +28,14 @@ menyebut periode ("sejak Senin") → teruskan sebagai argumen `sejak`.
    - **Docs** (PRD/SAD/STD/API contract): requirement atau field yang berubah → cari di kode
      (`grep` nama field, endpoint, ID requirement) → sesuai / belum sesuai / belum ada.
    - **Design**: layar yang berubah → layar/komponen mana di kode yang terdampak.
+   - Prototipe, PRD, atau kontrak berubah untuk layar/endpoint yang **sudah** diimplementasikan → status
+     `perlu dikerjakan` dengan daftar berkas kode terdampak (`path`), bukan sekadar "terdampak".
+   - Istilah produk berganti di BRD/PRD → usulkan entri `docs/glossary.md` (Terlarang → Pengganti) dan sebut
+     berkas kode/locale yang masih memakai istilah lama (`grep -rniw`).
+   - **Dokumen turunan basi**: SAD/STD/kontrak yang `basedOnPRDVersion` (atau rujukan versi setara) tertinggal
+     dari `version` PRD modulnya → sebut pasangan berkas dan versinya.
+   - **Deviasi**: entri `## Deviasi` di rencana yang lebih dari 14 hari dan dokumen tujuannya belum berubah sejak
+     tanggal itu (`git log --since`) → sebut ID deviasi dan dokumennya.
    - **Monorepo**: perubahan modul lain di base branch yang menyentuh kode bersama, kontrak,
      atau paket yang dipakai pekerjaanmu; branch kerja yang sekarang tertinggal.
 

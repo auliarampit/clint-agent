@@ -17,6 +17,8 @@ Terakhir diverifikasi: `{YYYY-MM-DD}` oleh `{nama}`
 | `{lintCmd}` · `{typecheckCmd}` · `{testCmd}` · `{formatCmd}` | | §2, §10 |
 | `{migrateCmd}` · `{newMigrationCmd}` | | §5 |
 
+Baris WAJIB di §10 (gerbang mesin) dan §11 (harness ukur) juga wajib diisi (`quality-gates.md` §1–§2).
+
 ## 1. Service di project ini
 
 Verifikasi: `ls -d */ apps/*/ services/*/ 2>/dev/null` lalu cari entry point server.
@@ -108,6 +110,20 @@ Verifikasi: `ls {modulesRoot}; find {modulesRoot}/<modul-contoh> -maxdepth 2` (p
 | Tool | Perintah | Catatan |
 |---|---|---|
 
+**Gerbang mesin wajib** (`.claude/rules/quality-gates.md` §1). Semua baris WAJIB diisi; dijalankan oleh
+skrip lint supaya ikut `ciOnMr`. Ditolak user → `TIDAK ADA (ditolak <tanggal>, <alasan>)`.
+
+Verifikasi: `grep -n -E "sonarjs|jscpd|knip|no-restricted-(paths|imports)|dependency-cruiser|audit|glossary" package.json eslint.config.* .jscpd.json knip.json 2>/dev/null`
+
+| Gerbang | Perintah / config |
+|---|---|
+| Rule Sonar (`eslint-plugin-sonarjs` atau job sonar MR) | `{config / TIDAK ADA (ditolak <tanggal>)}` |
+| Duplikasi ≤ 3% (`jscpd --min-tokens 50 --threshold 3`) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Kode mati (`knip` atau padanan bahasa) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Batas lapisan (controller/transport tidak mengimpor repository/ORM langsung; modul tidak mengimpor internal modul lain) | `{rule + lokasi / TIDAK ADA (ditolak <tanggal>)}` |
+| Audit dependensi (`<pm> audit --audit-level=high`) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Glosarium istilah terlarang (`docs/glossary.md`) | `{perintah grep / TIDAK ADA}` |
+
 ## 11. Testing
 
 | Hal | Nilai |
@@ -117,6 +133,11 @@ Verifikasi: `ls {modulesRoot}; find {modulesRoot}/<modul-contoh> -maxdepth 2` (p
 | Factory/fixture data | |
 | Test kontrak | ya/TIDAK ADA |
 | Pengukuran performa (APM, log timing, load test mis. k6/Artillery + perintah) | ya/TIDAK ADA |
+| Harness: uji beban endpoint panas p50/p95/p99 + galat (WAJIB) | perintah + daftar endpoint |
+| Harness: RSS/heap setelah 10.000 permintaan (WAJIB) | perintah + ambang (default < 10%) |
+| Harness: `EXPLAIN` query jalur panas (WAJIB) | perintah |
+| Lingkungan acuan (CPU, RAM, data volume) | |
+| Dokumen angka | `docs/performa/baseline.md` |
 | Target performa khusus project | hanya bila lebih ketat dari `references/performance.md` / TIDAK ADA |
 
 ## 12. Dokumen

@@ -22,15 +22,21 @@ Dibaca bila task merender input pengguna, menyentuh auth/token, URL eksternal, u
 - Token sesi disimpan sesuai keputusan project (mis. cookie `HttpOnly` + `Secure` + `SameSite`); tidak
   di storage yang bisa dibaca skrip kecuali itu keputusan tertulis.
 - Logout membersihkan semua state pengguna di klien (cache data, storage, state global).
+- Pembaruan sesi: logout hanya bila server **menolak** (401/403). Jaringan putus, timeout, atau 5xx →
+  sesi dipertahankan dan galat jaringan ditampilkan. Setiap `fetch`/klien HTTP punya timeout.
 - Menyembunyikan tombol bukan otorisasi: pengecekan izin selalu juga dilakukan di server (A01).
 
 ## Data dan permintaan
 
 - Mutasi dilindungi dari CSRF sesuai mekanisme project.
 - Tidak mencatat data pribadi atau token ke console, analytics, atau pelacak error.
+- Init SDK monitoring (Sentry dan sejenisnya) wajib punya `beforeBreadcrumb`/`beforeSend` yang membuang query
+  string URL dan header sensitif, dengan test unit scrubber. Daftar redaksi: `Authorization`, `Cookie`, dan
+  semua header di `securitySchemes` kontrak API.
 - Upload: batasi jenis dan ukuran di klien sebagai kenyamanan, validasi tetap di server.
 - Pengalihan setelah login hanya ke path internal yang diizinkan (cegah open redirect).
 
 ## Dependensi (A06)
 
-Jalankan audit package manager project; laporkan yang tingkat tinggi/kritis beserta versi perbaikannya.
+Audit package manager berjalan sebagai gerbang MR (`quality-gates.md` §1); yang tingkat tinggi/kritis
+diperbaiki atau dicatat alasannya beserta versi perbaikannya.

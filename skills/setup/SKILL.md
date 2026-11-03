@@ -14,6 +14,7 @@ Master ada di `$R/kit/`:
 kit/working-principles.md         → .claude/rules/working-principles.md
 kit/no-ai-slop.md                 → .claude/rules/no-ai-slop.md       (selalu)
 kit/sonarqube.md                  → .claude/rules/sonarqube.md       (bila project memakai SonarQube)
+kit/quality-gates.md              → .claude/rules/quality-gates.md   (selalu)
 kit/clint.TEMPLATE.json           → .claude/clint.json              (diisi)
 kit/mobile/SKILL.md               → .claude/skills/skill-mobile/SKILL.md
 kit/mobile/references/*.md        → .claude/skills/skill-mobile/references/
@@ -55,6 +56,15 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    ada → tanya user apakah project akan memakai SonarQube.
 4. Isi adapter: jalankan perintah verifikasi di setiap baris template dan tempel hasilnya.
    Jangan mengisi dari ingatan. Baris yang tidak berlaku ditulis `TIDAK ADA`.
+4b. **Gerbang mesin dan harness ukur** (`quality-gates.md` §1–2, wajib):
+   - Cek gerbang yang sudah ada (`package.json` devDependencies, config ESLint, job CI): sonarjs, jscpd, knip,
+     aturan impor lapisan, audit dependensi, glosarium. Yang belum ada diusulkan **dalam satu pertanyaan**: paket,
+     versi, perintah, dan tempatnya di skrip `lint`. Setelah user setuju, pasang sebagai devDependency, sambungkan
+     ke `lint` (supaya ikut `ciOnMr`), jalankan sekali, dan catat di adapter §10. Pelanggaran lama tidak dibungkam;
+     sebutkan jumlahnya dan usulkan PR perbaikan. Sonar tidak ada di `ciOnMr` → sonarjs (atau job sonar MR) tidak
+     boleh dilewati; bila tetap ditolak, tulis `TIDAK ADA (ditolak <tanggal>, <alasan>)` di adapter §10.
+   - Tanya perangkat acuan fisik (model dan OS; mobile: satu Android dan satu iPhone) dan catat di adapter §11.
+     Harness ukur belum ada → laporan setup menyebut PR pertama `chore/perf-baseline` lewat `/clint:develop`.
 5. Isi `.claude/clint.json` dari template: base branch (`git remote show origin`), CLI MR
    (`glab`/`gh` sesuai host remote), `mr.mode` (`"mr"` default; tanya user bila tim biasa
    push langsung ke base → `"push-base"`), `mr.reviewComments` (`false` default), perintah lint/typecheck/test/e2e dari `package.json`,
@@ -86,7 +96,7 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    (kerjakan = tindakan masih di user, diserahkan = menunggu QA/PM/klien, selesai) dalam **satu** pertanyaan,
    jangan ditebak. Setelah user setuju, jalankan ulang dengan `--status "<nilai>=<kelas>" ... --tulis`. Usulan
    `tidak ada` → biarkan tanpa `tugas` dan sebutkan bahwa laporan project ini tidak akan memuat butir tugas.
-6. Tambahkan rujukan ke `CLAUDE.md` project (buat kalau belum ada): prinsip kerja, `no-ai-slop.md`,
+6. Tambahkan rujukan ke `CLAUDE.md` project (buat kalau belum ada): prinsip kerja, `no-ai-slop.md`, `quality-gates.md`,
    skill platform, adapter, dan `sonarqube.md` bila disalin.
 7. Belum ada `~/.config/clint/user.json` → tanya bahasa pribadi user sekali (English / Bahasa
    Indonesia) dan tulis `{"name": [], "language": "<en|id>"}`.
@@ -124,13 +134,15 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
 3. Bandingkan setiap file salinan di project dengan masternya (`diff`). Laporkan yang berbeda.
    Perbedaan di project bisa jadi perbaikan yang belum naik ke master. Tanya per file: tarik
    dari master, naikkan ke master, atau biarkan.
-4. File master yang belum ada di project (mis. `sonarqube.md`, `no-ai-slop.md`, field `docs.language`, `ciOnMr`,
+4. File master yang belum ada di project (mis. `sonarqube.md`, `no-ai-slop.md`, `quality-gates.md`, field `docs.language`, `ciOnMr`,
    `surfaces[].testRelated`, `surfaces[].lintRelated`, `autoReview`, `docs.logbook`, `memory.wing`) → tawarkan
    untuk ditambahkan.
    **`tugas`**: belum ada → buat lewat alur `tugas` di mode setup langkah 5. Sudah ada → jalankan
    `python3 "$R/scripts/tugas-saya.py" .`; ada `STATUS TIDAK DIKENAL` atau file sumber
    tidak cocok lagi (mis. sprint tracker pindah folder) → tunjukkan usulan baru dari `deteksi-tugas.py` dan
    tanyakan sebelum menimpa.
+   **Gerbang dan harness**: jalankan pemeriksaan mode setup langkah 4b; gerbang yang belum terpasang dan belum
+   tercatat ditolak di adapter §10 diusulkan dalam satu pertanyaan.
 5. **Status PR di rencana**: rencana di `docs.plans` yang punya tabel *Urutan pekerjaan* tetapi belum punya
    `## Status PR` → tunjukkan hasil `python3 "$R/scripts/plan-status.py"` dan tawarkan
    `--write` untuk rencana yang statusnya terbukti (mode `mr`). Rencana `push-base` yang statusnya `❔ belum

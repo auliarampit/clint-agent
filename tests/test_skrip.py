@@ -112,6 +112,29 @@ class ReviewFitur(unittest.TestCase):
         self.assertNotIn("src/home/Home.tsx", nama)
         self.assertEqual([os.path.basename(p) for p in h["rujukan"]["docs"]], ["prd-inbox.md"])
 
+    def test_aset_biner_mewajibkan_performance_auditor(self):
+        kerja = os.path.join(self.d, "app")
+        os.makedirs(os.path.join(kerja, "assets", "icons"))
+        open(os.path.join(kerja, "assets", "icons", "inbox.png"), "wb").write(b"\x89PNG" + b"\0" * 64)
+        git("add", ".", cwd=kerja); git("commit", "-q", "-m", "b", cwd=kerja)
+        out = subprocess.run(["python3", os.path.join(SKRIP, "review-prep.py"), kerja, "HEAD~1", "--json"],
+                             capture_output=True, text=True, check=True).stdout
+        h = json.loads(out)
+        self.assertIn("performance-auditor", h["kandidat"])
+        self.assertEqual(h["wajib"], ["performance-auditor"])
+
+
+class SaranProsa(unittest.TestCase):
+    def test_prosa_tidak_jadi_suggestion(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("mr_suggestions", os.path.join(SKRIP, "mr-suggestions.py"))
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        self.assertTrue(m.prosa("Pakai konstanta bersama untuk ukuran halaman"))
+        self.assertTrue(m.prosa(""))
+        self.assertFalse(m.prosa("const PAGE_SIZE = 10;"))
+        self.assertFalse(m.prosa("return null"))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -9,7 +9,8 @@
 `relatedRepos`; kandidat auditor dihitung dari isi file utuh.
 
 --design: project punya prototype (`docs.design` bukan TIDAK ADA), jadi design-auditor bisa jadi kandidat.
-Kandidat hanya titik awal: orkestrator tetap memilih maksimal 2 dan boleh menambah auditor dari isi diff.
+Kandidat hanya titik awal: `wajib` (design, security, performance) selalu dipanggil; dari kandidat lain
+orkestrator memilih maksimal 2 dan boleh menambah auditor dari isi diff.
 """
 import json, os, re, subprocess, sys
 
@@ -38,7 +39,8 @@ AUDITOR = {
         r"onpress|onclick|<button|<input|textinput|pressable|touchable|accessibility|aria-|modal|dialog|"
         r"color|navigation|<form|label"),
     "performance-auditor": (
-        r"package\.json",
+        r"package\.json|(^|/)assets?/|\.(png|jpe?g|gif|webp|avif|wav|mp3|m4a|aac|ogg|mp4|ttf|otf|woff2?)$|"
+        r"(^|/)app\.(json|config\.[jt]s)$",
         r"flatlist|flashlist|scrollview|\.map\(|useeffect|usememo|usecallback|<image|<img|usequery|findmany|"
         r"for .* await|promise\.all|setinterval|animated|reanimated|export|csv|cache"),
 }
@@ -187,8 +189,10 @@ def main():
         if ui:
             kandidat["design-auditor"] = {"skor": 3 * len(ui), "bukti": ui[:4]}
 
+    wajib = [n for n in ("design-auditor", "security-auditor", "performance-auditor") if n in kandidat]
+
     hasil = {"folder": folder, "branch": branch, "file": len(kode),
-             "baris": baris, "tambah": tambah, "kurang": kurang, "ukuran": ukuran, "sensitif": sensitif,
+             "baris": baris, "tambah": tambah, "kurang": kurang, "ukuran": ukuran, "sensitif": sensitif, "wajib": wajib,
              "kandidat": dict(sorted(kandidat.items(), key=lambda k: -k[1]["skor"]))}
     if fitur:
         hasil.update(fitur=fitur, cakupan=os.path.join(folder, "cakupan.txt"), rujukan=rujukan)
@@ -207,6 +211,7 @@ def main():
         for peran, fs in rujukan.items():
             print(f"rujukan {peran}: " + "; ".join(fs))
     print("sensitif=" + (", ".join(sensitif) or "-"))
+    print("wajib=" + (", ".join(wajib) or "-"))
     for nama, k in hasil["kandidat"].items():
         print(f"kandidat {nama} skor={k['skor']}: " + "; ".join(k["bukti"]))
 

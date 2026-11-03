@@ -38,8 +38,9 @@ Repo sudah ditarik di atas.
    perannya (dokumen untuk `conformance-reviewer`, desain untuk `design-auditor`, api untuk `api-contract-auditor`),
    dan daftar peninjau lain:
    - `--desain` → hanya `design-auditor`;
-   - selain itu → `code-reviewer` + `conformance-reviewer` + `design-auditor` (bila ada kandidatnya) + maksimal 2
-     auditor lain dengan skor kandidat tertinggi yang memang relevan dengan isi fitur.
+   - selain itu → `code-reviewer` + `conformance-reviewer` + auditor `wajib=` (design, security, performance bila
+     kandidat) + maksimal 2 auditor lain dengan skor kandidat tertinggi yang memang relevan dengan isi fitur.
+     Untuk penutupan modul (`quality-gates.md` §3) `conformance-reviewer` diminta matriks FR/AC → `path:baris`.
 3. Gabungkan tanpa token: `python3 "$R/scripts/merge-findings.py" <folder> --putaran 1` → `findings.md`.
 4. `--only` → laporan (bagian 5) lalu berhenti. Selain itu perbaikan lewat alur `develop`, karena kode di base
    branch perlu branch, test, dan MR: jalankan skill `clint:develop` dengan tugas
@@ -59,9 +60,12 @@ menjalankan ulang.
 | Diff | Peninjau |
 |---|---|
 | ≤ ~30 baris di area biasa | **tanpa agent**; periksa sendiri dengan checklist skill platform |
-| ≤ ~150 baris di area biasa | `code-reviewer` **sendirian** (ia juga memeriksa kebenaran logika dan kesesuaian dengan rencana bila ada) |
-| lebih besar, atau menyentuh auth/data/migrasi/kontrak/pembayaran | `conformance-reviewer` + `code-reviewer` + **maksimal 2** auditor paling relevan dari daftar di bawah |
+| ≤ ~150 baris di area biasa | `code-reviewer` (ia juga memeriksa kesesuaian dengan rencana bila sendirian) + auditor `wajib=` |
+| lebih besar, atau menyentuh auth/data/migrasi/kontrak/pembayaran | `conformance-reviewer` + `code-reviewer` + auditor `wajib=` + **maksimal 2** auditor lain paling relevan dari daftar di bawah |
 | MR orang lain (`--only`) | `conformance-reviewer` + `code-reviewer` + semua auditor yang pemicunya tersentuh |
+
+Auditor `wajib=` dari skrip (`design-auditor`, `security-auditor`, `performance-auditor` bila menjadi kandidat)
+selalu dipanggil dan tidak dihitung dalam kuota (aturan skill `develop` 5.3).
 
 Pemicu auditor:
 - `security-auditor`: auth, API/HTTP, storage, konfigurasi, dependensi, WebView/deep link;
@@ -69,7 +73,7 @@ Pemicu auditor:
 - `api-contract-auditor`: endpoint, DTO/skema validasi, file kontrak;
 - `design-auditor`: UI **dan** `docs.design` bukan `TIDAK ADA`;
 - `accessibility-auditor`: komponen tampilan, form, dialog, navigasi, warna;
-- `performance-auditor`: dependensi baru, daftar besar, gambar, pengambilan data, komponen yang sering dirender,
+- `performance-auditor`: dependensi baru, aset biner (gambar, audio, font), daftar besar, gambar, pengambilan data, komponen yang sering dirender,
   startup/animasi (mobile), query/endpoint di jalur panas, job, ekspor/impor data (backend).
 
 Jalankan yang terpilih **bersamaan** (satu pesan). Input ke setiap peninjau:

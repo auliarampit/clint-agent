@@ -5,7 +5,9 @@ menyentuh logging.
 
 ## Panggilan keluar
 
-- Selalu ada timeout (koneksi dan total). Tanpa timeout = permintaan menggantung selamanya.
+- Selalu ada timeout (koneksi dan total) di setiap klien HTTP/RPC. Tanpa timeout = permintaan menggantung selamanya.
+- Hasil dibedakan: ditolak (4xx dari layanan luar) vs tak terjangkau (jaringan, timeout, 5xx). Hanya penolakan
+  yang boleh mengubah state permanen (mis. mencabut sesi, menandai gagal final).
 - Retry hanya untuk kegagalan sementara dan operasi idempoten, dengan backoff + jitter dan batas jumlah.
 - Kegagalan layanan luar dipetakan ke error yang jelas bagi klien (mis. 502/503 sesuai kontrak), bukan 500 polos.
 
@@ -14,6 +16,9 @@ menyentuh logging.
 - Idempoten: aman bila dijalankan/dikirim dua kali (cek kunci unik atau status sebelum memproses).
 - Kegagalan permanen masuk antrean gagal (dead letter) atau ditandai, tidak diulang tanpa batas.
 - Job panjang menyimpan kemajuan supaya bisa dilanjutkan.
+- Job terjadwal (cron, scheduler) didaftarkan satu kali di satu tempat; banyak instans → kunci/leader election
+  supaya tidak berjalan ganda.
+- Satu penulis per agregat: data yang sama tidak diubah dari dua modul tanpa melewati pemiliknya.
 
 ## Menerbitkan event dengan konsisten
 

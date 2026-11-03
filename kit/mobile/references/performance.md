@@ -22,7 +22,7 @@ Adapter §11 boleh menetapkan angka lebih ketat, tidak boleh lebih longgar tanpa
 | Respons tap | umpan balik visual ≤ 100 ms; transisi navigasi mulai ≤ 100 ms |
 | Konten layar | skeleton/placeholder muncul seketika; data dari cache ≤ 300 ms; dari jaringan ≤ 1 dtk (jaringan 4G) |
 | Pekerjaan sinkron di thread JS | tidak ada blok > 50 ms di jalur interaksi |
-| Memori | tidak naik setelah 10× masuk-keluar layar yang sama (tanpa kebocoran) |
+| Memori | 10× masuk-keluar layar yang sama: kembali ke ±5% awal; sesi panjang (±100 halaman/item): naik < 50 MB dari titik awal ke akhir (`quality-gates.md` §2.2) |
 | Ukuran bundle JS / update OTA | setiap kenaikan > 50 KB (gzip) dijelaskan di MR |
 | Skor alat profil (mis. Flashlight) | ≥ 90 untuk alur yang diubah, bila alatnya dipakai project |
 
@@ -46,7 +46,9 @@ Adapter §11 boleh menetapkan angka lebih ketat, tidak boleh lebih longgar tanpa
 
 - Daftar data **selalu** komponen virtualisasi dari adapter §7 (mis. `FlashList` bila project memakainya,
   selain itu `FlatList`/`SectionList`). Tidak pernah `map` di dalam `ScrollView` untuk data dari API.
-- `keyExtractor` memakai id stabil; `renderItem` mengembalikan komponen item yang di-memo.
+- `keyExtractor` memakai id stabil; `renderItem` mengembalikan komponen item yang dibungkus `memo`, dan
+  `renderItem` sendiri stabil (`useCallback` atau fungsi level modul). Diperiksa dengan grep: setiap komponen
+  item daftar punya `memo(`.
 - Tinggi item tetap → berikan ukuran item (`getItemLayout` atau `estimatedItemSize`, sesuai komponen).
 - Atur jendela render sesuai layar: jumlah render awal ≈ item yang terlihat; jangan menaikkan
   `windowSize`/`initialNumToRender` untuk menutupi masalah render item yang lambat.
@@ -62,7 +64,10 @@ Adapter §11 boleh menetapkan angka lebih ketat, tidak boleh lebih longgar tanpa
   Gambar didekode sebesar tampilannya, bukan sebesar file aslinya.
 - Dimensi atau `aspectRatio` selalu dipesan supaya tata letak tidak melompat.
 - Gambar di atas lipatan layar berikutnya boleh di-prefetch; sisanya dimuat saat dibutuhkan.
-- Aset lokal dikompresi (WebP/AVIF bila didukung, SVG untuk ikon). Tidak ada PNG besar untuk ikon.
+- Aset lokal dikompresi (WebP/AVIF bila didukung, SVG untuk ikon) dan mengikuti anggaran `quality-gates.md`
+  §2.3: raster ≤ 3× ukuran tampil terbesar (ikon 88 dp → ≤ 264 px), ikon ≤ 30 KB, audio `ogg`/`aac`/`m4a`
+  kecuali suara notifikasi iOS (`wav`/`caf`/`aiff`, ≤ 30 dtk), font hanya berat yang dipakai.
+- Perubahan di folder aset dan konfigurasi app (`app.json`/`app.config.*`) menyebut ukuran sebelum/sesudah di MR.
 
 ## 5. Animasi dan gestur
 
@@ -107,13 +112,16 @@ Adapter §11 boleh menetapkan angka lebih ketat, tidak boleh lebih longgar tanpa
 - Impor spesifik, bukan seluruh library. Hindari library yang membawa polyfill besar atau data lokal penuh
   (mis. semua locale tanggal) bila hanya sebagian yang dipakai.
 
-## 10. Cara mengukur dan melapor
+## 10. Cara mengukur dan melapor (wajib)
 
-1. Ukur alur yang diubah dengan alat di adapter §11 (mis. profiler React, monitor performa bawaan, Flashlight,
-   Android Studio/Xcode Instruments) di release build.
-2. Untuk perubahan yang menyentuh daftar, startup, atau animasi: angka **sebelum dan sesudah** di laporan/MR.
-3. Tidak bisa diukur (perangkat/alat tidak tersedia) → tulis "performa belum terukur" beserta alasannya.
-   **Jangan pernah mengklaim target tercapai tanpa angka.**
+1. Ukur dengan harness adapter §11 (perintah per metrik: startup dingin, FPS/jank, memori, sesi panjang,
+   ukuran) di release build pada **perangkat fisik** acuan. Emulator/simulator hanya bila tidak ada perangkat,
+   dan angkanya ditulis "indikatif". Harness belum ada → buat dulu sesuai `quality-gates.md` §2.1.
+2. PR yang menyentuh daftar, startup, animasi, aset, dependensi, atau layar sesi panjang: angka **sebelum dan
+   sesudah** di MR dan di `docs/performa/baseline.md`.
+3. Tidak bisa diukur (perangkat/alat tidak tersedia) → MR **Draft** dengan status "performa belum terukur"
+   beserta alasannya (`quality-gates.md` §2.4). Pekerjaan belum selesai sampai angka ada atau user menyetujui
+   pengecualian tertulis. **Jangan pernah mengklaim target tercapai tanpa angka.**
 4. Regresi terhadap target di bagian 1 menahan MR sampai diperbaiki atau user menyetujui pengecualiannya.
 5. Bagian lama yang **sudah** di bawah target sebelum PR ini: PR tidak boleh memperburuknya, dan selisihnya
    dilaporkan sebagai utang performa (angka + penyebab dugaan), bukan penahan MR. Bila PR memang menyentuh

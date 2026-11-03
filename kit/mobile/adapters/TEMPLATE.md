@@ -46,6 +46,9 @@ isi di sini, dan agent tidak perlu menebak baris mana yang dimaksud.
 | `{tcPath}` | `{...}` | §12 |
 
 > Kalau sebuah placeholder tidak berlaku, tulis `TIDAK ADA` — jangan dikosongkan.
+>
+> Di luar tabel ini, baris bertanda WAJIB di §10 (gerbang mesin) dan §11 (harness ukur, perangkat acuan)
+> juga wajib diisi (`quality-gates.md` §1–§2).
 
 ---
 
@@ -179,6 +182,20 @@ Verifikasi: `ls {appRoot}/eslint.config.* biome.json .prettierrc* 2>/dev/null; g
 | Pre-commit hook | `{apa yang dijalankan}` |
 | Ambang ukuran (`max-lines` per berkas, `max-len` per baris, `max-lines-per-function`) | `{angka dari config linter / TIDAK ADA}` |
 
+**Gerbang mesin wajib** (`.claude/rules/quality-gates.md` §1). Semua baris WAJIB diisi; dijalankan oleh
+skrip lint supaya ikut `ciOnMr`. Ditolak user → `TIDAK ADA (ditolak <tanggal>, <alasan>)`.
+
+Verifikasi: `grep -n -E "sonarjs|jscpd|knip|no-restricted-(paths|imports)|dependency-cruiser|audit|glossary" package.json eslint.config.* .jscpd.json knip.json 2>/dev/null`
+
+| Gerbang | Perintah / config |
+|---|---|
+| Rule Sonar (`eslint-plugin-sonarjs` atau job sonar MR) | `{config / TIDAK ADA (ditolak <tanggal>)}` |
+| Duplikasi ≤ 3% (`jscpd --min-tokens 50 --threshold 3`) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Kode mati (`knip` atau padanan bahasa) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Batas lapisan (presentation tidak mengimpor data/API/store mentah; fitur tidak mengimpor fitur lain) | `{rule + lokasi / TIDAK ADA (ditolak <tanggal>)}` |
+| Audit dependensi (`<pm> audit --audit-level=high`) | `{perintah / TIDAK ADA (ditolak <tanggal>)}` |
+| Glosarium istilah terlarang (`docs/glossary.md`) | `{perintah grep / TIDAK ADA}` |
+
 > **Satu formatter saja.** Menjalankan formatter yang bukan milik project ini
 > membuat diff berisik yang akan berubah lagi saat commit.
 
@@ -194,9 +211,18 @@ Verifikasi: `grep -n "coverageThreshold" {appRoot}/jest.config.js; ls -d {appRoo
 | E2E tool | `{Maestro / Detox / Appium / TIDAK ADA}` |
 | Lokasi flow E2E | `{path}` |
 | Locator E2E | `{testID / accessibilityLabel}` |
-| Alat ukur performa | `{mis. React DevTools Profiler, Perf Monitor, Flashlight, Android Studio Profiler, Xcode Instruments / TIDAK ADA}` |
-| Perangkat acuan performa | `{mis. Android RAM 4 GB kelas menengah + iPhone 12 / TIDAK ADA → default references/performance.md}` |
+| Alat ukur performa | `{mis. dumpsys gfxinfo/meminfo, Flashlight, xctrace (Instruments) / TIDAK ADA}` |
+| Perangkat acuan fisik (WAJIB: model, OS) | `{mis. Android RAM 4 GB kelas menengah (model, Android 14) + iPhone 11 (iOS 18)}` |
+| Harness: startup dingin (WAJIB) | `{perintah}` |
+| Harness: FPS/jank scroll dan mengetik (WAJIB) | `{perintah Android + iOS}` |
+| Harness: memori dan sesi panjang (WAJIB) | `{perintah + skenario, mis. 10× masuk-keluar, 100 halaman}` |
+| Harness: ukuran APK/IPA, bundle, aset (WAJIB) | `{perintah}` |
+| Ambang memori sesi panjang | `{default < 50 MB titik awal → akhir (quality-gates §2.2) / lebih ketat}` |
+| Dokumen angka | `{docs/performa/baseline.md}` |
 | Target performa khusus project | `{hanya bila lebih ketat dari references/performance.md / TIDAK ADA}` |
+
+> Baris WAJIB di atas diisi sebelum PR performa pertama. Belum ada harness → PR `chore/perf-baseline`
+> dibuat dulu (`quality-gates.md` §2.1).
 
 **Jebakan lingkungan E2E** — masalah yang terbukti bukan bug produk tapi tampak seperti bug
 (env API terkunci, launcher dev client, izin per platform, bundler dingin). Satu baris per

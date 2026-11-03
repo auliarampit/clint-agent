@@ -95,3 +95,23 @@ Pakai library bottom sheet yang ditunjuk adapter §7. **Jangan merakit sheet sen
 `Modal` + scrim `Pressable` + animasi manual: swipe-to-close, keyboard, safe area, dan
 aksesibilitas hampir selalu tertinggal. Kalau adapter belum menunjuk library, tanya user
 sebelum menambah dependency.
+
+## Galat, state, dan data bisnis
+
+Aturan ini muncul dari audit Sprint 1–4 project pertama clint; masing-masing pernah menjadi temuan Major.
+
+- **Galat dibedakan.** Hasil panggilan jaringan minimal `rejected` (4xx dari server) vs `unreachable`
+  (jaringan, timeout, 5xx). Pesan "luring" hanya untuk `unreachable`. Hook yang mengembalikan status gagal
+  wajib dipakai layarnya (grep pemakai).
+- **Empat keadaan per layar data**: loading, galat, kosong, berisi. Galat tidak ditampilkan seperti kosong.
+- **Satu pemilik state.** Data server tidak disalin ke store, kecuali sesi minimal dengan satu fungsi
+  pengganti yang dipanggil setiap mutasi. Efek terjadwal global (notifikasi, penjadwal, sync) dipasang tepat
+  satu kali di root; adaptor lifecycle library query (fokus aplikasi, status online) juga di root, bukan
+  ditambal per hook.
+- **Jawaban basi diabaikan.** Lookup atau mutasi berdasarkan input (cek kode, cari) membuang respons untuk
+  input yang sudah berganti.
+- **Logika memakai kode/ID**, tidak membandingkan teks terjemahan `t()` atau nama dari server.
+- **Tanggal bisnis** (jadwal, batas hari, "hari ini") dihitung dengan zona waktu eksplisit dari adapter, bukan
+  zona perangkat (`getDate()`/`getMonth()` langsung di kode feature).
+- **Istilah produk** mengikuti glosarium project (`quality-gates.md` §1); istilah lama yang diganti PRD disapu
+  dari locale dan teks UI di PR yang sama.

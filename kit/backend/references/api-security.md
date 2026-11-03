@@ -20,6 +20,11 @@ Dibaca bila task menyentuh auth, izin, input pengguna, upload, rate limit, atau 
 - Sandi di-hash dengan algoritma lambat yang dipakai project; tidak pernah dienkripsi bolak-balik.
 - Rahasia dari konfigurasi terkelola; tidak di repo, log, respons, atau pesan error.
 - Log dan event tidak memuat token, sandi, OTP, nomor identitas lengkap.
+- Logger memakai redaksi path (mis. `redact` pino) untuk `Authorization`, `Cookie`, `Set-Cookie`, dan semua header
+  di `securitySchemes` kontrak; access log tidak mencatat query string yang membawa data pribadi atau token.
+- SDK monitoring memakai `beforeSend`/scrubber yang membuang header dan query sensitif, dengan test unit.
+- Audit dependensi berjalan sebagai gerbang MR (`quality-gates.md` §1); high/critical diperbaiki atau dicatat
+  alasannya.
 
 ## Upload
 

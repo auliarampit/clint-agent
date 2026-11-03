@@ -25,6 +25,7 @@ menetapkan angka lebih ketat, tidak boleh lebih longgar tanpa persetujuan user.
 | JS awal per route (gzip) | ≤ 170 KB; kenaikan > 20 KB per PR dijelaskan di MR |
 | CSS awal (gzip) | ≤ 50 KB |
 | Long task di jalur interaksi | tidak ada yang > 50 ms |
+| Memori | heap JS setelah 10× navigasi bolak-balik antar route utama naik < 10% setelah GC (`quality-gates.md` §2.2) |
 
 ## 2. LCP dan pemuatan awal
 
@@ -74,6 +75,8 @@ menetapkan angka lebih ketat, tidak boleh lebih longgar tanpa persetujuan user.
 - Gambar lewat komponen gambar di adapter §7 (bila ada) dengan `srcset`/`sizes` responsif dan format modern.
 - Gambar di bawah lipatan memakai lazy loading; thumbnail di daftar, bukan ukuran asli.
 - Video tidak autoplay dengan suara, punya poster, dan tidak dimuat penuh sebelum diputar.
+- Aset di `public/`/folder statis mengikuti anggaran `quality-gates.md` §2.3: raster ≤ 3× ukuran tampil terbesar,
+  ikon ≤ 30 KB (SVG diutamakan), font hanya berat dan subset yang dipakai (`woff2`).
 
 ## 7. Data, cache, dan daftar
 
@@ -85,14 +88,15 @@ menetapkan angka lebih ketat, tidak boleh lebih longgar tanpa persetujuan user.
 - Prefetch route/data berikutnya saat pengguna menunjukkan niat (hover/fokus pada tautan) bila framework
   mendukung.
 
-## 8. Cara mengukur dan melapor
+## 8. Cara mengukur dan melapor (wajib)
 
-1. Ukur halaman yang diubah dengan alat di adapter §11 (audit lab, analisis bundle, profiler render) pada
-   build produksi dengan profil mobile.
-2. Halaman/route baru, perubahan pemuatan, dependensi baru, atau daftar: angka **sebelum dan sesudah**
-   (LCP, INP/TBT, CLS, ukuran JS) di laporan/MR.
-3. Tidak bisa diukur → tulis "performa belum terukur" beserta alasannya. **Jangan pernah mengklaim target
-   tercapai tanpa angka.**
+1. Ukur dengan harness adapter §11 pada build produksi dengan profil mobile: Lighthouse CI (LCP, CLS, TBT),
+   INP dari `web-vitals`, JS awal per route, heap setelah 10× navigasi. Harness belum ada → buat dulu sesuai
+   `quality-gates.md` §2.1.
+2. Halaman/route baru, perubahan pemuatan, aset, dependensi baru, atau daftar: angka **sebelum dan sesudah**
+   (LCP, INP/TBT, CLS, ukuran JS) di MR dan di `docs/performa/baseline.md`.
+3. Tidak bisa diukur → MR **Draft** dengan status "performa belum terukur" beserta alasannya
+   (`quality-gates.md` §2.4). **Jangan pernah mengklaim target tercapai tanpa angka.**
 4. Regresi terhadap target di bagian 1 menahan MR sampai diperbaiki atau user menyetujui pengecualiannya.
 5. Bagian lama yang **sudah** di bawah target sebelum PR ini: PR tidak boleh memperburuknya, dan selisihnya
    dilaporkan sebagai utang performa (angka + penyebab dugaan), bukan penahan MR. Bila PR memang menyentuh

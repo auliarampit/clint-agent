@@ -26,7 +26,7 @@ yang sedang di-enhance.
 4. [Contoh lengkap per perintah](#contoh-lengkap-per-perintah)
 5. [Panduan per peran](#panduan-per-peran)
 6. [Bahasa](#bahasa)
-7. [Standar SonarQube](#standar-sonarqube)
+7. [Standar SonarQube](#standar-sonarqube) dan [gerbang kualitas](#gerbang-kualitas-dan-pengukuran-wajib)
 8. [Tanpa AI slop](#tanpa-ai-slop)
 9. [Cara kerja `develop`](#cara-kerja-develop)
 10. [Tim agent](#tim-agent)
@@ -443,6 +443,23 @@ Cara clint menegakkannya:
 4. Gate tetap gagal di CI → `/clint:develop perbaiki pipeline !123`; `pipeline-fixer` membaca issue Sonar-nya
    dan memperbaiki kode.
 
+## Gerbang kualitas dan pengukuran wajib
+
+`kit/quality-gates.md` (disalin ke `.claude/rules/quality-gates.md`) lahir dari audit Sprint 1–4 project pertama:
+137 temuan lolos walaupun lint, typecheck, test, dan coverage 95,7% hijau. Isinya:
+
+- **Gerbang mesin di MR**, dipasang `/clint:setup` setelah user project setuju sekali: `eslint-plugin-sonarjs`
+  (wajib bila Sonar tidak jalan di MR), `jscpd` (duplikasi ≤ 3%), `knip` (kode mati), aturan impor lapisan, audit
+  dependensi high, dan glosarium istilah. `preflight.sh` dan `/clint:status` menyebut gerbang yang belum terpasang.
+- **Pengukuran di perangkat**: harness yang bisa diulang (`chore/perf-baseline`) untuk startup, FPS/jank, memori
+  termasuk sesi panjang (mobile < 50 MB, web/backend < 10%), ukuran, dan p95 backend; angka di
+  `docs/performa/baseline.md`. PR yang memicu `performance-auditor` tanpa angka sebelum/sesudah menjadi MR Draft.
+- **Anggaran aset**: gambar ≤ 3× ukuran tampil, ikon ≤ 30 KB, audio terkompresi; perubahan aset memicu
+  `performance-auditor`.
+- **Penutupan modul**: matriks FR/AC → kode, review fitur terhadap prototipe terbaru, sapu duplikasi, harness.
+- **Deviasi dan saran tinjauan**: keputusan yang menyimpang dari dokumen dicatat di `## Deviasi` rencana; saran
+  yang dilewati menjadi butir ber-ID; suggestion MR berupa prosa tidak pernah dipasang.
+
 `// NOSONAR`, menonaktifkan rule, atau menambah exclusion untuk meloloskan gate **dilarang** tanpa
 persetujuan Anda.
 
@@ -479,8 +496,8 @@ yang menambah nilai. Tugas kecil tidak dibuat kompleks:
 | Ukuran | Ciri | Tim |
 |---|---|---|
 | Mikro | 1–2 file, ≤ ~30 baris, area biasa | tanpa subagent; dikerjakan langsung, lalu lint/test dan MR |
-| Kecil | 1 PR, ≤ ~150 baris | `developer` + `code-reviewer` (sendirian: ia juga memeriksa kebenaran logika dan kesesuaian rencana) |
-| Sedang | PR besar atau area sensitif | + `conformance-reviewer` + maksimal 2 auditor paling relevan |
+| Kecil | 1 PR, ≤ ~150 baris | `developer` + `code-reviewer` (selalu memeriksa kebenaran logika) + auditor wajib |
+| Sedang | PR besar atau area sensitif | + `conformance-reviewer` + auditor wajib + maksimal 2 auditor lain paling relevan |
 | Besar | modul, > 1 PR, lintas platform | `solution-architect` sekali → `planner` → tiap PR sesuai ukurannya |
 
 Bug yang penyebabnya belum jelas → `bug-investigator` dulu. Pipeline merah → `pipeline-fixer`.
@@ -710,7 +727,8 @@ Model tidak diturunkan; yang dijaga cara kerjanya:
   membaca `checks.md`, tidak menjalankan ulang;
 - temuan semua peninjau dikumpulkan lalu diperbaiki sekaligus; putaran ulang hanya memverifikasi temuan sebelumnya,
   dan temuan Low (tetap wajib diperbaiki) tidak memicu putaran ulang;
-- auditor hanya jalan bila diff relevan, maksimal 2 per PR; potret layar hanya bila perlu;
+- auditor hanya jalan bila diff relevan; `design-auditor`, `security-auditor`, dan `performance-auditor` wajib bila
+  pemicunya kena, auditor lain maksimal 2 per PR; potret layar hanya bila perlu;
 - review otomatis hanya untuk ≥ 40 baris, sekali per perubahan;
 - pemantau (`change-tracker`, `status-reporter`) mengumpulkan bahan dalam **satu panggilan skrip**
   (`scripts/collect-changes.sh`, `scripts/collect-status.sh`) alih-alih puluhan putaran `git`/`grep`;
@@ -926,6 +944,7 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 6b | **v2.3**: isolasi antar project, klaim PR antar sesi, `## Status PR` di rencana, `status plan`, *Berikutnya* bertanda paralel/urutan, menutup MR Draft, format temuan peninjau seragam | selesai |
 | 7 | **Review sejajar standar Badr + skrip alur PR**: label `Critical/Major/Minor/Low` dan verdict `LGTM/Needs Fix`, semua tingkat wajib diperbaiki, temuan dikumpulkan lalu diperbaiki sekaligus (maks 3 putaran); komentar temuan di MR dengan mention author (opsional, default mati); aturan Anti-Slop digabung ke `no-ai-slop.md`; skrip `preflight`, `prepare-branch`, `review-prep`, `merge-findings`, `ship-pr` (skrip penyaring lolos uji banding di 5 MR lama + 2 cacat tanam); penanda MR menunggu peer review > 3 jam (SA) dan > 5 jam (lead) di `status` | selesai |
 | 7b | **v2.15 lebih cepat dan hemat** (dari audit 19–28 Okt): `run-checks.py` (lint file berubah, paralel, hasil dipakai ulang peninjau), `plan-slice.py` (potongan rencana per PR), temuan Low tanpa putaran ulang, sesi utama tidak membuka screenshot/keluaran besar, peringatan adapter > 25 KB, `audit-usage.py` + `pr.jsonl` untuk mengukur per PR | selesai |
+| 7c | **v2.16 gerbang kualitas** (dari audit Sprint 1–4 magnet-rezeki, 137 temuan): `kit/quality-gates.md` (gerbang mesin sonarjs/jscpd/knip/lapisan/audit/glosarium, harness ukur startup/FPS/memori/ukuran, anggaran aset, penutupan modul, deviasi), auditor design/security/performance di luar kuota, kebenaran selalu diperiksa `code-reviewer`, aturan galat ditolak vs tak terjangkau, scrubber monitoring, keychain setelah pasang ulang | selesai |
 | 8 | **Layout repo Badr**: repo root + repo domain (docs, design, qa, app, data-pipeline, mobile), `clint.json` di repo root, status dan `change-tracker` lintas repo domain, commit tetap per repo; `setup audit` untuk repo standard (skrip) | ditunda, menunggu standar repo Badr resmi (bentuk repo root dan isi wajib tiap repo) |
 | 9 | **Logbook dan memori**: `/clint:docs logbook` menulis entri harian per orang di `docs/logbook/YYYY-MM.md` (bahan dari skrip `logbook-draft.sh`); mempalace untuk ingatan antar sesi (`embeddinggemma`, wake-up wing project di awal sesi, transkrip disimpan saat sesi berakhir); satu fakta di satu tempat | selesai |
 | 10 | **Dokumen lengkap**: rantai dokumen per project (`docs` di `clint.json`) + template `kit/docs/` (PRD, SAD, ERD, STD, API contract OpenAPI 3.1, ADR, UAT, BAST, quick guide, sprint review); `solution-architect`: SAD dan ERD per domain; `business-analyst`: UAT dan BAST; uji terpandu `qa-analyst`; tampilan `status` per peran; skrip `trace` (AC↔TC, cascade ID) dan `sprint-evidence` | agent BA, QA, sprint-tracker sudah ada; sisanya rencana |

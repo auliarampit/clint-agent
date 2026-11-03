@@ -72,8 +72,9 @@ diingat):
 ## 6. Penegakan
 
 1. **Saat menulis kode**: ikuti dokumen ini. Rule 🔴 tidak punya linter; hanya disiplin ini yang mencegahnya.
-2. **Sebelum melapor selesai**: jalankan `lint` project (banyak project memasang `eslint-plugin-sonarjs`).
-   Jangan menambah plugin atau dependency tanpa bertanya.
+2. **Sebelum melapor selesai**: jalankan `lint` project. Bila `sonar` tidak ada di `ciOnMr`,
+   `eslint-plugin-sonarjs` (JS/TS) atau job sonar MR (bahasa lain) **wajib** terpasang, lewat `/clint:setup`
+   sesuai `quality-gates.md` §1. Sonarjs mencakup sebagian rule 🔴 di bagian 3; sisanya tetap disiplin butir 1.
 3. **Dilarang** `// NOSONAR`, menonaktifkan rule, atau menambah exclusion untuk meloloskan gate tanpa
    persetujuan user; perbaiki kodenya.
 4. **CI** adalah penjaga terakhir. Gate gagal di pipeline → `pipeline-fixer` membaca issue Sonar-nya

@@ -24,6 +24,8 @@ mengubah file.
    - **Visual**: kontras token yang dipakai (≥ 4.5:1 teks, ≥ 3:1 komponen), informasi tidak hanya lewat
      warna, target sentuh ≥ 24 px, gerak menghormati `prefers-reduced-motion`.
    - **Media & dinamis**: teks alternatif gambar, nama aksesibel tombol ikon, live region untuk hasil aksi.
+     Indikator muat (spinner, skeleton) tanpa label aksesibel = Minor; dua elemen dengan nama aksesibel sama
+     untuk aksi berbeda di satu layar = Minor.
 4. Bila pemeriksa otomatis tersedia di project (adapter §11), jalankan hanya untuk layar yang disentuh
    dan potong keluarannya.
 

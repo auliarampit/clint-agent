@@ -49,3 +49,19 @@ menghapus isian; validasi per langkah sebelum lanjut.
 
 Pengecekan sesi sebelum konten tampil (tanpa kilatan konten terproteksi); sesi habis → arahkan ke login
 lalu kembali ke halaman semula; tidak punya izin → halaman 403 yang menjelaskan, bukan halaman kosong.
+
+## Galat, state, dan data bisnis
+
+Aturan ini muncul dari audit Sprint 1–4 project pertama clint; masing-masing pernah menjadi temuan Major.
+
+- **Galat dibedakan.** Hasil permintaan minimal `rejected` (4xx) vs `unreachable` (jaringan, timeout, 5xx);
+  pesan "luring/koneksi" hanya untuk `unreachable`. Status gagal yang dikembalikan hook wajib dipakai halaman.
+- **Empat keadaan per halaman data**: loading, galat, kosong, berisi. Galat tidak tampil seperti kosong.
+- **Satu pemilik state.** Data server tetap di lapisan cache query, tidak disalin ke store global kecuali sesi
+  minimal dengan satu fungsi pengganti. Efek global (polling, websocket, sinkronisasi) dipasang satu kali di
+  root layout; adaptor fokus/online library query di root.
+- **Jawaban basi diabaikan.** Pencarian/lookup membatalkan atau membuang respons untuk input lama
+  (`AbortController` atau kunci query).
+- **Logika memakai kode/ID**, tidak membandingkan teks terjemahan atau nama dari server.
+- **Tanggal bisnis** dihitung dengan zona waktu eksplisit dari adapter, bukan zona browser.
+- **Istilah produk** mengikuti glosarium project (`quality-gates.md` §1).

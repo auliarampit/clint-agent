@@ -17,6 +17,9 @@ tidak disentuh.
    dan larangan), serta aturan memori/CLAUDE.md tentang kapan dan dari branch mana rilis boleh dilakukan.
 2. Prasyarat sebelum build/rilis: branch sumber benar dan terbaru, lint/test lulus, migrasi siap (backend),
    variabel lingkungan untuk target ada, perubahan native vs JS/OTA dibedakan (mobile).
+   Checklist wajib: `<pm> audit --audit-level=high` bersih atau tiap temuan punya alasan tertulis; update OTA dan
+   artefak rilis ditandatangani; ukuran APK/IPA/bundle dibandingkan `docs/performa/baseline.md` dan kenaikan
+   > 50 KB dijelaskan di catatan rilis (`.claude/rules/quality-gates.md` §2.3).
 3. Versi: naikkan sesuai skema project; changelog dari commit/MR sejak rilis terakhir, ditulis untuk manusia
    (apa yang berubah bagi pengguna), bukan daftar commit mentah.
 4. Jalankan build/rilis dengan perintah project. Operasi yang memengaruhi pengguna atau QA (kanal yang dipakai

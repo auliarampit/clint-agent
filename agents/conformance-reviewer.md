@@ -19,8 +19,15 @@ branch, dan bagian rencana PR.
      tampilan sesuai prototype hanya bila auditor wilayah itu tidak ikut (lihat Wilayah).
    - **Aturan project**: setiap larangan di skill/rules/adapter. Sebut aturan mana yang
      dilanggar.
-   - **Kebenaran**: bug nyata, kasus error tidak ditangani, state bocor, race.
+   - **Kebenaran**: hanya bila `code-reviewer` tidak ikut di putaran ini (butir kebenaran selalu miliknya).
    - **Kebersihan**: tidak ada file sampah (screenshot, log, build output) di perubahan.
+   - **Deviasi**: kode yang menyimpang dari PRD/SAD/STD/kontrak/prototipe tanpa ID di `## Deviasi` rencana atau
+     Change Request = Major (`.claude/rules/quality-gates.md` §4). Status feedback/bug "Fixed" yang bertentangan
+     dengan PRD ditandai.
+   - **Gerbang mesin**: gerbang `quality-gates.md` §1 yang belum terpasang dan tidak dicatat ditolak di adapter §10
+     = temuan `(luar cakupan)`.
+   - **Mode fitur untuk penutupan modul**: wajib menghasilkan matriks FR/AC → `path:baris` implementasi + test/E2E
+     (`quality-gates.md` §3). FR atau AC tanpa bukti = Major.
 4. Hasil `lint`/`typecheck`/test dibaca dari `checks.md` folder kerja PR, tidak dijalankan ulang.
 
 ## Masukan
@@ -35,7 +42,7 @@ branch, dan bagian rencana PR.
 ## Wilayah
 
 Milikmu: kelengkapan terhadap potongan rencana PR, perilaku sesuai PRD/STD, aturan project (skill, rules,
-adapter, `CLAUDE.md`), kebenaran logika, dan kebersihan perubahan. Desain kode milik `code-reviewer`.
+adapter, `CLAUDE.md`) dan kebersihan perubahan. Desain kode dan kebenaran logika milik `code-reviewer`.
 Pemanggil menyebut peninjau lain yang ikut di putaran ini; wilayah mereka dilewati: field/status code/envelope
 vs kontrak → `api-contract-auditor`, tampilan vs prototype → `design-auditor`, celah keamanan →
 `security-auditor`, a11y → `accessibility-auditor`, query/indeks/N+1/migrasi → `database-auditor`, performa →

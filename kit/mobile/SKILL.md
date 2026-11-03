@@ -737,6 +737,9 @@ const [error, setError] = useState<'credentials' | 'locked' | 'network' | null>(
 }
 ```
 
+Pesan jaringan/luring hanya untuk galat tak terjangkau (jaringan, timeout, 5xx), bukan 4xx; lihat
+`references/patterns.md` → *Galat, state, dan data bisnis*.
+
 ### Mock handler
 
 Kalau endpoint backend untuk feature baru belum ada dan project punya mode mock, tambahkan
@@ -753,6 +756,9 @@ handler-nya supaya app tetap jalan. Baca handler yang ada dulu untuk mencocokkan
 | elemen interaktif, form, dialog/sheet, navigasi, warna, teks | `.claude/skills/skill-mobile/references/accessibility.md` |
 | auth, token, penyimpanan lokal, deep link, WebView, izin, log, konfigurasi build | `.claude/skills/skill-mobile/references/security.md` |
 | paginasi, pull-to-refresh, empty/loading state, wizard, optimistic UI, tap ganda, daftar, bottom sheet | `.claude/skills/skill-mobile/references/patterns.md` |
+| galat jaringan, state global, efek terjadwal, tanggal bisnis, istilah produk | `.claude/skills/skill-mobile/references/patterns.md` → *Galat, state, dan data bisnis* |
+
+`.claude/rules/quality-gates.md` wajib diikuti di setiap task: gerbang mesin di MR, pengukuran (performa, memori, ukuran) dengan harness adapter §11, penutupan modul, dan deviasi.
 
 ---
 

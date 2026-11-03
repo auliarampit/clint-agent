@@ -20,8 +20,8 @@ bila ia menambah nilai yang tidak bisa didapat murah di sesi ini. **Tugas kecil 
 | Ukuran | Ciri | Tim |
 |---|---|---|
 | **Mikro** | 1–2 file, ≤ ~30 baris, area biasa (teks, warna, testID, satu kondisi, konfigurasi kecil) | **Tanpa subagent.** Kerjakan langsung di sesi ini mengikuti skill platform → `run-checks.py` → commit → MR. Cocokkan sendiri dengan checklist skill |
-| **Kecil** | 1 PR, ≤ ~150 baris, area biasa | `developer` + **satu** peninjau: `code-reviewer` (clean code + aturan project) |
-| **Sedang** | 1 PR > ~150 baris, atau menyentuh area sensitif (auth, token/penyimpanan data sensitif, query/data/migrasi, kontrak API, pembayaran), dinilai dari **isi** diff, bukan hanya nama file | `developer` + `conformance-reviewer` + `code-reviewer` + **maksimal 2** auditor paling relevan (tabel 5.3) |
+| **Kecil** | 1 PR, ≤ ~150 baris, area biasa | `developer` + `code-reviewer` (clean code + aturan project) + auditor `wajib=` (5.3) |
+| **Sedang** | 1 PR > ~150 baris, atau menyentuh area sensitif (auth, token/penyimpanan data sensitif, query/data/migrasi, kontrak API, pembayaran), dinilai dari **isi** diff, bukan hanya nama file | `developer` + `conformance-reviewer` + `code-reviewer` + auditor `wajib=` + **maksimal 2** auditor lain paling relevan (tabel 5.3) |
 | **Besar** | modul / > 1 PR / lintas platform / arsitektur atau teknologi baru | `solution-architect` sekali (tinjau rencana) → `planner` → setiap PR ditangani sesuai ukurannya sendiri |
 
 **Jenis tugas** (menggantikan tim di atas):
@@ -52,6 +52,8 @@ hanya untuk diteruskan ke agent (beri path/potongan saja).
   `paralel=` (sisa disk ≥ 20 GB → 3 PR sekaligus; 5–20 GB → 1). Exit 1 = belum ada `.claude/clint.json` →
   tawarkan `/clint:setup`; exit 2 = disk < 5 GB → berhenti dan laporkan. `adapter_besar=` → kerja tetap jalan;
   sebut di laporan akhir dan sarankan `/clint:setup sync` untuk memindahkan isi jurnal adapter.
+  `gerbang_kurang=` atau `harness=tidak ada` (`quality-gates.md` §1–2) → kerja tetap jalan, tetapi laporan akhir
+  selalu menyebutnya dan *Berikutnya* memuat `/clint:setup sync` (gerbang) atau PR `chore/perf-baseline` (harness).
 - Cocokkan tugas dengan `surfaces[]` (dari path/app yang disebut, atau dari rencana). Tugas
   menyentuh app yang tidak ada di `surfaces[]` (mis. backend/web saat clint baru dipasang
   untuk mobile) → berhenti, sebut surface yang tidak tercakup, dan sarankan mengerjakannya
@@ -172,11 +174,14 @@ Setelah implementasi, satu perintah tanpa token:
 boleh dinaikkan, tidak boleh diturunkan. Pilih auditor dari kandidat; boleh menambah auditor di luar kandidat bila
 isi diff menunjukkannya.
 
+- **Auditor wajib** (`wajib=` dari skrip, semua ukuran kecuali Mikro): `design-auditor` (UI dan ada prototipe),
+  `security-auditor`, dan `performance-auditor` **selalu** dipanggil bila menjadi kandidat. Mereka tidak dihitung
+  dalam kuota di bawah. Mikro yang menyentuh UI dicocokkan sendiri dengan prototipe terbaru.
 - **Mikro**: tanpa agent conformance-reviewer.
-- **Kecil**: hanya `code-reviewer`.
-- **Sedang/Besar**: `conformance-reviewer` + `code-reviewer` + **maksimal 2** auditor dari tabel di bawah yang paling
-  relevan dengan diff (urutkan: keamanan/database/kontrak untuk data dan API, aksesibilitas/desain/performa
-  untuk UI). Auditor lain dilewati walaupun pemicunya tersentuh sedikit.
+- **Kecil**: `code-reviewer` + auditor wajib.
+- **Sedang/Besar**: `conformance-reviewer` + `code-reviewer` + auditor wajib + **maksimal 2** auditor lain dari
+  tabel di bawah yang paling relevan dengan diff (database/kontrak untuk data dan API, aksesibilitas untuk UI).
+- `code-reviewer` selalu memeriksa kebenaran logika (race, kasus tepi, galat), sendirian maupun bersama peninjau lain.
 
 Jalankan yang terpilih **bersamaan** (satu pesan), masing-masing diberi `<path kerja>`, base branch, bagian
 rencana, dan **daftar peninjau lain di putaran ini** (wilayah auditor yang ikut dipanggil tidak diperiksa ulang
@@ -229,6 +234,14 @@ Hasil perbaikan Low di-commit **terpisah** dari commit utama (mis. `refactor: te
 tinjauan`, ikuti gaya commit repo) supaya mudah diperiksa di tab Commits MR dan bisa di-revert
 sendiri. Bila perbaikan Critical/Major/Minor dan Low menyentuh baris yang sama, satukan di commit utama.
 
+### 5.3b Ukur performa (`quality-gates.md` §2.4)
+
+`performance-auditor` ada di `wajib=` → `developer` menjalankan harness adapter §11 untuk metrik yang disentuh
+(startup, FPS/jank, memori termasuk sesi panjang, ukuran) sebelum dan sesudah, di perangkat acuan, lalu menulis
+angkanya ke `docs/performa/baseline.md` dan deskripsi MR. Regresi terhadap target atau ambang = temuan Major.
+Harness atau perangkat belum ada → status `performa: belum terukur, <alasan>` dan MR **Draft**, sama seperti
+gerbang E2E di 5.4. Tidak pernah menulis target tercapai tanpa angka.
+
 ### 5.4 E2E → agent `e2e-tester`
 
 Jalankan bila **salah satu** benar (adapter menyebut tool E2E, bukan `TIDAK ADA`):
@@ -267,6 +280,8 @@ Yang ditulis model hanya isi berkas; sisanya dijalankan skrip tanpa token:
   agent, jumlah putaran tinjauan, atau kalimat pujian. E2E tertunda → memuat `E2E: tertunda, <alasan>`.
 - **Temuan luar cakupan dan usulan yang dilewati** sebagai JSON
   `[{"path","line","sekarang","usulan","alasan","agent","tingkat"}]`, supaya user bisa memvalidasinya.
+  Yang Critical/Major/Minor juga ditambahkan sebagai butir rencana atau issue ber-ID (`quality-gates.md` §4),
+  supaya tidak hanya tinggal di deskripsi MR.
 
 ```bash
 python3 "$R/scripts/ship-pr.py" --dir <path kerja> \
@@ -302,6 +317,18 @@ Kegagalan satu PR (masih ada temuan setelah 3 putaran, test gagal, konflik rebas
   ikutkan di commit itu. Tanpa worktree, kembali ke branch asal user. Branch/worktree itu disebut di
   laporan untuk diperiksa user. (Working tree bersih = hook tinjau otomatis tidak terpicu ulang.)
 - PR yang bergantung padanya **dilewati**; PR lain tetap jalan.
+
+### 5.6 Penutupan modul (`quality-gates.md` §3)
+
+Setelah PR terakhir sebuah rencana modul jadi MR (sisa `plan-status.py` hanya PR penutupan, atau semua ✅/🔍),
+jalankan penutupan sebelum melaporkan modul selesai:
+1. `/clint:review fitur <nama>` per layar/endpoint modul. `conformance-reviewer` menghasilkan matriks FR/AC →
+   `path:baris` + test/E2E terhadap PRD, kontrak, dan prototipe **terbaru**.
+2. Gerbang `quality-gates.md` §1 pada seluruh folder sumber (duplikasi, kode mati, sonarjs, audit).
+3. Harness ukur penuh dan `baseline.md` diperbarui.
+4. Deviasi terbuka di `## Deviasi` rencana disebut beserta dokumen yang belum diperbarui.
+
+Temuan menjadi PR perbaikan di rencana yang sama. Modul dilaporkan selesai hanya bila keempatnya bersih.
 
 ## Status di menu bar dan klaim PR
 
@@ -346,6 +373,8 @@ Seperti rekan kerja mengabari lewat chat, maksimal ±12 baris (di luar blok *Ber
 - Bila ada MR bertumpuk: "Merge berurutan: !a → !b."
 - Bila ada yang tertahan atau belum bisa diverifikasi: satu baris alasannya + apa yang Anda
   perlu putuskan.
+- Performa: angka sebelum/sesudah, atau `belum terukur` beserta alasannya. Gerbang mesin atau harness yang belum
+  terpasang (`gerbang_kurang=`, `harness=`) disebut setiap kali.
 - Tanpa tabel, tanpa putusan per agent, tanpa hash/path kecuali untuk tindak lanjut.
 
 Merge tetap oleh user.

@@ -26,7 +26,11 @@ build. Notasi `§N` = bagian adapter (`.claude/mobile-stack.md`).
 
 ## Autentikasi dan sesi
 
-- Refresh token ditangani wrapper HTTP (adapter §5); kegagalan refresh → logout bersih, bukan loop.
+- Refresh token ditangani wrapper HTTP (adapter §5). Logout hanya bila server **menolak** refresh (401/403).
+  Jaringan putus, timeout, atau 5xx saat refresh → sesi dipertahankan dan galat jaringan ditampilkan, tanpa loop.
+- Setiap panggilan HTTP, termasuk refresh, punya timeout (konstanta di lapisan HTTP).
+- Keychain iOS bertahan setelah aplikasi dihapus. Simpan penanda instalasi di penyimpanan non-persisten
+  (mis. AsyncStorage); penanda tidak ada saat boot → hapus secure storage sebelum memulihkan sesi.
 - Biometrik lokal hanya membuka kunci rahasia yang tersimpan aman; ia **bukan** pengganti autentikasi server.
 - Otorisasi selalu ditegakkan di server; menyembunyikan tombol di klien bukan kontrol akses.
 
@@ -45,6 +49,11 @@ build. Notasi `§N` = bagian adapter (`.claude/mobile-stack.md`).
 ## Log, clipboard, dan layar
 
 - Tidak ada token, kata sandi, OTP, atau data pribadi di log, crash report, atau analytics.
+- Init SDK monitoring (Sentry dan sejenisnya) wajib punya `beforeBreadcrumb`/`beforeSend` yang membuang
+  query string URL dan header sensitif, dengan test unit untuk scrubber-nya. Breadcrumb HTTP bawaan SDK
+  membawa URL lengkap.
+- Logger jaringan (dev maupun rilis) menyamarkan `Authorization`, `Cookie`, dan semua header di
+  `securitySchemes` kontrak API (grep kontraknya, jangan dari ingatan).
 - Data sensitif tidak disalin ke clipboard tanpa aksi eksplisit pengguna.
 - Layar sensitif (OTP, kartu, saldo) dilindungi dari tangkapan layar/pratinjau multitasking bila
   diwajibkan project.
@@ -57,6 +66,11 @@ build. Notasi `§N` = bagian adapter (`.claude/mobile-stack.md`).
 ## Dependensi
 
 - Dependensi baru = wajib tanya (sudah aturan skill). Periksa reputasi, pemeliharaan, dan audit
-  (`npm audit`/setara) sebelum dipakai.
+  (`npm audit`/setara) sebelum dipakai. Audit berjalan sebagai gerbang MR (`quality-gates.md` §1).
+
+## Update OTA
+
+- Update over-the-air ditandatangani (code signing, mis. `codeSigningCertificate` EAS Update) bila platform
+  mendukung; kunci privat di secret CI, bukan di repo.
 
 Audit mendalam dilakukan `security-auditor`; dokumen ini adalah aturan saat menulis kode.

@@ -57,6 +57,12 @@ Project memakai SonarQube (`.claude/rules/sonarqube.md` ada) → periksa diff te
 (cognitive complexity, rule 🔴, hotspot) dan pastikan setiap logika baru punya test. Coverage diukur
 pipeline bila `sonar` ada di `ciOnMr`; selain itu ukur coverage file yang diubah.
 
+Gerbang mesin `.claude/rules/quality-gates.md` §1 yang terpasang ikut berjalan lewat `lint`; pelanggarannya
+diperbaiki, tidak dibungkam. PR yang menyentuh daftar, startup, animasi, aset, dependensi, query, atau endpoint
+panas wajib diukur dengan harness adapter §11 (sebelum dan sesudah) dan angkanya ditulis ke
+`docs/performa/baseline.md`; harness atau perangkat tidak ada → laporkan "performa belum terukur" beserta
+alasannya (pemanggil membuat MR Draft).
+
 ## Laporan (wajib, singkat)
 
 - Tipe dan tier task bila skill platform memintanya diumumkan (mis. "fix, Tier 1").
@@ -68,6 +74,8 @@ pipeline bila `sonar` ada di `ciOnMr`; selain itu ukur coverage file yang diubah
 - Hasil lint/typecheck/test (baris ringkasan `run-checks.py` + path `checks.md`).
 - SonarQube (bila berlaku): coverage file yang diubah (angka, "diukur pipeline", atau "belum terukur") dan pelanggaran
   yang sengaja dibiarkan beserta alasannya.
+- Performa (bila berlaku): angka sebelum/sesudah dan perintah harness, atau "performa belum terukur: <alasan>".
+- Saran tinjauan yang diberikan pemanggil: setiap saran `diterapkan` atau `dijadikan butir: <ID>`, tidak diabaikan.
 - Yang belum dikerjakan atau di luar lingkup, apa adanya.
 
 ## Standar senior

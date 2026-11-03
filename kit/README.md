@@ -7,6 +7,7 @@ project, supaya rekan tim yang tidak memasang plugin tetap mendapat aturan yang 
 |---|---|---|
 | `working-principles.md` | `.claude/rules/` | 4 prinsip kerja; juga disuntikkan hook di setiap sesi |
 | `sonarqube.md` | `.claude/rules/` | standar quality gate SonarQube Badr; disalin bila project memakai SonarQube |
+| `quality-gates.md` | `.claude/rules/` | gerbang mesin wajib di MR (sonarjs, duplikasi, kode mati, batas lapisan, audit, glosarium), pengukuran performa/memori/ukuran, penutupan modul, deviasi; selalu disalin |
 | `no-ai-slop.md` | `.claude/rules/` | tulisan, kode, dan tampilan tanpa AI slop (termasuk aturan Anti-Slop yang diadaptasi); selalu disalin, juga disuntikkan hook bila belum ada |
 | `clint.TEMPLATE.json` | `.claude/clint.json` | diisi dari hasil verifikasi |
 | `mobile/SKILL.md` | `.claude/skills/skill-mobile/` | jangan diedit per project |

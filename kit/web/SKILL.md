@@ -167,7 +167,8 @@ Semua lulus, lalu periksa:
 - [ ] Setiap poin permintaan/requirement terpenuhi; tidak ada tambahan di luar scope.
 - [ ] Empat keadaan data (loading/error/kosong/berisi) tertangani di layar yang disentuh.
 - [ ] Bisa dioperasikan dengan keyboard, fokus terlihat, label lengkap (`.claude/skills/skill-web/references/accessibility.md`).
-- [ ] `references/performance.md` dipenuhi; halaman/route baru, perubahan pemuatan, atau dependensi baru diukur di build produksi profil mobile (angka sebelum/sesudah, atau "belum terukur").
+- [ ] `references/performance.md` dipenuhi; halaman/route baru, perubahan pemuatan, aset, atau dependensi baru diukur dengan harness adapter §11 (angka sebelum/sesudah; tidak terukur → MR Draft).
+- [ ] `.claude/rules/quality-gates.md` wajib diikuti di setiap task: gerbang mesin di MR, pengukuran (performa, memori, ukuran) dengan harness adapter §11, penutupan modul, dan deviasi.
 - [ ] Tidak ada teks keras, warna acak, style inline statis, `fetch` langsung di komponen.
 - [ ] Test baru menguji perilaku, bukan detail implementasi; bug fix punya test yang tadinya gagal.
 - [ ] Yang belum dikerjakan atau belum terverifikasi dilaporkan apa adanya.

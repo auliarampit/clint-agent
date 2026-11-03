@@ -22,6 +22,9 @@ mengumpulkan ulang.** Perintah tambahan hanya untuk bagian yang gagal atau koson
 - Komentar MR perlu dibaca (komentar > 0 dan relevan) → `glab mr view <n> --comments` / `gh pr view <n> --comments`
   untuk MR itu saja.
 
+- **Audit dependensi** (tanpa token, sekali per laporan): `<pm> audit --audit-level=high` di setiap surface
+  (`bun audit`/`npm audit`/`pnpm audit`, padanan bahasa lain dari adapter §10); cukup jumlah high/critical.
+
 ## Keluaran (maks 15 baris)
 
 - **Perlu tindakan**: MR dengan pipeline gagal atau komentar baru, lalu MR yang menunggu peer review melewati batas
@@ -33,6 +36,7 @@ mengumpulkan ulang.** Perintah tambahan hanya untuk bagian yang gagal atau koson
 - **Menunggu**: MR yang menunggu review/merge.
 - **Bersih-bersih**: worktree/branch yang aman dihapus + perintahnya.
 - **Disk**: sisa ruang; beri peringatan kalau < 10 GB.
+- **Kualitas**: jumlah kerentanan high/critical dependensi (0 → tidak ditulis).
 
 ## Standar senior
 
