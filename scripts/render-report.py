@@ -12,6 +12,7 @@ HOME = os.path.expanduser("~")
 
 proyek = d.get("proyek") or []
 nama_dir = {os.path.realpath(p["dir"]): p.get("nama") for p in proyek if p.get("dir")}
+dir_proyek = {p.get("nama"): p.get("dir") for p in proyek if p.get("dir")}
 warna = {p.get("nama"): "ab"[i % 2] for i, p in enumerate(proyek)}
 
 
@@ -54,6 +55,56 @@ KATA = [(4, r"\bMR\b|push|commit"), (3, r"test|e2e"), (2, r"tinjau|review|audito
 
 def tahap_ke(t):
     return next((i for i, pola in KATA if re.search(pola, t or "", re.I)), None)
+
+
+def pendek(t, n):
+    t = re.sub(r"\*\*|`", "", str(t or "")).strip()
+    return t if len(t) <= n else t[:n].rsplit(" ", 1)[0] + "…"
+
+
+def dari_rencana(x):
+    """Baris tabel dan butir `### PR-n` dari rencana yang disebut perintah, apa adanya dari dokumen (tanpa model)."""
+    m = re.search(r"/clint:develop\s+(\S+\.md)\s+(PR-\d+[a-z]?(?:[,\s]+PR-\d+[a-z]?)*)", x.get("perintah") or "")
+    dirp = dir_proyek.get(x.get("proyek"))
+    if not m or not dirp:
+        return []
+    try:
+        baris = open(os.path.join(dirp, m.group(1)), encoding="utf-8").read().splitlines()
+    except OSError:
+        return []
+    out = []
+    for pr in re.findall(r"PR-\d+[a-z]?", m.group(2)):
+        item, kepala, ambil = {"pr": pr, "judul": "", "kolom": [], "butir": []}, [], False
+        for l in baris:
+            if l.startswith("|"):
+                sel = [c.strip() for c in l.strip().strip("|").split("|")]
+                if not sel or re.fullmatch(r":?-{2,}:?", sel[0]):
+                    continue
+                if sel[0].lower() == "pr":
+                    kepala = sel
+                elif sel[0] == pr:
+                    item["kolom"] = [[k, pendek(v, 500)] for k, v in zip(kepala, sel) if k and v and k.lower() != "pr"]
+            elif re.match(rf"#{{3,}}\s+{re.escape(pr)}\b", l):
+                ambil, item["judul"] = True, pendek(re.sub(r"^#+\s*", "", l), 120)
+            elif ambil and re.match(r"#{1,3}\s", l):
+                ambil = False
+            elif ambil and l.lstrip().startswith("- ") and len(item["butir"]) < 8:
+                item["butir"].append(pendek(l.lstrip()[2:], 400))
+        if item["kolom"] or item["butir"]:
+            out.append(item)
+    return out
+
+
+DETAIL = []
+
+
+def detail_ke(x):
+    d = x.get("detail") or {}
+    DETAIL.append({"teks": x.get("teks"), "proyek": x.get("proyek"), "sumber": x.get("sumber"), "ket": x.get("ket"),
+                   "perintah": x.get("perintah"), "url": x.get("url"), "tugas": d.get("tugas"),
+                   "alur": d.get("alur") or [], "menyangkut": d.get("menyangkut") or [], "harapan": d.get("harapan"),
+                   "rencana": dari_rencana(x)})
+    return len(DETAIL) - 1
 
 
 klaim_teks = diklaim_lain()
@@ -119,8 +170,9 @@ def kartu(x):
     ket = x.get("ket") or ""
     aksi = salin(x["perintah"]) if x.get("perintah") else \
         (f'<a class="open" href="{e(x["url"])}">Buka MR</a>' if x.get("url") else "")
-    return (f'<article class="card" data-p="{e(x.get("proyek"))}"><div class="meta">{proyek_tag(x.get("proyek"))}'
-            f'<span>·</span><span class="mono">{e(x.get("sumber"))}</span></div>'
+    return (f'<article class="card" tabindex="0" role="button" aria-haspopup="dialog" data-i="{detail_ke(x)}" '
+            f'data-p="{e(x.get("proyek"))}"><div class="meta">{proyek_tag(x.get("proyek"))}'
+            f'<span>·</span><span class="mono" title="{e(x.get("sumber"))}">{e(x.get("sumber"))}</span></div>'
             f'<p class="t">{e(x.get("teks"))}</p>{f"<p class=k>{e(ket)}</p>" if ket else ""}{aksi}</article>')
 
 
@@ -135,7 +187,8 @@ if fokus:
     hero_isi = (f'<div class="eyebrow {"bad" if fokus in gagal else ""}"><span></span>{label}</div>'
                 f'<p class="hero-t">{e(fokus.get("teks"))}</p>'
                 f'<p class="hero-k">{proyek_tag(fokus.get("proyek"))} · {e(fokus.get("sumber"))}</p>'
-                + (salin(fokus["perintah"], True) if fokus.get("perintah") else ""))
+                + (salin(fokus["perintah"], True) if fokus.get("perintah") else "")
+                + f'<div class="hero-cmd"><button class="ghost" type="button" data-i="{detail_ke(fokus)}">Lihat detail</button></div>')
 else:
     hero_isi = ('<div class="eyebrow calm"><span></span>Aman</div>'
                 '<p class="hero-t">Tidak ada yang perlu dikerjakan sekarang. Tugas hari ini sudah selesai semua.</p>')
@@ -218,7 +271,21 @@ border-radius:10px;padding:13px 14px;overflow-wrap:anywhere}
 .meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
 .pj{display:inline-flex;align-items:center;gap:6px;font-weight:500}.pj i{width:6px;height:6px;border-radius:3px}
 .pj.a{color:var(--a)}.pj.a i{background:var(--a)}.pj.b{color:var(--b)}.pj.b i{background:var(--b)}
-.t{font-size:15px;font-weight:500;line-height:1.4}.k{font-size:13px;color:var(--muted)}
+.card{height:212px;cursor:pointer}.card:hover{border-color:var(--a)}
+.meta .mono{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t{font-size:15px;font-weight:500;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.k{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .copy.line,.card .open{margin-top:auto}
+.ghost{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--hero-mut);background:transparent;color:var(--hero-ink);font:inherit;cursor:pointer}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);width:min(680px,calc(100% - 32px));max-height:min(84vh,760px);padding:0}
+dialog::backdrop{background:rgba(10,12,16,.62)}
+.dlg-in{padding:22px;display:flex;flex-direction:column;gap:16px;overflow:auto;max-height:inherit}
+.dlg-in h2{font-size:18px;font-weight:600;line-height:1.35;text-wrap:balance}.dlg-in h3{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.dlg-in ul,.dlg-in ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}.dlg-in p{font-size:14px;color:var(--soft)}
+.dlg-in dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;font-size:13px}.dlg-in dt{color:var(--muted)}.dlg-in dd{margin:0;overflow-wrap:anywhere}
+.dlg-in code{font-size:12px;overflow-wrap:anywhere}.dlg-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.dlg-x{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer;flex:none}
+.rc{border-top:1px solid var(--line2);padding-top:10px;display:flex;flex-direction:column;gap:8px}
 .copy.line{min-width:0;width:100%;min-height:44px;display:flex;align-items:center;gap:10px;text-align:left;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--soft)}
 .copy.line code{flex:1;min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy.line span{font-size:12px;font-weight:500}
 .open{min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid var(--line);text-decoration:none;font-size:13px;font-weight:500;color:var(--a)}
@@ -236,13 +303,36 @@ details{border-top:1px solid var(--line);padding-top:14px}summary{cursor:pointer
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:12px}
 .grid section{font-size:13px;color:var(--muted)}.grid h3{font-size:13px;color:var(--ink);margin-bottom:6px}.grid ul{margin:0;padding-left:18px}
 [hidden]{display:none!important}
-button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.card:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--a);outline-offset:2px}
 """
 JS = """
 document.querySelectorAll('.copy').forEach(b=>b.onclick=()=>navigator.clipboard.writeText(b.dataset.cmd).then(()=>{
 const s=b.querySelector('span')||b,t=s.textContent;s.textContent='Tersalin';setTimeout(()=>s.textContent=t,1600)}));
 const fb=[...document.querySelectorAll('.seg button')];fb.forEach(b=>b.onclick=()=>{fb.forEach(x=>x.setAttribute('aria-pressed',x===b));
 const f=b.dataset.f;document.querySelectorAll('[data-p]').forEach(el=>el.hidden=!!f&&el.dataset.p!==f)});
+const D=JSON.parse(document.getElementById('detail').textContent),dlg=document.getElementById('dlg'),body=document.getElementById('dlg-body');
+const h=(t,c,x)=>{const n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n};
+const sek=(j,...k)=>{const s=h('section');s.append(h('h3',0,j),...k);return s};
+const daftar=(t,xs,c)=>{const l=h(t);xs.forEach(x=>{const li=h('li');li.append(c?h('code',0,x):x);l.append(li)});return l};
+function buka(i){const d=D[i],top=h('div','dlg-top'),x=h('button','dlg-x','Tutup');x.type='button';x.onclick=()=>dlg.close();
+const hd=h('div'),jd=h('h2',0,d.teks);jd.id='dlg-t';hd.append(h('p','muted',[d.proyek,d.sumber].filter(Boolean).join(' · ')),jd);top.append(hd,x);body.replaceChildren(top);
+if(d.ket)body.append(h('p',0,d.ket));let ada=false;
+if(d.tugas){body.append(sek('Tugas',h('p',0,d.tugas)));ada=true}
+if(d.alur.length){body.append(sek('Alur',daftar('ol',d.alur)));ada=true}
+if(d.menyangkut.length){body.append(sek('Menyangkut',daftar('ul',d.menyangkut,1)));ada=true}
+if(d.harapan){body.append(sek('Harapan',h('p',0,d.harapan)));ada=true}
+d.rencana.forEach(r=>{const dl=h('dl');r.kolom.forEach(([k,v])=>dl.append(h('dt',0,k),h('dd',0,v)));
+const s=sek('Dari rencana · '+r.pr+(r.judul?' · '+r.judul.replace(/^PR-\\d+\\w*\\s*[—-]?\\s*/,''):''),dl);if(r.butir.length)s.append(daftar('ul',r.butir));
+s.className='rc';body.append(s);ada=true});
+if(!ada)body.append(h('p','muted','Belum ada rincian dari sumber. Buka '+(d.sumber||'sumbernya')+' untuk konteks lengkap.'));
+if(d.perintah){const b=h('button','copy line');b.type='button';b.dataset.cmd=d.perintah;b.append(h('code',0,d.perintah),h('span',0,'Salin'));
+b.onclick=()=>navigator.clipboard.writeText(d.perintah).then(()=>{const s=b.querySelector('span');s.textContent='Tersalin';setTimeout(()=>s.textContent='Salin',1600)});body.append(sek('Perintah',b))}
+if(d.url){const a=h('a','open','Buka MR');a.href=d.url;body.append(a)}
+dlg.setAttribute('aria-labelledby','dlg-t');dlg.showModal()}
+document.querySelectorAll('.card[data-i]').forEach(c=>{c.onclick=e=>{if(!e.target.closest('.copy,a'))buka(c.dataset.i)};
+c.onkeydown=e=>{if(e.target===c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();buka(c.dataset.i)}}});
+document.querySelectorAll('.ghost[data-i]').forEach(b=>b.onclick=()=>buka(b.dataset.i));
+dlg.onclick=e=>{if(e.target===dlg)dlg.close()};
 const sp=document.getElementById('speak');if(sp)sp.onclick=()=>{const u=new SpeechSynthesisUtterance(sp.dataset.t);u.lang='id-ID';speechSynthesis.cancel();speechSynthesis.speak(u)};
 """
 
@@ -264,5 +354,7 @@ out = f"""<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name=
 {peringatan}{f'<div class="pills">{aman}</div>' if aman else ""}
 </aside></div>
 {f'<details><summary>Rincian per project</summary><div class="grid">{rincian}</div></details>' if rincian else ""}
-</div><script>{JS}</script></body></html>"""
+</div><dialog id="dlg"><div class="dlg-in" id="dlg-body"></div></dialog>
+<script type="application/json" id="detail">{json.dumps(DETAIL, ensure_ascii=False).replace("<", "\\u003c")}</script>
+<script>{JS}</script></body></html>"""
 open(dst, "w", encoding="utf-8").write(out)

@@ -273,6 +273,24 @@ class Terverifikasi(Dasar):
         self.assertEqual(self.saring(rencana=[r])["rencana"][0]["selesai"], 1)
         self.assertEqual(self.saring(rencana=[r])["rencana"][0]["total"], 2)
 
+    def test_detail_modal_path_hantu_dibuang_dan_rencana_dibaca_dari_dokumen(self):
+        os.makedirs(os.path.join(self.d, "src/a"))
+        open(os.path.join(self.d, "src/a/.keep"), "w").close()
+        perintah = "/clint:develop docs/plans/mr-mob-1-contoh.md PR-2"
+        x = {"proyek": "mobile", "sumber": "docs/plans/mr-mob-1-contoh.md PR-2", "teks": "t", "perintah": perintah,
+             "detail": {"menyangkut": ["src/a", "src/hantu.ts", "/etc/passwd", "../x"], "tugas": "x" * 500}}
+        hasil = self.saring(kerjakan=[x])
+        detail = hasil["kerjakan"][0]["detail"]
+        self.assertEqual(detail["menyangkut"], ["src/a"])
+        self.assertEqual(len(detail["tugas"]), 400)
+        sumber, keluar = os.path.join(self.tmp, "lap.json"), os.path.join(self.tmp, "lap.html")
+        self.jalan("render-report.py", sumber, keluar)
+        isi = baca(keluar)
+        data = json.loads(isi.split('id="detail">', 1)[1].split("</script>", 1)[0])
+        self.assertEqual(data[0]["rencana"][0]["pr"], "PR-2")
+        self.assertIn(["Branch", "feat/b"], data[0]["rencana"][0]["kolom"])
+        self.assertIn('id="dlg"', isi)
+
 
 class Gabung(Dasar):
     def test_merge_rincian_rencana_per_dir_dan_jam_merge(self):

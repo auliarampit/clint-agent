@@ -103,13 +103,19 @@ Mode ini hanya membaca. Memperbarui tracker (centang, status, PIC) dikerjakan le
     "kalimat":"<kalimat inti untuk dibacakan>", "lead":"<1 kalimat pendukung>",
     "proyek":[{"nama":"<nama pendek>","dir":"<path absolut project>","aktif":"kemarin"}],
     "gagal":[{"teks":"Pipeline !123 gagal di lint","proyek":"<nama>","sumber":"MR !123","perintah":"/clint:develop perbaiki pipeline !123","url":"<tautan MR>"}],
-    "kerjakan":[{"teks":"<1 kalimat>","proyek":"<nama>","sumber":"<ID/MR>","perintah":"/clint:develop ..."}],
+    "kerjakan":[{"teks":"<1 kalimat>","proyek":"<nama>","sumber":"<ID/MR>","perintah":"/clint:develop ...",
+                 "detail":{"tugas":"<apa yang dikerjakan>","alur":["<langkah>"],"menyangkut":["<path>"],"harapan":"<kapan dianggap selesai>"}}],
     "cek":[{"teks":"...","proyek":"...","sumber":"MR !123","url":"<tautan MR>"}], "tunggu":[...],
     "aman":["Pipeline aman di 2 project"], "peringatan":["Disk tinggal 18 GB"],
     "rincian":[{"proyek":"<nama>","butir":["<1 baris>"]}],
     "rencana":[{"proyek":"<nama>","nama":"<judul pendek rencana>","selesai":6,"total":7}],
     "berikutnya":[{"proyek":"<nama>","dir":"<path absolut>","langkah":["[paralel] /clint:develop …","[urutan, setelah PR-2] …"]}]}
    ```
+   `detail` (opsional, dibuka sebagai modal saat kartu diklik): isi hanya dari dokumen sumber butir itu (baris
+   sprint/feedback, rencana, MR). `tugas` satu-dua kalimat, `alur` langkah berurutan bila sumber menulisnya,
+   `menyangkut` path file/folder yang **tertulis** di sumber, `harapan` kriteria selesai dari sumber. Tidak ada di
+   sumber → kosongkan, jangan menebak; `saring` membuang path yang tidak ada di repo. Butir yang perintahnya
+   `/clint:develop <rencana> PR-n` otomatis menampilkan baris tabel dan butir `### PR-n` dari rencana.
    Butir mengikuti gaya laporan di bawah; kelompok kosong ditulis `[]`. `gagal` = pipeline/pekerjaan
    gagal (memberi ikon merah di menu bar); `url` diisi untuk butir MR. Setiap butir wajib punya `proyek`, dan
    `berikutnya` dipisah per project (langkah dari plan-status + butir project itu, aturan *Berikutnya*). `rencana` diisi dari keluaran

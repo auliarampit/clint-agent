@@ -223,6 +223,20 @@ def _status_plan(dirp, plan=None):
     return _PLAN[k]
 
 
+def _rapikan_detail(x, dirs):
+    """Isi modal detail dari agent: path `menyangkut` yang tidak ada di repo dibuang, teks dibatasi panjangnya."""
+    d = x.get("detail")
+    if not isinstance(d, dict):
+        x.pop("detail", None)
+        return
+    ada = lambda p: not p.startswith("/") and ".." not in p and any(
+        os.path.exists(os.path.join(r, p.split(":")[0])) for r in dirs)
+    d["menyangkut"] = [p for p in (d.get("menyangkut") or [])[:8] if isinstance(p, str) and ada(p)]
+    d["alur"] = [str(a)[:200] for a in (d.get("alur") or [])[:6]]
+    for k in ("tugas", "harapan"):
+        d[k] = str(d.get(k) or "")[:400]
+
+
 def _langkah_salah(langkah, dirp):
     """Langkah develop yang menyebut PR yang tidak ada di rencana, atau sudah selesai / sudah punya MR."""
     m = re.search(r"/clint:develop\s+(\S+\.md)\s+(.*)", langkah)
@@ -284,6 +298,9 @@ def saring(d):
             a = alasan_tolak(x, g)
             (ditolak.append((g, x, a)) if a else tetap.append(x))
         d[g] = tetap
+        for x in tetap:
+            if x.get("proyek") in info:
+                _rapikan_detail(x, info[x["proyek"]][0])
     lengkapi(d, tugas)
     for b in d.get("berikutnya") or [] if isinstance(d.get("berikutnya"), list) else []:
         if b.get("proyek") in info:
