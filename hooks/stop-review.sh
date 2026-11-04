@@ -15,10 +15,12 @@ case "$1" in --mark|--tandai) mark_mode=1 ;; esac
 if [ "$mark_mode" = 0 ]; then
   [ "${CLINT_HEADLESS:-0}" = "1" ] && exit 0
   input="$(cat)"
-  IFS=$'\x1f' read -r active sid tanya < <(jq -r '[(.stop_hook_active // false | tostring), (.session_id // ""),
-    ((.last_assistant_message // "") | sub("\\s+$"; "") | endswith("?") | tostring)] | join("\u001f")' <<<"$input")
+  IFS=$'\x1f' read -r active sid tanya transcript < <(jq -r '[(.stop_hook_active // false | tostring), (.session_id // ""),
+    ((.last_assistant_message // "") | sub("\\s+$"; "") | endswith("?") | tostring), (.transcript_path // "")] | join("\u001f")' <<<"$input")
   [ "$active" = "true" ] && exit 0
   [ "$tanya" = "true" ] && exit 0
+  # Sesi yang tidak pernah menyunting file atau memanggil agent tidak bertanggung jawab atas perubahan yang ada.
+  if [ -f "$transcript" ] && ! grep -qE '"name": ?"(Edit|Write|MultiEdit|NotebookEdit|Agent)"' "$transcript"; then exit 0; fi
   kerja="$HOME/Library/Logs/clint/kerja/$sid.json"
   [ -n "$sid" ] && [ -n "$(find "$kerja" -maxdepth 0 -mmin -180 2>/dev/null)" ] && exit 0
 fi
