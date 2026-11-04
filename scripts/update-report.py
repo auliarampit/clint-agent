@@ -173,6 +173,79 @@ def _disebut(sumber, dirs):
     return any((r := _git(d, "grep", "-l", "-F", k)) and r.stdout.strip() for k in kata for d in dirs)
 
 
+_MR, _PLAN = {}, {}
+
+
+def _mr_status(dirp, n):
+    """Status MR/PR dari glab/gh: opened, merged, closed, 'tidak ada', atau None bila tidak bisa dipastikan."""
+    if (dirp, n) in _MR:
+        return _MR[dirp, n]
+    st = None
+    try:
+        gh = "github.com" in (_git(dirp, "remote", "get-url", "origin").stdout or "")
+        cmd = ["gh", "pr", "view", n, "--json", "state"] if gh else ["glab", "mr", "view", n, "-F", "json"]
+        r = subprocess.run(cmd, cwd=dirp, capture_output=True, text=True, timeout=20)
+        if r.returncode == 0:
+            st = json.loads(r.stdout).get("state", "").lower()
+            st = "opened" if st == "open" else st
+        elif re.search(r"404|not found|Could not resolve", r.stdout + r.stderr, re.I):
+            st = "tidak ada"
+    except Exception:
+        pass
+    _MR[dirp, n] = st
+    return st
+
+
+def _alasan_mr(x, g, dirp):
+    """MR yang disebut butir harus ada; butir cek/gagal tidak boleh menunjuk MR yang sudah merged/closed."""
+    nomor = re.findall(r"(?:^|\s)!(\d+)\b", f"{x.get('sumber') or ''} {x.get('perintah') or ''}")
+    status = {n: _mr_status(dirp, n) for n in nomor}
+    for n, st in status.items():
+        if st == "tidak ada":
+            return f"MR !{n} tidak ditemukan"
+    if status and g in ("cek", "gagal") and all(st in ("merged", "closed") for st in status.values()):
+        return "MR !" + ", !".join(status) + " sudah " + "/".join(sorted(set(status.values())))
+    if any(st is None for st in status.values()) and not x.get("ket"):
+        x["ket"] = "MR belum terverifikasi (glab/gh tidak menjawab)"
+    return None
+
+
+def _status_plan(dirp, plan=None):
+    """{id PR: state} per rencana dari plan-status.py; tanpa `plan` → semua rencana project: {slug: [pr, ...]}."""
+    k = (dirp, plan)
+    if k not in _PLAN:
+        try:
+            cmd = ["python3", os.path.join(os.path.dirname(os.path.abspath(__file__)), "plan-status.py"), "--json"]
+            r = subprocess.run(cmd + ([plan] if plan else []), cwd=dirp, capture_output=True, text=True, timeout=120)
+            _PLAN[k] = json.loads(r.stdout)["plans"] if r.returncode == 0 else None
+        except Exception:
+            _PLAN[k] = None
+    return _PLAN[k]
+
+
+def _langkah_salah(langkah, dirp):
+    """Langkah develop yang menyebut PR yang tidak ada di rencana, atau sudah selesai / sudah punya MR."""
+    m = re.search(r"/clint:develop\s+(\S+\.md)\s+(.*)", langkah)
+    prs = re.findall(r"PR-\d+", m.group(2)) if m else []
+    hasil = _status_plan(dirp, m.group(1)) if prs else None
+    if not hasil:
+        return False
+    state = {p["id"]: p["state"] for p in hasil[0]["prs"]}
+    return any(i not in state or state[i] in ("done", "review") for i in prs)
+
+
+def _koreksi_rencana(d, info):
+    """Angka n/total dihitung dari plan-status.py, bukan dipercaya dari agent."""
+    for r in d.get("rencana") or []:
+        if r.get("proyek") not in info:
+            continue
+        kunci_id = re.search(r"[a-z]+-[a-z]+-\d+", re.sub(r"[^a-z0-9]+", "-", str(r.get("nama") or "").lower()))
+        semua = _status_plan(info[r["proyek"]][0][0]) or []
+        cocok = [x for x in semua if kunci_id and (x["slug"] + "-").startswith(kunci_id.group() + "-")]
+        if len(cocok) == 1:
+            r["selesai"], r["total"] = cocok[0]["done"], len(cocok[0]["prs"])
+
+
 def saring(d):
     """Buang butir tanpa bukti atau yang menurut sumber tugas sudah diserahkan/selesai. Dicatat di ditolak.log."""
     ts = _tugas_saya()
@@ -201,9 +274,9 @@ def saring(d):
         s = f"{x.get('sumber') or ''} {x.get('perintah') or ''}"
         if (i := _cocok(s, beres)) and not _cocok(s, kerja):
             return f"{i} sudah diserahkan/selesai menurut sumber tugas"
-        if _cocok(s, kerja) or _bukti(s, dirs) or (g == "tunggu" and _disebut(s, dirs)):
-            return None
-        return "tanpa bukti yang bisa diperiksa"
+        if not (_cocok(s, kerja) or _bukti(s, dirs) or (g == "tunggu" and _disebut(s, dirs))):
+            return "tanpa bukti yang bisa diperiksa"
+        return _alasan_mr(x, g, dirs[0])
 
     for g in GRUP:
         tetap = []
@@ -215,7 +288,9 @@ def saring(d):
     for b in d.get("berikutnya") or [] if isinstance(d.get("berikutnya"), list) else []:
         if b.get("proyek") in info:
             beres, kerja = info[b["proyek"]][2], info[b["proyek"]][1]
-            b["langkah"] = [l for l in b.get("langkah") or [] if not (_cocok(l, beres) and not _cocok(l, kerja))]
+            b["langkah"] = [l for l in b.get("langkah") or []
+                            if not (_cocok(l, beres) and not _cocok(l, kerja)) and not _langkah_salah(l, info[b["proyek"]][0][0])]
+    _koreksi_rencana(d, info)
     if ditolak:
         with open(os.path.expanduser("~/Library/Logs/clint/ditolak.log"), "a", encoding="utf-8") as fh:
             for g, x, a in ditolak:

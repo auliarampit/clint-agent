@@ -213,6 +213,67 @@ class Saring(Dasar):
         self.assertEqual(len(ulang["rincian"][0]["butir"]), 1)
 
 
+class Terverifikasi(Dasar):
+    """Butir yang menyebut MR atau PR diperiksa ke glab dan plan-status; glab diganti skrip palsu."""
+    RENCANA = """# Rencana
+
+## 5. Urutan pekerjaan
+
+| PR   | Branch   | Isi  |
+| ---- | -------- | ---- |
+| PR-1 | feat/a   | satu |
+| PR-2 | feat/b   | dua  |
+
+## Status PR
+
+- [x] PR-1 · ✅ selesai · MR !5
+"""
+
+    def setUp(self):
+        super().setUp()
+        bin_ = os.path.join(self.tmp, "bin")
+        os.makedirs(bin_)
+        glab = os.path.join(bin_, "glab")
+        with open(glab, "w") as fh:
+            fh.write("#!/bin/sh\ncase \"$1 $2\" in\n"
+                     " \"mr view\") case \"$3\" in 5) echo '{\"state\":\"merged\"}';; 6) echo '{\"state\":\"opened\"}';;"
+                     " *) echo '404 Not Found' >&2; exit 1;; esac;;\n \"mr list\") echo '[]';;\nesac\n")
+        os.chmod(glab, 0o755)
+        self.env["PATH"] = bin_ + os.pathsep + self.env["PATH"]
+        self.d = os.path.join(self.tmp, "mobile")
+        os.makedirs(os.path.join(self.d, "docs/plans"))
+        os.makedirs(os.path.join(self.d, ".claude"))
+        tulis(os.path.join(self.d, ".claude/clint.json"), {"baseBranch": "dev", "docs": {"plans": "docs/plans"}})
+        with open(os.path.join(self.d, "docs/plans/mr-mob-1-contoh.md"), "w") as fh:
+            fh.write(self.RENCANA)
+        jadikan_repo(self.d)
+
+    def saring(self, **grup):
+        lap = {"judul": "x", "kalimat": "x", "proyek": [{"nama": "mobile", "dir": self.d}],
+               "gagal": [], "kerjakan": [], "cek": [], "tunggu": []}
+        lap.update(grup)
+        p = os.path.join(self.tmp, "lap.json")
+        tulis(p, lap)
+        self.jalan("update-report.py", "saring", p)
+        return json.loads(baca(p))
+
+    def test_mr_karangan_dan_merged_dibuang_yang_open_lolos(self):
+        b = lambda s: {"proyek": "mobile", "sumber": s, "teks": "x"}
+        hasil = self.saring(cek=[b("MR !99"), b("MR !5"), b("MR !6")])
+        self.assertEqual([x["sumber"] for x in hasil["cek"]], ["MR !6"])
+
+    def test_langkah_berikutnya_hanya_pr_yang_ada_dan_belum_selesai(self):
+        cmd = "[siap] /clint:develop docs/plans/mr-mob-1-contoh.md "
+        hasil = self.saring(berikutnya=[{"proyek": "mobile", "dir": self.d,
+                                         "langkah": [cmd + "PR-2", cmd + "PR-1", cmd + "PR-9"]}])
+        self.assertEqual(hasil["berikutnya"][0]["langkah"], [cmd + "PR-2"])
+
+    def test_angka_rencana_dihitung_dari_rencana_bukan_agent(self):
+        r = {"proyek": "mobile", "nama": "MR-MOB-1 Contoh", "selesai": 0, "total": 9}
+        self.assertEqual(self.saring(rencana=[r])["rencana"][0]["selesai"], 1)
+        self.assertEqual(self.saring(rencana=[r])["rencana"][0]["total"], 2)
+
+
 class Gabung(Dasar):
     def test_merge_rincian_rencana_per_dir_dan_jam_merge(self):
         m = self.jadwal()
