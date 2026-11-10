@@ -5,8 +5,8 @@ Dibaca orkestrator `develop` (dan `review`) saat sampai langkah tinjauan. Ringka
 ## 5.3 Tinjauan sesuai ukuran
 
 Setelah implementasi, satu perintah tanpa token:
-`python3 "$R/scripts/review-prep.py" <path kerja> <base> [--design]` (`--design` bila `docs.design` bukan
-`TIDAK ADA`) → menulis `pr.diff` di folder kerja PR, lalu mencetak `folder=`, `ukuran=`, `sensitif=`, dan
+`python3 "$R/scripts/review-prep.py" <path kerja> <base> --catat [--design]` (`--catat` menulis ukuran, wajib, dan skor ke
+log audit; `--design` bila `docs.design` bukan `TIDAK ADA`) → menulis `pr.diff` di folder kerja PR, lalu mencetak `folder=`, `ukuran=`, `sensitif=`, dan
 `kandidat <auditor> skor=...: <bukti>` (path dan isi baris yang memicu). Ukuran dari skrip adalah **batas bawah**:
 boleh dinaikkan, tidak boleh diturunkan. Pilih auditor dari kandidat; boleh menambah auditor di luar kandidat bila
 isi diff menunjukkannya.

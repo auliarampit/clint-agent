@@ -21,6 +21,7 @@ CMD = re.compile(r"<command-name>/?(clint:[a-z-]+)</command-name>")
 CEK = [("run-checks", r"run-checks\.py"), ("lint", r"\beslint\b|run lint"), ("typecheck", r"\btsc\b|typecheck"),
        ("test", r"\bjest\b|vitest|run test"), ("e2e", r"maestro|playwright")]
 JEDA = 600
+TUNGGU = Counter()  # path transkrip → jumlah perintah Bash sleep/until
 
 
 def waktu(s):
@@ -63,6 +64,8 @@ def transkrip(path):
                 if c.get("name") == "Skill" and str(inp.get("skill", "")).startswith("clint:"):
                     perintah.append(inp["skill"])
                 if c.get("name") == "Bash":
+                    if re.search(r"\bsleep\b|\buntil\b", str(inp.get("command", ""))):
+                        TUNGGU[path] += 1
                     jenis = next((n for n, p in CEK if re.search(p, str(inp.get("command", "")))), None)
                     if jenis:
                         pending[c["id"]] = (jenis, t)
@@ -101,12 +104,52 @@ def ringkas(xs, fmt="{:.1f}"):
             f"p75 {fmt.format(xs[(3 * n) // 4])} · rata2 {fmt.format(statistics.mean(xs))}")
 
 
+def pembanding(sesi, tanggal, lokal):
+    """Sebelum vs sesudah `tanggal` (v2.18): konteks awal, peninjau per PR, loop tunggu, batas RAM, verifikasi."""
+    batas = datetime.fromisoformat(tanggal).replace(tzinfo=lokal)
+    kel = {"sebelum": [], "sesudah": []}
+    for s in sesi.values():
+        kel["sebelum" if s["mulai"] < batas else "sesudah"].append(s)
+    med = lambda xs: f"{statistics.median(xs) / 1000:.0f} rb" if xs else "-"
+    awal = lambda t: sum(t[0][1].get(k, 0) for k in ("in", "cw", "cr")) if t else None
+    log = [d for d in (baca(LOG) if os.path.exists(LOG) else []) if d.get("t")]
+    per = lambda d: "sebelum" if waktu(d["t"]) < batas else "sesudah"
+    out = ["", f"## Pembanding v2.18 (batas {tanggal})", "| | sebelum | sesudah |", "|---|---|---|"]
+    out.append("| sesi | " + " | ".join(str(len(kel[k])) for k in kel) + " |")
+    out.append("| konteks turn pertama, sesi utama (median) | " + " | ".join(
+        med([awal(s["titik"]) for s in kel[k] if s["titik"]]) for k in kel) + " |")
+    out.append("| konteks turn pertama, subagent (median) | " + " | ".join(
+        med([awal(x["titik"]) for s in kel[k] for x in s["subs"] if x["titik"]]) for k in kel) + " |")
+    out.append("| subagent per sesi (rata-rata) | " + " | ".join(
+        f"{sum(len(s['subs']) for s in kel[k]) / len(kel[k]):.1f}" if kel[k] else "-" for k in kel) + " |")
+    out.append("| perintah sleep/until per sesi | " + " | ".join(
+        f"{sum(s['loop'] for s in kel[k]) / len(kel[k]):.1f}" if kel[k] else "-" for k in kel) + " |")
+    tinjau = {k: [d for d in log if d["jadi"] == "tinjau" and per(d) == k] for k in kel}
+    out.append("| peninjau per putaran tinjau (rata-rata) | " + " | ".join(
+        f"{sum(len(d.get('peninjau') or []) for d in tinjau[k]) / len(tinjau[k]):.1f}" if tinjau[k] else "-"
+        for k in kel) + " |")
+    prep = [d for d in log if d["jadi"] == "prep" and per(d) == "sesudah"]
+    if prep:
+        ukuran = Counter(d["ukuran"] for d in prep)
+        wajib = Counter(n for d in prep for n in d.get("wajib") or [])
+        out.append(f"- prep (sesudah): {len(prep)} PR · ukuran {dict(ukuran)} · wajib {dict(wajib)}")
+    pf = [d for d in log if d["jadi"] == "preflight" and per(d) == "sesudah"]
+    if pf:
+        out.append(f"- preflight (sesudah): {len(pf)} run · batas RAM aktif {sum(1 for d in pf if d.get('batas'))}x · "
+                   f"paralel {dict(Counter(d['paralel'] for d in pf))}")
+    kirim = Counter(d.get("verifikasi") or "tidak diisi" for d in log if d["jadi"] == "kirim" and per(d) == "sesudah")
+    if kirim:
+        out.append(f"- verifikasi jalur persis di PR terkirim (sesudah): {dict(kirim)}")
+    return out
+
+
 def main():
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap =argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--sejak")
     ap.add_argument("--sampai")
     ap.add_argument("--proyek")
     ap.add_argument("--json")
+    ap.add_argument("--pembanding", default="2026-11-10", help="tanggal mulai v2.18 (sebelum/sesudah)")
     a = ap.parse_args()
     lokal = datetime.now().astimezone().tzinfo
     sejak = (datetime.fromisoformat(a.sejak).replace(tzinfo=lokal) if a.sejak
@@ -124,7 +167,7 @@ def main():
         titik, kejadian, perintah, cek, _ = transkrip(f)
         if not kejadian or not (sejak <= kejadian[0] < sampai):
             continue
-        subs = []
+        subs, loop = [], TUNGGU[f]
         for sf in glob.glob(f[:-6] + "/subagents/*.jsonl"):
             meta = sf[:-6] + ".meta.json"
             jenis = json.load(open(meta)).get("agentType", "?") if os.path.exists(meta) else "?"
@@ -132,9 +175,10 @@ def main():
             if sk:
                 subs.append({"jenis": jenis, "titik": st, "kejadian": sk, "cek": scek, "prompt": sprompt})
                 cek.update(scek)
+                loop += TUNGGU[sf]
         semua = sorted(kejadian + [t for s in subs for t in s["kejadian"]])
         sesi[os.path.basename(f)[:-6]] = {"proyek": proyek.replace("-Users-", "").split("-Desktop-")[-1],
-                                         "mulai": kejadian[0], "titik": titik, "subs": subs, "cek": cek,
+                                         "mulai": kejadian[0], "titik": titik, "subs": subs, "cek": cek, "loop": loop,
                                          "perintah": sorted(set(perintah)), "aktif": aktif(semua)}
 
     # Pasangan mulai → kirim dari log PR.
@@ -239,6 +283,8 @@ def main():
             out.append(f"- {m}: {len(ps)} PR · {sum(p['aktif'] for p in ps) / 60:.1f} jam aktif · "
                        f"{min(p['mulai'] for p in ps):%d/%m %H:%M} → {max(p['kirim'] for p in ps):%d/%m %H:%M} · "
                        f"{jt(sum(total(p['token']) for p in ps))}")
+
+    out += pembanding(sesi, a.pembanding, lokal)
 
     cek = sum((s["cek"] for s in sesi.values()), Counter())
     out += ["", "## Waktu cek lokal (semua sesi, menit)", "- " + ", ".join(f"{j} {v / 60:.0f}" for j, v in

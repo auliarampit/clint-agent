@@ -4,7 +4,7 @@
   ship-pr.py --dir <path kerja> --commit <pesan.txt>:<daftar-file.txt> [--commit ...]
              [--plan <rencana> --pr PR-n --state review|draft|done]
              [--desc <deskripsi.md>] [--draft] [--saran <saran.json>]
-             [--check "<perintah cek cepat>"]... [--butir "<ID/teks>" --proyek <nama>]
+             [--check "<perintah cek cepat>"]... [--butir "<ID/teks>" --proyek <nama>] [--verifikasi lulus|belum|tidak-terreproduksi]
              [--asal <branch asal user> | --worktree] [--uji]
 
 --commit dipakai berurutan: commit utama dulu, lalu commit perbaikan Low (`refactor: terapkan saran tinjauan`).
@@ -68,6 +68,7 @@ def main():
     ap.add_argument("--desc"); ap.add_argument("--draft", action="store_true"); ap.add_argument("--saran")
     ap.add_argument("--check", action="append", default=[])
     ap.add_argument("--butir"); ap.add_argument("--proyek")
+    ap.add_argument("--verifikasi", choices=["lulus", "belum", "tidak-terreproduksi"])
     ap.add_argument("--asal"); ap.add_argument("--worktree", action="store_true")
     ap.add_argument("--uji", action="store_true")
     a = ap.parse_args()
@@ -127,7 +128,8 @@ def main():
             henti(f"push ke {base} ditolak; commit ada di {base} lokal, jalankan `git push origin {base}`: "
                   f"{r.stderr.strip()[:200]}", 5)
         print(f"push={base}")
-        catat({"repo": repo, "branch": branch, "mr": None, "mode": mode, "plan": a.plan, "pr": a.pr, "draft": False})
+        catat({"repo": repo, "branch": branch, "mr": None, "mode": mode, "plan": a.plan, "pr": a.pr, "draft": False,
+               "verifikasi": a.verifikasi})
         if a.worktree:
             jalan(["git", "worktree", "remove", kerja], repo)
         jalan(["git", "branch", "-q", "-D", branch], repo)
@@ -156,7 +158,7 @@ def main():
         nomor, url = mr or ("?", "")
         print(f"mr=!{nomor} {url}" + (" draft" if a.draft else ""))
         catat({"repo": repo, "branch": branch, "mr": nomor, "mode": mode, "plan": a.plan, "pr": a.pr,
-               "draft": bool(a.draft)})
+               "draft": bool(a.draft), "verifikasi": a.verifikasi})
 
     if a.saran and os.path.getsize(a.saran) > 2:
         blok = jalan(["python3", f"{R}/scripts/mr-suggestions.py", str(nomor), a.saran, "--deskripsi"], kerja)

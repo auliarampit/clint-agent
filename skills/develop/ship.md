@@ -23,8 +23,12 @@ python3 "$R/scripts/ship-pr.py" --dir <path kerja> \
   --commit <pesan-utama.txt>:<file-utama.txt> [--commit <pesan-low.txt>:<file-low.txt>] \
   [--plan <rencana> --pr PR-<n> --state review|draft|done] [--desc <deskripsi.md>] [--draft] \
   [--saran <saran.json>] [--check "<lint>" --check "<test terkait>"] \
-  [--butir "<ID/teks butir status>" --proyek <nama project>] [--asal <branch asal> | --worktree]
+  [--butir "<ID/teks butir status>" --proyek <nama project>] \
+  [--verifikasi lulus|belum|tidak-terreproduksi] [--asal <branch asal> | --worktree]
 ```
+
+`--verifikasi` wajib diisi untuk PR dari bug/feedback: `lulus` (jalur persis laporan lulus sebelum dan sesudah),
+`belum`, atau `tidak-terreproduksi`; dicatat ke log audit.
 
 Skrip menulis `## Status PR` di rencana dan mengikutkannya di commit pertama (`review` untuk MR biasa, `draft`
 bila E2E tertunda, `done` untuk `push-base`), commit berurutan, menarik base dan rebase bila tertinggal (lalu

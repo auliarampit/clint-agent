@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bahan tinjauan satu PR tanpa token: pr.diff di folder kerja PR, ukuran, area sensitif, kandidat auditor.
 
-  review-prep.py <path kerja> <base-ref> [--design] [--json]
+  review-prep.py <path kerja> <base-ref> [--design] [--json] [--catat]
   review-prep.py <path kerja> --fitur "<nama>" [--kata k1,k2] [--design] [--json]
 
 --fitur: tinjau fitur yang sudah ada (tanpa diff). File kode yang nama atau isinya memuat nama fitur / kata kunci
@@ -206,6 +206,18 @@ def main():
         hasil["diff"] = os.path.join(folder, "pr.diff")
     with open(os.path.join(folder, "prep.json"), "w") as f:
         json.dump(hasil, f, indent=1)
+    if "--catat" in sys.argv and not fitur:
+        import time
+        log = os.path.expanduser("~/Library/Logs/clint/pr.jsonl")
+        try:
+            os.makedirs(os.path.dirname(log), exist_ok=True)
+            with open(log, "a", encoding="utf-8") as f:
+                f.write(json.dumps({"t": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "jadi": "prep",
+                                    "repo": os.path.dirname(common), "branch": branch, "ukuran": ukuran,
+                                    "baris": baris, "wajib": wajib,
+                                    "skor": {n: k["skor"] for n, k in kandidat.items()}}) + "\n")
+        except OSError:
+            pass
     if "--json" in sys.argv:
         print(json.dumps(hasil, indent=1))
         return

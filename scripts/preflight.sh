@@ -35,4 +35,9 @@ ram="$(( $(sysctl -n hw.memsize 2>/dev/null || echo 0) / 1073741824 ))"
 batas=""
 if [ "$ram" -gt 0 ] && [ "$ram" -le 8 ] && [ "$par" -gt 2 ]; then par=2; batas=" batas=ram"; fi
 echo "disk_gb=$gb ram_gb=$ram paralel=$par$batas"
+# Bahan audit-usage.py (pembanding antar versi).
+log="$HOME/Library/Logs/clint/pr.jsonl"
+mkdir -p "${log%/*}" 2>/dev/null && jq -cn --arg t "$(date +%Y-%m-%dT%H:%M:%S%z)" --arg repo "$(pwd)" \
+  --argjson disk "$gb" --argjson ram "$ram" --argjson par "$par" --arg batas "${batas# batas=}" \
+  '{t:$t, jadi:"preflight", repo:$repo, disk_gb:$disk, ram_gb:$ram, paralel:$par, batas:$batas}' >>"$log" 2>/dev/null
 [ "$par" -gt 0 ] || { echo "error=sisa disk < 5 GB"; exit 2; }
