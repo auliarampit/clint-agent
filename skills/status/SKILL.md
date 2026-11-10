@@ -139,7 +139,8 @@ bila bahasa user English. Nama kunci JSON tetap seperti di atas.
 
 **Hanya yang valid dan milik user** (berlaku untuk chat dan semua kelompok JSON):
 - Butir tugas hanya dari `KERJAKAN` di `tugas-saya.py` (sumber tugas `"tugas"` di `clint.json`); project tanpa
-  adapter tidak punya butir tugas. Butir lain masuk laporan hanya bila tindakan berikutnya ada di tangan user dan
+  adapter tidak punya butir tugas. Butir `KERJAKAN` bertanda `STATUS TERTINGGAL` ditulis dengan perintah `/clint:docs` yang tercetak,
+  bukan `/clint:develop`. Butir lain masuk laporan hanya bila tindakan berikutnya ada di tangan user dan
   ada buktinya yang bisa diperiksa mesin (MR, hash commit, path file), ditulis persis. Butir agent tanpa bukti, atau yang bertentangan dengan status tracker (mis. "belum ada
   commit" padahal butir 🧪), dibuang, tidak diteruskan.
 - `tunggu` hanya untuk hal yang menahan pekerjaan user sendiri (keputusan PM atas pertanyaan user, materi klien).

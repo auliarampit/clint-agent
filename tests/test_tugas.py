@@ -390,3 +390,64 @@ class Deteksi(Dasar):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StatusTertinggal(Dasar):
+    """Kode perbaikan sudah di origin/<base> sesudah baris status terakhir diubah: tugasnya perbarui status, bukan
+    mengulang develop. Baris yang diubah sesudah commit (mis. Reopen) tetap tugas kode."""
+    def proyek(self, baris, pesan, kode_lebih_baru=True):
+        d = os.path.join(self.tmp, "p")
+        shutil.copytree(os.path.join(FIXTURE, "feedback"), d)
+        f = os.path.join(d, "docs/qa/feedback/feedback-mobile.md")
+        with open(f, "a", encoding="utf-8") as fh:
+            fh.write("\n| # | Bagian | Modul | Status | Catatan |\n|---|---|---|---|---|\n" + baris + "\n")
+        t_doc, t_kode = ("2026-11-09T10:00:00", "2026-11-10T06:00:00") if kode_lebih_baru else \
+            ("2026-11-10T06:00:00", "2026-11-09T10:00:00")
+        for sub, t, msg in (("docs", t_doc, "docs: feedback"), ("mobile", t_kode, pesan)):
+            r = os.path.join(d, sub)
+            env = dict(self.env, GIT_AUTHOR_DATE=t, GIT_COMMITTER_DATE=t)
+            for a in (["init", "-q", "-b", "dev"], ["add", "-A"],
+                      ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", msg],
+                      ["update-ref", "refs/remotes/origin/dev", "HEAD"]):
+                subprocess.run(["git", "-C", r, *a], env=env, check=True, capture_output=True)
+        return os.path.join(d, "mobile")
+
+    def butir(self, r, id_):
+        return next(x for k in ("kerjakan", "diserahkan", "selesai", "tidak_dikenal") for x in r[k] if x["id"] == id_)
+
+    def test_baris_bernomor_dicari_lewat_id_temuan_bukan_id_modul(self):
+        m = self.proyek("| 9 | Donasi habis waktu | MR-MOB-10 | Open | 1 temuan (FB-MOB10-007), FR-08 |",
+                        "fix(donation): kirim donasi 30 detik (FB-MOB10-007)")
+        x = self.butir(self.tugas(m), "feedback-mobile #9")
+        self.assertTrue(x["perintah"].startswith("/clint:docs perbarui status feedback-mobile #9"), x["perintah"])
+        self.assertIn("STATUS TERTINGGAL", self.jalan("tugas-saya.py", m))
+
+    def test_commit_yang_hanya_menyebut_modul_tidak_dihitung(self):
+        m = self.proyek("| 9 | Donasi | MR-MOB-10 | Open | FR-08 |", "feat(donation): form (MR-MOB-10, FR-08)")
+        x = self.butir(self.tugas(m), "feedback-mobile #9")
+        self.assertEqual(x["commit"], "")
+        self.assertTrue(x["perintah"].startswith("/clint:develop"))
+
+    def test_baris_diubah_sesudah_commit_tetap_tugas_kode(self):
+        m = self.proyek("| 9 | Donasi | MR-MOB-10 | Reopen | FB-MOB10-007 |",
+                        "fix(donation): x (FB-MOB10-007)", kode_lebih_baru=False)
+        self.assertTrue(self.butir(self.tugas(m), "feedback-mobile #9")["perintah"].startswith("/clint:develop"))
+
+    def test_status_riwayat_dibaca_dari_yang_terakhir_dan_pipa_dalam_sel(self):
+        m = self.proyek("| 9 | Arah `Geser \\| Gulir` | MR-MOB-02 | Open → **Passed 9 Nov 2026** | - |", "awal")
+        self.assertEqual(self.butir(self.tugas(m), "feedback-mobile #9")["kelas"], "selesai")
+
+    def test_laporan_mengganti_perintah_develop_dengan_docs(self):
+        m = self.proyek("| 9 | Donasi | MR-MOB-10 | Open | FB-MOB10-007 |", "fix(donation): x (FB-MOB10-007)")
+        lap = {"judul": "x", "kalimat": "x", "proyek": [{"nama": "mr", "dir": m}], "gagal": [], "cek": [],
+               "tunggu": [], "kerjakan": [{"proyek": "mr", "sumber": "feedback-mobile #9", "teks": "x",
+                                           "perintah": "/clint:develop feedback-mobile #9 Donasi"}],
+               "berikutnya": [{"proyek": "mr", "langkah": ["[siap] /clint:develop FB-MOB10-007"]}]}
+        p = os.path.join(self.tmp, "lap.json")
+        tulis(p, lap)
+        self.jalan("update-report.py", "saring", p)
+        hasil = json.loads(baca(p))
+        kartu = next(x for x in hasil["kerjakan"] if x["sumber"] == "feedback-mobile #9")
+        self.assertTrue(kartu["perintah"].startswith("/clint:docs perbarui status"), kartu["perintah"])
+        self.assertTrue(all(l.startswith("[siap] /clint:docs") for l in hasil["berikutnya"][0]["langkah"]),
+                        hasil["berikutnya"][0]["langkah"])

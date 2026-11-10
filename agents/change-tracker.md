@@ -43,6 +43,8 @@ menyebut periode ("sejak Senin") → teruskan sebagai argumen `sejak`.
    `clint.json`). Itu satu-satunya sumber butir tugas:
    - laporkan **hanya** butir di `KERJAKAN`, satu baris per butir, dengan ID, file:baris, dan commit kode yang
      tercetak; bila perlu rincian, baca bagian butir itu saja (`sed -n` dari baris yang tercetak);
+   - butir bertanda `STATUS TERTINGGAL` (kode perbaikannya sudah di base sesudah status terakhir diubah)
+     bukan tugas kode: laporkan dengan perintah `/clint:docs` yang tercetak, jangan `/clint:develop`;
    - butir `DISERAHKAN`/`SELESAI` tidak dilaporkan; jumlahnya boleh disebut di satu baris aman;
    - `STATUS TIDAK DIKENAL` dilaporkan apa adanya sebagai saran pemetaan adapter, bukan sebagai tugas;
    - `sumber_tugas=tidak ada` → tidak ada butir tugas sama sekali; jangan mencari tugas sendiri dari isi

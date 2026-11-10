@@ -19,6 +19,9 @@ PEMETAAN_BAWAAN = {
 }
 
 
+POLA_ID = r"\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+[a-z]?\b"
+
+
 def norm(s):
     s = re.sub(r"[*_`]", "", s or "").strip().lower()
     return re.sub(r"\s+", " ", s)
@@ -63,7 +66,15 @@ def kata_kunci(nilai, peta):
 
 
 def sel(baris):
-    return [c.strip() for c in baris.strip().strip("|").split("|")]
+    return [c.strip() for c in re.split(r"(?<!\\)\|", baris.strip().strip("|"))]
+
+
+def ref_temuan(header, c):
+    """ID temuan yang disebut baris bernomor. ID di kolom Modul dan ID requirement dipakai banyak commit lain, jadi
+    tidak dipakai mencari commit perbaikan."""
+    modul = {i for h, x in zip(header, c) if norm(h) in ("modul", "module") for i in re.findall(POLA_ID, x)}
+    return list(dict.fromkeys(i for x in c for i in re.findall(POLA_ID, x)
+                              if i not in modul and not re.match(r"(N?FR|AC|BR|SR|OQ|US|UC|TC|E2E|PT)-", i)))
 
 
 def cari_kolom(header, nama):
@@ -101,7 +112,7 @@ def baca_tabel(f, src, user, peta):
             if not i_pic or not any(n in get(i_pic[0]).lower() for n in user):
                 continue
         status = {header[i]: get(i) for i in i_st if get(i)}
-        kls = [kelas(v, peta) for v in status.values()]
+        kls = [kelas(v.split("→")[-1], peta) or kelas(v, peta) for v in status.values()]
         if "kerjakan" in kls:
             k = "kerjakan"
         elif "diserahkan" in kls:
@@ -111,7 +122,8 @@ def baca_tabel(f, src, user, peta):
         else:
             k = "tidak_dikenal"
         hasil.append({"id": id_, "judul": get(i_jd[0])[:90] if i_jd else "", "kelas": k,
-                      "status": " ".join(f"{h}:{v}" for h, v in status.items()), "file": f, "baris": no + 1})
+                      "status": " ".join(f"{h}:{v}" for h, v in status.items()), "file": f, "baris": no + 1,
+                      "ref": ref_temuan(header, c) if " #" in id_ else [id_]})
     return hasil
 
 
@@ -216,14 +228,27 @@ def baca_jadwal(f, src, dirp, hari=None):
     return hasil
 
 
-def commit_kode(dirp, base, id_):
-    if " #" in id_:
-        return ""
-    out = subprocess.run(["git", "-C", dirp, "log", f"origin/{base}", "-E",
-                          f"--grep={re.escape(id_)}([^0-9A-Za-z]|$)", "--format=%h %ad %s",
-                          "--date=format:%d/%m"], capture_output=True, text=True).stdout
-    kode = [l for l in out.splitlines() if not re.match(r"^\S+ \S+ (docs|Merge)\b", l)]
-    return kode[0][:90] if kode else ""
+def commit_kode(dirp, base, ref):
+    """Commit kode terbaru di origin/<base> yang menyebut salah satu ID: (baris ringkas, waktu unix)."""
+    for id_ in ref:
+        out = subprocess.run(["git", "-C", dirp, "log", f"origin/{base}", "-E",
+                              f"--grep={re.escape(id_)}([^0-9A-Za-z]|$)", "--format=%h %ct %ad %s",
+                              "--date=format:%d/%m"], capture_output=True, text=True).stdout
+        kode = [l.split(" ", 2) for l in out.splitlines() if not re.match(r"^\S+ \S+ \S+ (docs|Merge)\b", l)]
+        if kode:
+            h, ct, sisa = kode[0]
+            return f"{h} {sisa}"[:90], int(ct)
+    return "", 0
+
+
+def waktu_baris(f, no):
+    """Waktu commit terakhir yang mengubah baris status di dokumen (git blame); 0 bila tidak bisa dipastikan."""
+    r = subprocess.run(["git", "-C", os.path.dirname(f), "blame", "--porcelain", "-L", f"{no},{no}", "--",
+                        os.path.basename(f)], capture_output=True, text=True)
+    if r.returncode or r.stdout.startswith("0" * 40):
+        return 0
+    m = re.search(r"^committer-time (\d+)", r.stdout, re.M)
+    return int(m.group(1)) if m else 0
 
 
 def kumpulkan(dirp, sumber=None):
@@ -246,9 +271,14 @@ def kumpulkan(dirp, sumber=None):
             items = baca_tabel(f, src, user, peta) if jenis == "tabel" else \
                 baca_jadwal(f, src, dirp) if jenis == "jadwal" else baca_checklist(f, src)
             for x in items:
-                x["file"] = os.path.relpath(x["file"], dirp)
+                ref, path = x.pop("ref", []), x["file"]
+                x["file"] = os.path.relpath(path, dirp)
                 if x["kelas"] == "kerjakan" and jenis == "tabel":
-                    x["commit"] = commit_kode(dirp, base, x["id"])
+                    x["commit"], ct = commit_kode(dirp, base, ref)
+                    if ct and ct > waktu_baris(path, x["baris"]):
+                        x["perintah"] = (f"/clint:docs perbarui status {x['id']} di {x['file']}: kode sudah di "
+                                         f"{base} ({x['commit'].split()[0]})")
+                        x["ref"] = ref
                 x.setdefault("perintah", f"/clint:develop {x['id']} {x.get('judul', '')} ({x['file']})".strip()
                              if jenis == "tabel" else f"/clint:develop {x['file']}")
                 out[x["kelas"]].append(x)
@@ -269,7 +299,9 @@ if __name__ == "__main__":
     print(f"KERJAKAN {len(r['kerjakan'])} (hanya ini yang boleh dilaporkan sebagai tugas):")
     for x in r["kerjakan"]:
         print(f"  {x['id']} | {x.get('judul', '')} | {x['status']} | {x['file']}:{x['baris']}"
-              + (f" | commit kode: {x['commit'] or '-'}" if "commit" in x else ""))
+              + (f" | commit kode: {x['commit'] or '-'}" if "commit" in x else "")
+              + (f" | STATUS TERTINGGAL, bukan tugas kode: {x['perintah']}"
+                 if x["perintah"].startswith("/clint:docs") else ""))
     print(f"DISERAHKAN {len(r['diserahkan'])} (sudah di QA/fixed, jangan dilaporkan): "
           + ", ".join(x["id"] for x in r["diserahkan"]))
     print(f"SELESAI {len(r['selesai'])}")

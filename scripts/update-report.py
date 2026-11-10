@@ -260,10 +260,17 @@ def _koreksi_rencana(d, info):
             r["selesai"], r["total"] = cocok[0]["done"], len(cocok[0]["prs"])
 
 
+def _perintah_status(proyek, teks, perintah, tertinggal):
+    """Perintah develop untuk butir yang kodenya sudah di base diganti perintah docs perbarui status."""
+    awal = (perintah or "").find("/clint:develop")
+    i = _cocok(teks, [i for (p, i) in tertinggal if p == proyek]) if awal >= 0 else None
+    return perintah[:awal] + tertinggal[proyek, i] if i else perintah
+
+
 def saring(d):
     """Buang butir tanpa bukti atau yang menurut sumber tugas sudah diserahkan/selesai. Dicatat di ditolak.log."""
     ts = _tugas_saya()
-    ditolak, info, tugas = [], {}, {}
+    ditolak, info, tugas, tertinggal = [], {}, {}, {}
     for p in d.get("proyek") or []:
         dirp = p.get("dir")
         if not dirp or not os.path.isdir(dirp):
@@ -278,6 +285,8 @@ def saring(d):
         t = ts.kumpulkan(dirp)
         info[p.get("nama")] = (dirs, [x["id"] for x in t.get("kerjakan", [])],
                                [x["id"] for k in ("diserahkan", "selesai") for x in t.get(k, [])])
+        tertinggal.update({(p.get("nama"), i): x["perintah"] for x in t.get("kerjakan", [])
+                           if x.get("perintah", "").startswith("/clint:docs") for i in [x["id"], *x.get("ref", [])]})
         if t.get("adapter"):
             tugas[p.get("nama")] = t.get("kerjakan", [])
 
@@ -301,12 +310,15 @@ def saring(d):
         for x in tetap:
             if x.get("proyek") in info:
                 _rapikan_detail(x, info[x["proyek"]][0])
+                x["perintah"] = _perintah_status(x.get("proyek"), f"{x.get('sumber') or ''} {x.get('perintah') or ''}",
+                                                 x.get("perintah"), tertinggal)
     lengkapi(d, tugas)
     for b in d.get("berikutnya") or [] if isinstance(d.get("berikutnya"), list) else []:
         if b.get("proyek") in info:
             beres, kerja = info[b["proyek"]][2], info[b["proyek"]][1]
-            b["langkah"] = [l for l in b.get("langkah") or []
-                            if not (_cocok(l, beres) and not _cocok(l, kerja)) and not _langkah_salah(l, info[b["proyek"]][0][0])]
+            b["langkah"] = list(dict.fromkeys(
+                _perintah_status(b["proyek"], l, l, tertinggal) for l in b.get("langkah") or []
+                if not (_cocok(l, beres) and not _cocok(l, kerja)) and not _langkah_salah(l, info[b["proyek"]][0][0])))
     _koreksi_rencana(d, info)
     if ditolak:
         with open(os.path.expanduser("~/Library/Logs/clint/ditolak.log"), "a", encoding="utf-8") as fh:
