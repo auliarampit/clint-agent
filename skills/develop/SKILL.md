@@ -49,7 +49,8 @@ hanya untuk diteruskan ke agent (beri path/potongan saja).
   sini. Apakah repo utama boleh dipakai ditentukan di langkah 5.1.
 - **Satu perintah, tanpa token:** `bash "$R/scripts/preflight.sh" .` → fetch, tarik `relatedRepos` yang bersih
   (dokumen dan desain terbaru), lalu cetak `base`, `mr_mode`, `surface=...`, status tiap related repo, dan
-  `paralel=` (sisa disk ≥ 20 GB → 3 PR sekaligus; 5–20 GB → 1). Exit 1 = belum ada `.claude/clint.json` →
+  `paralel=` (sisa disk ≥ 20 GB → 3 PR sekaligus; 5–20 GB → 1; RAM ≤ 8 GB membatasi maks 2, ditandai `batas=ram`;
+  sebut batas ini di laporan bila membatasi). Exit 1 = belum ada `.claude/clint.json` →
   tawarkan `/clint:setup`; exit 2 = disk < 5 GB → berhenti dan laporkan. `adapter_besar=` → kerja tetap jalan;
   sebut di laporan akhir dan sarankan `/clint:setup sync` untuk memindahkan isi jurnal adapter.
   `gerbang_kurang=` atau `harness=tidak ada` (`quality-gates.md` §1–2) → kerja tetap jalan, tetapi laporan akhir
@@ -74,7 +75,7 @@ hanya untuk diteruskan ke agent (beri path/potongan saja).
 | Kosong, setelah `status` di percakapan ini | pakai temuan "perlu dikerjakan" dari laporan itu sebagai argumen |
 | ID/nama modul, atau tugas yang butuh > 1 PR | cari rencana di `docs.plans` (`grep -il <ID>`) |
 | Path file rencana (di `docs.plans`, punya tabel *Urutan pekerjaan*) | pakai rencana itu |
-| Path dokumen lain (feedback QA, bug report, MoM, notulen) | jadikan **sumber tugas**: ambil butir yang masih open dan menyangkut surface ini; muat 1 PR → langsung; lebih → `planner` membuat rencana di `docs.plans` dari butir itu. Jangan mengubah dokumen sumber |
+| Path dokumen lain (feedback QA, bug report, MoM, notulen) | jadikan **sumber tugas**: ambil butir yang masih open dan menyangkut surface ini; muat 1 PR → langsung; lebih → `planner` membuat rencana di `docs.plans` dari butir itu. Jangan mengubah isi dokumen sumber; status butir ditulis lewat `tech-writer` (lihat `klaim.md`) |
 
 Untuk tugas **Besar**, panggil `solution-architect` sekali untuk meninjau rencana (baru atau yang sudah ada)
 sebelum PR pertama; putusan `PERLU DIUBAH` → teruskan daftar perubahan rencana dari SA apa adanya ke `planner`
@@ -167,80 +168,15 @@ wajib-tanya dari skill platform):
 
 ### 5.3 Tinjauan sesuai ukuran
 
-Setelah implementasi, satu perintah tanpa token:
-`python3 "$R/scripts/review-prep.py" <path kerja> <base> [--design]` (`--design` bila `docs.design` bukan
-`TIDAK ADA`) → menulis `pr.diff` di folder kerja PR, lalu mencetak `folder=`, `ukuran=`, `sensitif=`, dan
-`kandidat <auditor> skor=...: <bukti>` (path dan isi baris yang memicu). Ukuran dari skrip adalah **batas bawah**:
-boleh dinaikkan, tidak boleh diturunkan. Pilih auditor dari kandidat; boleh menambah auditor di luar kandidat bila
-isi diff menunjukkannya.
-
-- **Auditor wajib** (`wajib=` dari skrip, semua ukuran kecuali Mikro): `design-auditor` (UI dan ada prototipe),
-  `security-auditor`, dan `performance-auditor` **selalu** dipanggil bila menjadi kandidat. Mereka tidak dihitung
-  dalam kuota di bawah. Mikro yang menyentuh UI dicocokkan sendiri dengan prototipe terbaru.
-- **Mikro**: tanpa agent conformance-reviewer.
-- **Kecil**: `code-reviewer` + auditor wajib.
-- **Sedang/Besar**: `conformance-reviewer` + `code-reviewer` + auditor wajib + **maksimal 2** auditor lain dari
-  tabel di bawah yang paling relevan dengan diff (database/kontrak untuk data dan API, aksesibilitas untuk UI).
-- `code-reviewer` selalu memeriksa kebenaran logika (race, kasus tepi, galat), sendirian maupun bersama peninjau lain.
-
-Jalankan yang terpilih **bersamaan** (satu pesan), masing-masing diberi `<path kerja>`, base branch, bagian
-rencana, dan **daftar peninjau lain di putaran ini** (wilayah auditor yang ikut dipanggil tidak diperiksa ulang
-peninjau umum). `code-reviewer` yang dipanggil tanpa peninjau lain (PR Kecil) diberi tahu "sendirian": ia juga
-memeriksa kebenaran logika dan kesesuaian dengan rencana.
-
-| Agent | Kapan | Fokus |
-|---|---|---|
-| `conformance-reviewer` | selalu | kesesuaian rencana, dokumen, aturan project |
-| `code-reviewer` | selalu | clean code, clean architecture |
-| `security-auditor` | diff menyentuh auth, API/HTTP, storage, konfigurasi, dependensi, WebView/deep link | celah keamanan |
-| `design-auditor` | diff menyentuh UI **dan** `docs.design` bukan `TIDAK ADA` | selisih dengan prototype |
-| `accessibility-auditor` | diff menyentuh komponen tampilan, form, dialog, navigasi, atau warna | WCAG 2.2 AA |
-| `performance-auditor` | diff menambah dependensi, menyentuh daftar besar, gambar, pengambilan data, komponen yang sering dirender, startup/animasi (mobile), query, endpoint di jalur panas, job, atau ekspor/impor data (backend) | target performa ketat per platform |
-| `database-auditor` | diff menyentuh migrasi, skema, repository/akses data, atau query | keamanan migrasi, integritas, indeks, N+1 |
-| `api-contract-auditor` | diff menyentuh endpoint, DTO/skema validasi, atau file kontrak | kesesuaian dengan API contract, perubahan merusak |
-
-**Folder kerja PR** (dipakai bersama semua agent PR ini): `<git-common-dir>/clint/<branch>/`
-(`git -C <path kerja> rev-parse --path-format=absolute --git-common-dir`; di dalam `.git`, jadi tidak ikut
-ter-commit).
-- `pr.diff` (dari `review-prep.py`): peninjau diberi **path**-nya, bukan isi diff;
-- `rencana-PR-<n>.md` (dari `plan-slice.py`) dan `checks.md` (dari `run-checks.py` yang dijalankan `developer`):
-  peninjau diberi path keduanya, tidak membaca rencana utuh dan tidak menjalankan ulang lint/typecheck/test;
-- `temuan-<agent>.md`: blok keluaran tiap peninjau, ditulis peninjau sendiri (beri path folder di prompt);
-- `findings.md`: gabungan dari `merge-findings.py`.
-
-Setiap peninjau menutup laporan dengan blok seragam `VERDICT: LGTM | Needs Fix` + `TEMUAN:` berlabel
-`[Critical]`/`[Major]`/`[Minor]`/`[Low]` (`path:baris · aspek · kategori · masalah`, `sekarang`, `usulan`,
-`(luar cakupan)` bila perlu). Semua tingkat, termasuk Low, wajib diperbaiki dan menahan MR,
-tetapi Low tidak memicu putaran ulang (lihat di bawah). Temuan
-`(luar cakupan)` tidak menahan PR ini apa pun tingkatnya; yang Critical/Major disebut di laporan akhir.
-
-**Kumpulkan dulu, perbaiki sekaligus.** Tunggu semua peninjau di putaran itu selesai, lalu gabungkan tanpa token:
-`python3 "$R/scripts/merge-findings.py" <folder> --putaran <n>` → `findings.md` (urut per tingkat, temuan ganda
-dengan path, baris, dan kategori sama digabung; luar cakupan dipisah), `verdict` per agent, jumlah per tingkat,
-dan `putaran_ulang=` (peninjau yang memberi temuan). Lalu kirim ke `developer` dalam
-**satu** pesan: path `findings.md`, semua temuan di kode yang diubah PR (kecuali luar cakupan), dan hasil lint/typecheck/test yang gagal bila ada. Jangan meneruskan temuan per peninjau begitu datang.
-SendMessage ke agent yang sama bila masih ada. Usulan yang bertentangan dengan aturan project → lewati dan sebut
-alasannya. `developer` menandai setiap butir diperbaiki/dilewati di laporannya.
-Putaran ulang: jalankan ulang `review-prep.py` (memperbarui `pr.diff`), lalu **hanya** peninjau di `putaran_ulang=`,
-dengan path `findings.md` + `pr.diff`; mereka memverifikasi temuannya dan baris yang berubah karena perbaikan,
-bukan meninjau dari awal. `putaran_ulang=` hanya memuat peninjau dengan temuan Critical/Major/Minor; peninjau
-yang hanya memberi Low tidak dipanggil lagi. `hanya_low=ya` → setelah `developer` memperbaiki, cukup
-`run-checks.py` lulus dan laporannya menandai setiap butir `diperbaiki`/`dilewati`, tanpa tinjauan ulang.
-**Maksimal 3 putaran perbaikan.** Masih ada temuan setelah itu → berhenti, laporkan
-ke user, jangan buat MR. Temuan luar cakupan dan usulan yang dilewati karena bertentangan dengan aturan project
-dicantumkan di deskripsi MR.
-
-Hasil perbaikan Low di-commit **terpisah** dari commit utama (mis. `refactor: terapkan saran
-tinjauan`, ikuti gaya commit repo) supaya mudah diperiksa di tab Commits MR dan bisa di-revert
-sendiri. Bila perbaikan Critical/Major/Minor dan Low menyentuh baris yang sama, satukan di commit utama.
-
-### 5.3b Ukur performa (`quality-gates.md` §2.4)
-
-`performance-auditor` ada di `wajib=` → `developer` menjalankan harness adapter §11 untuk metrik yang disentuh
-(startup, FPS/jank, memori termasuk sesi panjang, ukuran) sebelum dan sesudah, di perangkat acuan, lalu menulis
-angkanya ke `docs/performa/baseline.md` dan deskripsi MR. Regresi terhadap target atau ambang = temuan Major.
-Harness atau perangkat belum ada → status `performa: belum terukur, <alasan>` dan MR **Draft**, sama seperti
-gerbang E2E di 5.4. Tidak pernah menulis target tercapai tanpa angka.
+**Baca `review.md` (folder skill ini) saat sampai langkah ini.** Intinya:
+- `python3 "$R/scripts/review-prep.py" <path kerja> <base> [--design]` → `pr.diff`, `ukuran=` (batas bawah, boleh
+  dinaikkan), `sensitif=`, `wajib=`, dan kandidat auditor dengan buktinya.
+- Kecil: `code-reviewer` + auditor `wajib=`. Sedang/Besar: + `conformance-reviewer` + maks 2 auditor relevan.
+  Mikro: tanpa agent, cocokkan sendiri.
+- Peninjau jalan bersamaan, diberi path (`pr.diff`, `rencana-PR-<n>.md`, `checks.md`), bukan isi. Kumpulkan dulu,
+  gabungkan dengan `merge-findings.py`, kirim ke `developer` sekali. Semua tingkat termasuk Low diperbaiki;
+  maks 3 putaran; Low tidak memicu putaran ulang.
+- `performance-auditor` di `wajib=` → ukur sebelum/sesudah (5.3b di `review.md`); tanpa angka → MR Draft.
 
 ### 5.4 E2E → agent `e2e-tester`
 
@@ -269,85 +205,15 @@ Lanjutannya `/clint:test e2e !<n>` (skill `test`).
 
 ### 5.5 Commit, push, MR, bersihkan (satu perintah)
 
-Yang ditulis model hanya isi berkas; sisanya dijalankan skrip tanpa token:
-- **Pesan commit** mengikuti gaya `git log --oneline -15` repo. PR dari rencana: commit utama diberi trailer
-  `Plan: <nama-file-rencana-tanpa-.md> PR-<n>` (baris terakhir pesan), supaya status selesai terdeteksi di
-  mode `push-base`. Perbaikan Low punya pesan sendiri (langkah 5.3).
-- **Daftar file** per commit, satu path per baris, dari laporan `developer`/`e2e-tester` (stage eksplisit;
-  tanpa screenshot, log, atau output build).
-- **Deskripsi MR**: ringkasan, requirement yang dipenuhi (ID), cara verifikasi, hasil lint/typecheck/test/E2E,
-  dan yang belum dikerjakan. Ikuti format MR sebelumnya kalau repo punya pola. Tanpa AI slop: tanpa nama
-  agent, jumlah putaran tinjauan, atau kalimat pujian. E2E tertunda → memuat `E2E: tertunda, <alasan>`.
-- **Temuan luar cakupan dan usulan yang dilewati** sebagai JSON
-  `[{"path","line","sekarang","usulan","alasan","agent","tingkat"}]`, supaya user bisa memvalidasinya.
-  Yang Critical/Major/Minor juga ditambahkan sebagai butir rencana atau issue ber-ID (`quality-gates.md` §4),
-  supaya tidak hanya tinggal di deskripsi MR.
-
-```bash
-python3 "$R/scripts/ship-pr.py" --dir <path kerja> \
-  --commit <pesan-utama.txt>:<file-utama.txt> [--commit <pesan-low.txt>:<file-low.txt>] \
-  [--plan <rencana> --pr PR-<n> --state review|draft|done] [--desc <deskripsi.md>] [--draft] \
-  [--saran <saran.json>] [--check "<lint>" --check "<test terkait>"] \
-  [--butir "<ID/teks butir status>" --proyek <nama project>] [--asal <branch asal> | --worktree]
-```
-
-Skrip menulis `## Status PR` di rencana dan mengikutkannya di commit pertama (`review` untuk MR biasa, `draft`
-bila E2E tertunda, `done` untuk `push-base`), commit berurutan, menarik base dan rebase bila tertinggal (lalu
-menjalankan ulang `--check` saja), push, membuat MR ke `mr.targetBranch` (Draft dengan `--draft`),
-**memverifikasi MR benar-benar ada**, menempel blok "Saran tinjauan" ke deskripsi, memindahkan butir laporan
-`status` ke "menunggu review" (`--butir`, wajib bila PR berasal dari butir itu), lalu bersih-bersih: kembali
-ke `--asal` dan menghapus branch lokal, atau menghapus worktree. Tidak pernah force push; tidak menunggu
-pipeline (hasilnya muncul di `/clint:status`).
-
-Keluaran `commit=`, `rebase=`, `mr=!<n> <url>`, `push=`, `bersih=`; berhenti dengan `error=` dan exit:
-3 konflik rebase (branch dibiarkan seperti sebelum rebase), 4 cek setelah rebase gagal, 5 push ke base ditolak
-(commit tetap di base lokal; minta user menjalankan `git push origin <baseBranch>`), 6 MR tidak terverifikasi
-(beri user tautan "create merge request" dari keluaran push). Exit selain 0 → jalur kegagalan di bawah.
-
-**`push-base`** (tim langsung push ke base, tanpa MR): PR dikerjakan satu per satu urut gelombang, tanpa MR
-bertumpuk; skrip fast-forward base di repo utama lalu push. Tugas besar (> 1 PR) atau menyentuh pekerjaan
-orang lain → konfirmasi ke user sekali sebelum push pertama. Blok saran dicetak di laporan akhir. Menerapkan
-saran di MR nanti: `/clint:develop terapkan saran di !<n>`.
-
-Kegagalan satu PR (masih ada temuan setelah 3 putaran, test gagal, konflik rebase):
-
-- jangan buat MR untuk PR itu;
-- commit lokal semua perubahannya (stage eksplisit) dengan pesan `wip(<PR>): tertahan, <alasan>`,
-  **jangan push**; PR dari rencana: tulis dulu `--set PR-<n>=held:<alasan>` ke rencana (langkah 5.5) dan
-  ikutkan di commit itu. Tanpa worktree, kembali ke branch asal user. Branch/worktree itu disebut di
-  laporan untuk diperiksa user. (Working tree bersih = hook tinjau otomatis tidak terpicu ulang.)
-- PR yang bergantung padanya **dilewati**; PR lain tetap jalan.
-
-### 5.6 Penutupan modul (`quality-gates.md` §3)
-
-Setelah PR terakhir sebuah rencana modul jadi MR (sisa `plan-status.py` hanya PR penutupan, atau semua ✅/🔍),
-jalankan penutupan sebelum melaporkan modul selesai:
-1. `/clint:review fitur <nama>` per layar/endpoint modul. `conformance-reviewer` menghasilkan matriks FR/AC →
-   `path:baris` + test/E2E terhadap PRD, kontrak, dan prototipe **terbaru**.
-2. Gerbang `quality-gates.md` §1 pada seluruh folder sumber (duplikasi, kode mati, sonarjs, audit).
-3. Harness ukur penuh dan `baseline.md` diperbarui.
-4. Deviasi terbuka di `## Deviasi` rencana disebut beserta dokumen yang belum diperbarui.
-
-Temuan menjadi PR perbaikan di rencana yang sama. Modul dilaporkan selesai hanya bila keempatnya bersih.
+**Baca `ship.md` (folder skill ini) saat sampai langkah ini**: isi pesan commit (trailer `Plan:`), daftar file,
+deskripsi MR, JSON saran tinjauan, argumen dan kode keluar `python3 "$R/scripts/ship-pr.py"`, mode `push-base`,
+jalur kegagalan PR (commit `wip`, jangan push), dan 5.6 penutupan modul (wajib setelah PR terakhir sebuah
+rencana modul jadi MR).
 
 ## Status di menu bar dan klaim PR
 
-File status **per sesi** `~/Library/Logs/clint/kerja/<sid>.json`. Tulis saat PR dipilih (klaim), setiap ganti
-PR/tahap, dan hapus di akhir, termasuk bila berhenti karena gagal (murah, satu perintah):
-```bash
-mkdir -p ~/Library/Logs/clint/kerja && printf '%s' '{"dir":"<repo utama absolut>","rencana":"docs/plans/mob-10.md","prs":["PR-2","PR-3"],"perintah":"/clint:develop docs/plans/mob-10.md PR-2,PR-3","path":"<path kerja>","judul":"develop MOB-10","mulai":"11.21","pr":2,"total":3,"label":"PR-2/3","tahap":"ditinjau code-reviewer","catatan":"PR-1 → MR !127 · PR-3 menunggu"}' > ~/Library/Logs/clint/kerja/<sid>.json
-```
-`dir` = repo utama (bukan worktree): `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"`.
-`rencana` = path relatif rencana, `null` bila tanpa rencana. `perintah` = perintah clint persis seperti diketik user
-(dipakai untuk membuang saran yang sama di sesi lain); sebut juga ID butir (FB-/BUG-/MR-MOB-...) di `judul`. `prs` = PR yang **masih** dipegang sesi ini; PR yang
-sudah jadi MR dikeluarkan dari `prs` supaya sesi lain bisa melanjutkan PR sesudahnya. `label` pendek (tampil di
-sebelah ikon); tugas tunggal `"pr":1,"total":1`. Akhir run: `rm -f ~/Library/Logs/clint/kerja/<sid>.json`.
-
-Bila tugas berasal dari butir laporan `status` (feedback, bug, temuan), setelah MR terverifikasi pindahkan
-butir itu ke "menunggu review" supaya badge menu bar ikut berkurang (tanpa token):
-`python3 "$R/scripts/update-report.py" review "<ID/teks butir>" "MR !<n>" "<url MR>" --proyek <nama project>`
-Tindak lanjut yang tidak menghasilkan MR baru (mis. perbaikan di MR yang sama) → `... selesai "<ID/teks>"`.
-
+Klaim PR di `~/Library/Logs/clint/kerja/<sid>.json` saat PR dipilih, perbarui setiap ganti tahap, hapus di akhir
+(termasuk bila gagal). Format dan `update-report.py review|selesai`: `klaim.md` (folder skill ini).
 
 ## Hemat token
 
@@ -360,7 +226,13 @@ Tindak lanjut yang tidak menghasilkan MR baru (mis. perbaikan di MR yang sama) �
   kegagalan E2E diserahkan ke `e2e-tester`/`bug-investigator`, file besar cukup di-`grep` untuk baris yang perlu.
 - Minta setiap agent melapor ringkas (±25 baris). Simpan hanya verdict, daftar file, dan temuan yang tersisa;
   jangan menyalin ulang laporan panjang ke pesan berikutnya.
-- Tidak ada `sleep`/polling untuk pipeline, build, atau pihak luar lain (lihat aturan agent).
+- Tidak ada `sleep`/polling untuk pipeline, build, atau pihak luar lain (lihat aturan agent). Pola yang paling
+  sering muncul di audit dan penggantinya: menunggu `run-checks.py` atau skrip lokal → jalankan dengan
+  `run_in_background` lalu tunggu notifikasi selesai (jangan `until pgrep`); menunggu job pipeline `glab` atau build
+  `eas` → satu pengecekan lalu laporkan tertunda, atau Monitor bila user memintanya; menunggu file keluaran
+  agent → agent latar belakang sudah memberi notifikasi, jangan `until [ -s file ]`.
+- Pertanyaan ke user digabung jadi satu `AskUserQuestion` per gelombang (atau satu di akhir bila bisa memakai
+  default yang wajar); jangan bertanya per PR saat jawabannya tidak memblokir PR lain.
 
 ## 6. Laporan akhir (satu pesan, singkat dan manusiawi)
 
@@ -379,51 +251,13 @@ Seperti rekan kerja mengabari lewat chat, maksimal ±12 baris (di luar blok *Ber
 
 Merge tetap oleh user.
 
-### Berikutnya (wajib, blok terakhir; aturan ini dipakai semua skill clint)
+### Berikutnya (wajib, blok terakhir)
 
-Blok berisi langkah siap ketik untuk **project sesi ini saja**, setiap baris diberi tanda:
-
-| Tanda | Arti |
-|---|---|
-| `[paralel]` | PR saling bebas: satu run (develop memprosesnya bersamaan, maks 3), atau satu sesi per PR |
-| `[siap]` | satu langkah yang bisa langsung dikerjakan |
-| `[urutan, setelah X]` | baru bisa dikerjakan setelah X selesai |
-| `[lanjutkan]` | PR yang tertahan atau setengah jalan |
-| `[E2E]` | MR Draft yang menunggu E2E (`/clint:test`) |
-| `[terblokir]` | menunggu pihak lain; sebut penyebabnya |
-
-```
-Berikutnya (magnet-rezeki/mobile, sesi baru: ketik /clear dulu):
-[paralel] /clint:develop docs/plans/mr-mob-11.md PR-2,PR-3
-[urutan, setelah PR-2,PR-3] /clint:develop docs/plans/mr-mob-11.md PR-4,PR-5,PR-8
-[terblokir] PR-7: seeder api data inbox
-Sedang dikerjakan sesi lain: PR-1 (ditinjau)
-```
-
-Cara menyusun (tanpa menebak):
-1. Rencana yang sedang dikerjakan → **jalankan ulang** `python3 "$R/scripts/plan-status.py" <rencana> --session <sid>`
-   di akhir run dan pakai baris *Berikutnya* dari skrip apa adanya. Skrip sudah membuang PR yang diklaim sesi
-   lain, yang selesai, dan yang MR-nya open, jadi saran tidak mengulang PR yang sedang dikerjakan sesi lain.
-2. Lalu butir *Perlu perhatian* dari run ini.
-3. Lalu butir laporan `status` milik project ini, dari skrip (bukan membaca `terakhir.json` sendiri):
-   `python3 "$R/scripts/update-report.py" periksa-mr; python3 "$R/scripts/update-report.py" langkah --dir <repo utama> --session <sid>`.
-   `periksa-mr` membuang butir yang MR-nya sudah merged dan memindahkan yang MR-nya masih open ke "menunggu
-   review"; `langkah` membuang butir yang diklaim sesi lain dan butir project lain. Pakai keluarannya apa adanya;
-   butir yang baru dikerjakan run ini juga tidak ditulis lagi.
-4. Langkah yang sedang dikerjakan sesi lain (klaim di `~/Library/Logs/clint/kerja/`, ditandai skrip "Sedang
-   dikerjakan sesi lain") **tidak pernah** ditulis sebagai langkah siap ketik, hanya sebagai baris info.
-5. Tidak ada langkah → "Menunggu review: !n" bila ada; sisanya dipegang sesi lain → **"Tidak ada tugas baru untuk
-   sesi ini; sisanya sedang dikerjakan sesi lain."**; selain itu **"Tugas hari ini sudah selesai semua."**
-
-Run mengerjakan 3 PR atau lebih, atau masih ada PR tersisa dari batas per run → judul blok menyebut
-"sesi baru: ketik /clear dulu". Maksimal 5 langkah.
+Aturannya di `berikutnya.md` (folder skill ini), dipakai semua skill clint. Susun dari keluaran skrip
+(`plan-status.py`, `update-report.py periksa-mr` lalu `langkah`), tidak pernah dari ingatan; maks 5 langkah.
 
 ## Kabar suara (wajib, di akhir)
 
-Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) ke file kabar sesi ini;
-hook akan menampilkannya sebagai notifikasi dan membacakannya:
-
-```bash
-printf '%s' "<kalimat inti>" > "${TMPDIR:-/tmp}/clint-kabar-<sid>.txt"
-```
+Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) dengan tool Write ke path
+`kabar` di baris *Sesi clint*; hook akan menampilkannya sebagai notifikasi dan membacakannya.
 Contoh: "Selesai. Tiga MR siap direview, satu tertahan karena test gagal."

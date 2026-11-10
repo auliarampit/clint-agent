@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.{ts,tsx,js,jsx,mjs,cjs,kt,kts,java,swift,dart,py,go,php,rb,cs,sql}"
+---
+
 # SonarQube — tulis kode yang lolos quality gate sejak awal
 
 > **Portable.** Berlaku untuk setiap project yang dianalisis SonarQube (ada `sonar-project.properties`

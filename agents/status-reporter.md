@@ -12,7 +12,8 @@ hapus); kamu hanya melapor dan mengusulkan perintah.
 
 **Mulai dengan satu panggilan pengumpul** (wajib, hemat token):
 `bash "$R/scripts/collect-status.sh" <dir-project>`, dengan `R` = path plugin yang diberikan pemanggil di prompt
-(tidak diberikan: `R=$(cat ~/.config/clint/root)`). Keluarannya sudah
+(tidak diberikan: `R=$(cat ~/.config/clint/root)`; di perintah tulis nilainya secara literal, bukan `$R`,
+karena ekspansi variabel selalu meminta izin user). Keluarannya sudah
 berisi MR milik user + pipeline + komentar, MR menunggu peer review, MR Draft, branch tertinggal, worktree, dan
 disk, dan repo sudah ditarik (`sync-repos.sh`). **Susun laporan langsung dari keluaran itu; jangan fetch atau
 mengumpulkan ulang.** Perintah tambahan hanya untuk bagian yang gagal atau kosong padahal seharusnya ada:

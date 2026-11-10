@@ -32,10 +32,11 @@ ctx=""
 lang="$(jq -r '.language // "en"' "$CFG/user.json" 2>/dev/null)"; [ -n "$lang" ] || lang="en"
 [ "$lang" = "id" ] && nama="Bahasa Indonesia" || nama="English"
 ctx+=$'\n\n'"Bahasa clint: ${nama} (\`${lang}\`, dari ~/.config/clint/user.json). Pakai bahasa ini untuk semua jawaban, laporan, kabar suara, dan file rencana, kecuali user meminta lain. Dokumen project lain mengikuti \`docs.language\` di .claude/clint.json. Ganti dengan \`/clint:setup language en|id\`."
-ctx+=$'\n\n'"Sesi clint: id \`${sid}\`, plugin \`${ROOT}\`."
+ctx+=$'\n\n'"Sesi clint: id \`${sid}\`, plugin \`${ROOT}\`, kabar \`${TMPDIR:-/tmp}/clint-kabar-${sid}.txt\`. Di perintah shell, tulis path plugin secara literal (\`python3 ${ROOT}/scripts/x.py ...\`), bukan \`\$R\`, \`R=...;\`, atau \`cd ... &&\` di depannya: ekspansi variabel dan perintah gabungan selalu meminta izin user walau skrip sudah di-allowlist. Teruskan path literal yang sama ke agent."
 
 if [ -f "$DIR/.claude/clint.json" ]; then
   ctx+=$'\n\nclint aktif (`.claude/clint.json`). Perintah: `/clint:status` (kondisi kerja), `/clint:develop` (kode sampai MR), `/clint:review` (tinjau), `/clint:test` (E2E), `/clint:docs` (dokumen), `/clint:release` (build/rilis), `/clint:setup` (pasang/sync/bahasa).'
+  ctx+=$'\n\n'"Dokumen terbaru: PM/QA bisa push di tengah sesi. Sebelum menyimpulkan sesuatu belum ada, belum diputuskan, atau masih open di docs, kontrak API, feedback, atau desain, jalankan lagi \`bash ${ROOT}/scripts/sync-repos.sh .\`. Repo \`status=fetch-saja\` dengan \`tertinggal=\` > 0 → baca file itu dari \`origin/<branch>\` (\`git -C <repo> show origin/<branch>:<path>\`), bukan dari working tree. Status MR (merged/open) selalu dari \`glab\`/\`gh\`, bukan dari branch lokal."
   # Ingatan antar sesi: hanya L1 wake-up (L0 identitas sudah dipegang CLAUDE.md dan bahasa clint).
   wing="$(jq -r '.memory.wing // empty' "$DIR/.claude/clint.json" 2>/dev/null)"
   if [ -n "$wing" ] && [ "$wing" != "TIDAK ADA" ] && command -v mempalace >/dev/null 2>&1; then

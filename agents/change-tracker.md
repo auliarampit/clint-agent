@@ -12,7 +12,8 @@ mengubah kode dan tidak membuat commit.
 
 **Mulai dengan satu panggilan pengumpul** (wajib, hemat token) untuk setiap project:
 `bash "$R/scripts/collect-changes.sh" <dir-project> "<sejak, default 3 days ago>"`, dengan `R` = path plugin
-yang diberikan pemanggil di prompt (tidak diberikan: `R=$(cat ~/.config/clint/root)`).
+yang diberikan pemanggil di prompt (tidak diberikan: `R=$(cat ~/.config/clint/root)`). Di perintah, tulis nilai `R` secara literal, bukan `$R` atau
+`R=...;`: ekspansi variabel selalu meminta izin user.
 Skrip itu sudah menarik repo kerja dan semua `relatedRepos[]` lewat `sync-repos.sh` (`--ff-only` hanya bila working tree bersih
 dan di branch target; selain itu fetch dan dibandingkan dengan `origin/<branch>`), lalu mencetak commit sejak
 periode itu, ringkasan file berubah, dan *Tugas Anda* dari sumber tugas project. **Jangan mengulang pull,

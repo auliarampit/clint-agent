@@ -108,7 +108,12 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
    `nohup mempalace mine ~/.claude/projects/<folder sesi project> --mode convos --wing <wing> >>~/Library/Logs/clint/mempalace.log 2>&1 &`.
    Hook clint yang menyimpan dan memuat ingatan; jangan pasang hook bawaan mempalace (wing-nya diambil dari nama
    folder, jadi worktree dan repo `mobile` di project berbeda tercampur).
-9. Tampilkan ringkasan file yang dibuat. **Jangan commit**; user yang memutuskan.
+9. **Allowlist skrip clint** (tanpa mengubah apa pun): baca `R=$(cat ~/.config/clint/root)` lalu cek apakah
+   `jq '.permissions.allow' ~/.claude/settings.json` sudah memuat `Bash(bash <R>/scripts/*)` dan
+   `Bash(python3 <R>/scripts/*)`. Yang belum ada, cetak sebagai perintah siap salin untuk **dijalankan user sendiri**:
+   `jq --arg a 'Bash(bash <R>/scripts/*)' --arg b 'Bash(python3 <R>/scripts/*)' '.permissions.allow |= ((. // []) + [$a,$b] | unique)' ~/.claude/settings.json > /tmp/s.json && mv /tmp/s.json ~/.claude/settings.json`
+   (`<R>` diganti nilai literal). Claude tidak boleh mengedit `~/.claude/settings.json` sendiri. Sudah lengkap → satu baris "allowlist sudah ada".
+10. Tampilkan ringkasan file yang dibuat. **Jangan commit**; user yang memutuskan.
 
 ## Mode `sync`
 

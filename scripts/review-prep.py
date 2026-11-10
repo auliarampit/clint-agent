@@ -190,6 +190,12 @@ def main():
             kandidat["design-auditor"] = {"skor": 3 * len(ui), "bukti": ui[:4]}
 
     wajib = [n for n in ("design-auditor", "security-auditor", "performance-auditor") if n in kandidat]
+    if ukuran == "Kecil":
+        # PR Kecil: design/perf hanya bila bukti kuat (skor >= 6, atau perf kena path dependensi/aset); security tetap.
+        def kuat(n):
+            k = kandidat[n]
+            return k["skor"] >= 6 or (n == "performance-auditor" and any("(path)" in b for b in k["bukti"]))
+        wajib = [n for n in wajib if n == "security-auditor" or kuat(n)]
 
     hasil = {"folder": folder, "branch": branch, "file": len(kode),
              "baris": baris, "tambah": tambah, "kurang": kurang, "ukuran": ukuran, "sensitif": sensitif, "wajib": wajib,

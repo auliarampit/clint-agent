@@ -19,8 +19,6 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
     var data: [String: Any] = [:]
     var json = "{}"
     var avatar: NSImage?
-    var detak = 0.0
-    var animasi: Timer?
     var pemantau: Any?
     var sibuk = false
 
@@ -56,28 +54,15 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
                 let berubah = teks != self.json
                 self.data = d
                 self.json = teks
-                self.aturAnimasi()
-                self.gambarLabel()
+                if berubah { self.gambarLabel() }
                 if berubah && self.panel.isVisible { self.kirimKePanel() }
             }
         }
     }
 
-    // ---- menu bar: avatar + label; saat bekerja bilah biru mengalir di bawah label ----
+    // ---- menu bar: avatar + label; saat bekerja bilah biru diam di bawah label ----
+    // Tanpa animasi: label hanya digambar ulang saat data berubah, supaya hemat CPU.
     var bekerja: Bool { (data["status"] as? String) == "bekerja" }
-
-    func aturAnimasi() {
-        if bekerja && animasi == nil {
-            animasi = Timer.scheduledTimer(withTimeInterval: 1.0 / 30, repeats: true) { [weak self] _ in
-                guard let self else { return }
-                self.detak += 1.0 / 30
-                self.gambarLabel()
-            }
-        } else if !bekerja, let t = animasi {
-            t.invalidate()
-            animasi = nil
-        }
-    }
 
     func gambarLabel() {
         guard let tombol = item.button else { return }
@@ -91,8 +76,6 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
         // Pil setinggi menu bar (seperti tombol lain di menu bar): avatar 18 pt di kiri, label di kanannya.
         let tinggi: CGFloat = 22
         let lebar = label.isEmpty ? 26 : 2 + 18 + 7 + lebarIsi + 9
-        let sp = bekerja ? 0.8 : 0.0
-        let fase = sp > 0 ? (sin(detak / sp * .pi) + 1) / 2 : 0
         let gambar = NSImage(size: NSSize(width: lebar, height: tinggi), flipped: false) { _ in
             warnaTeks.withAlphaComponent(0.14).setFill()
             NSBezierPath(roundedRect: NSRect(x: 0, y: 0, width: lebar, height: tinggi), xRadius: 11, yRadius: 11).fill()
@@ -110,12 +93,8 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
             let x = 27.0
             if self.bekerja {
                 (label as NSString).draw(at: NSPoint(x: x, y: 7), withAttributes: atribut)
-                let rel = NSRect(x: x, y: 3.5, width: 44, height: 3)
-                warnaTeks.withAlphaComponent(0.2).setFill()
-                NSBezierPath(roundedRect: rel, xRadius: 1.5, yRadius: 1.5).fill()
                 biru.setFill()
-                let potong = NSRect(x: x + fase * 28, y: 3.5, width: 16, height: 3)
-                NSBezierPath(roundedRect: potong, xRadius: 1.5, yRadius: 1.5).fill()
+                NSBezierPath(roundedRect: NSRect(x: x, y: 3.5, width: 44, height: 3), xRadius: 1.5, yRadius: 1.5).fill()
             } else {
                 (label as NSString).draw(at: NSPoint(x: x, y: (tinggi - ukuranTeks.height) / 2), withAttributes: atribut)
             }
@@ -147,6 +126,10 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
         web.autoresizingMask = [.width, .height]
         web.navigationDelegate = self
         panel.contentView = web
+        muatPanel()
+    }
+
+    func muatPanel() {
         let html = URL(fileURLWithPath: akar + "/menubar/panel.html")
         web.loadFileURL(html, allowingReadAccessTo: html.deletingLastPathComponent())
     }
@@ -156,6 +139,10 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
     }
 
     func bukaPanel() {
+        // Proses web bisa mati (sleep, tekanan memori); tanpa muat ulang panel tinggal border kosong.
+        web.evaluateJavaScript("typeof render") { [weak self] hasil, _ in
+            if (hasil as? String) != "function" { self?.muatPanel() }
+        }
         web.evaluateJavaScript("terbuka.clear()", completionHandler: nil)   // setiap dibuka, semua kartu tertutup
         kirimKePanel()
         letakkan(tinggi: panel.frame.height)
@@ -208,6 +195,8 @@ final class App: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavi
     }
 
     func webView(_ w: WKWebView, didFinish n: WKNavigation!) { kirimKePanel() }
+
+    func webViewWebContentProcessDidTerminate(_ w: WKWebView) { muatPanel() }
 }
 
 let app = NSApplication.shared

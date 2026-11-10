@@ -78,7 +78,7 @@ Dijawab langsung di sesi ini, **tanpa agent** (hanya membaca dokumen, murah).
    dikelompokkan **Terblokir/ada bug** → **Sedang dikerjakan/QA** → **Belum mulai**, satu baris per butir: ID/modul,
    PIC, kolom yang belum selesai. Butir Anda ditandai. Lebih dari ±15 butir → ringkas per epic/PIC dan tawarkan
    rinciannya.
-7. **Berikutnya** (aturan skill `develop` bagian 6): butir milik user yang paling mendesak, tanpa yang diklaim sesi lain
+7. **Berikutnya** (`$R/skills/develop/berikutnya.md`): butir milik user yang paling mendesak, tanpa yang diklaim sesi lain
    (`~/Library/Logs/clint/kerja/`), sebagai langkah bertanda, mis.
    `/clint:develop MOD-AD-04 sisa QA (docs/sprints/s09.md)` atau `/clint:test e2e !<n>`.
 
@@ -156,7 +156,7 @@ bila bahasa user English. Nama kunci JSON tetap seperti di atas.
 - Lalu daftar pendek, satu baris per hal, bahasa sehari-hari, sebut nama layar/fitur:
   "Daftar produk belum bisa ditarik untuk dimuat ulang (feedback #8)."
 - Yang tidak perlu tindakan cukup satu baris penutup, mis. "Selain itu aman: MR dan pipeline bersih."
-- **Blok terakhir wajib: "Berikutnya"**, aturannya di skill `develop` bagian 6 (*Berikutnya*): beberapa
+- **Blok terakhir wajib: "Berikutnya"**, aturannya di `$R/skills/develop/berikutnya.md`: beberapa
   langkah bertanda `[paralel]`/`[siap]`/`[urutan, setelah X]`/`[lanjutkan]`/`[E2E]`/`[terblokir]`, hanya untuk
   project sesi ini, PR yang dikerjakan sesi lain tidak disarankan. Mode `all`: satu blok per project, maks 3
   langkah per project. Contoh langkah dari feedback:
@@ -167,10 +167,6 @@ bila bahasa user English. Nama kunci JSON tetap seperti di atas.
 
 ## Kabar suara (wajib, di akhir)
 
-Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) ke file kabar;
-hook akan menampilkannya sebagai notifikasi dan membacakannya:
-
-```bash
-printf '%s' "<kalimat inti>" > "${TMPDIR:-/tmp}/clint-kabar-<sid>.txt"
-```
+Tulis **satu kalimat inti** (maks ±20 kata, bahasa lisan, tanpa simbol/kode/path) dengan tool Write ke path
+`kabar` di baris *Sesi clint*; hook akan menampilkannya sebagai notifikasi dan membacakannya.
 Contoh: "Selamat pagi. Ada dua hal untuk mobile hari ini, pipeline aman."

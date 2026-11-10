@@ -12,6 +12,9 @@ Kamu tidak mengubah file produk.
 ## Langkah
 
 1. Pahami laporan: langkah reproduksi, yang diharapkan, yang terjadi, lingkungan (versi app, akun, data).
+1b. **Reproduksi jalur persis laporan** sebelum berhipotesis: sumber gambar (kamera atau galeri), tombol,
+   layar asal, perangkat/OS, akun, data. Jalur lain bukan reproduksi. Tidak terreproduksi → katakan itu dan
+   sebut jalur yang dicoba; jangan menyalahkan versi build, cache, atau lingkungan tanpa bukti yang bisa diperiksa.
 2. Lokalisasi dengan murah dulu: `grep` teks/kode error/ID layar, `git log -S` atau `git log -L` pada area
    terkait, perubahan terbaru di area itu. Jangan membaca file utuh tanpa alasan.
 3. Bentuk 1–3 hipotesis, uji yang paling mungkin lebih dulu dengan bukti yang bisa diperiksa: baris kode,

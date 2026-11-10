@@ -18,7 +18,7 @@ argument-hint: <dokumen dan perubahan yang diminta>
 - **Klaim** di awal setiap run (kecuali perubahan satu-dua baris yang langsung selesai) supaya sesi lain tidak
   disarankan pekerjaan yang sama, dan hapus di akhir termasuk bila gagal:
   `mkdir -p ~/Library/Logs/clint/kerja && printf '%s' '{"dir":"<repo utama absolut>","rencana":null,"prs":[],"perintah":"<perintah persis>","judul":"docs <ringkas + ID butir>","label":"docs","tahap":"<agent>"}' > ~/Library/Logs/clint/kerja/<sid>.json`
-  · akhir: `rm -f ~/Library/Logs/clint/kerja/<sid>.json`. `dir` seperti di skill `develop` (*Status di menu bar dan klaim PR*).
+  · akhir: `rm -f ~/Library/Logs/clint/kerja/<sid>.json`. `dir` seperti di `$R/skills/develop/klaim.md`.
 
 ## 2. Kerjakan
 
@@ -73,15 +73,12 @@ sudah atau perlu jadi ADR cukup dirujuk ID-nya, status PR tetap di rencana, stat
 logbook hanya merangkum dan menautkan.
 
 Dokumen di repo terkait (`relatedRepos`): ikuti alur git repo itu (CLAUDE.md/memori project); stage
-eksplisit, commit mengikuti gaya repo, push/MR mengikuti `mr.mode` (aturan skill `develop` langkah 5.5).
+eksplisit, commit mengikuti gaya repo, push/MR mengikuti `mr.mode` (`$R/skills/develop/ship.md`).
 
 ## 3. Laporan
 
 Maksimal ±6 baris: dokumen dan bagian yang berubah, bukti yang dirujuk, dokumen turunan yang terdampak, commit/MR
-bila ada. Blok terakhir wajib **Berikutnya** (aturan skill `develop` bagian 6).
+bila ada. Blok terakhir wajib **Berikutnya** (`$R/skills/develop/berikutnya.md`).
 
-Tutup dengan kabar suara: satu kalimat inti (maks ±20 kata, tanpa simbol/kode/path):
-
-```bash
-printf '%s' "<kalimat inti>" > "${TMPDIR:-/tmp}/clint-kabar-<sid>.txt"
-```
+Tutup dengan kabar suara: satu kalimat inti (maks ±20 kata, tanpa simbol/kode/path), ditulis dengan tool Write
+ke path `kabar` di baris *Sesi clint*.

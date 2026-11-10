@@ -6,7 +6,8 @@ set -euo pipefail
 akar="$(cd "$(dirname "$0")/.." && pwd)"
 app="$akar/menubar/build/Clint.app"
 rm -rf "$app" && mkdir -p "$app/Contents/MacOS"
-swiftc -O "$akar/menubar/ClintBar.swift" -o "$app/Contents/MacOS/Clint" -framework Cocoa -framework WebKit
+# Target dikunci: tanpa ini swiftc bisa memakai minos yang lebih baru dari macOS terpasang (error -10825).
+swiftc -O -target "$(uname -m)-apple-macos13" "$akar/menubar/ClintBar.swift" -o "$app/Contents/MacOS/Clint" -framework Cocoa -framework WebKit
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

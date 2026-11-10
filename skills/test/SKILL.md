@@ -40,27 +40,27 @@ atasnya. Maksimal 3 MR per run (konteks sesi); sisanya masuk *Berikutnya*.
 
 `git fetch`, lalu kerjakan di branch MR itu: `bash "$R/scripts/repo-busy.sh" . <sid>` → `bebas` →
 `git switch <source_branch>` di repo utama; `dipakai` → worktree (aturan skill `develop` langkah 5.1). Tulis klaim
-sesi seperti skill `develop` (*Status di menu bar dan klaim PR*). Panggil `e2e-tester` dengan path kerja, fitur dari deskripsi MR, dan sumber
+sesi seperti `$R/skills/develop/klaim.md`. Panggil `e2e-tester` dengan path kerja, fitur dari deskripsi MR, dan sumber
 test case.
 
 - **Lulus**: commit file flow saja (stage eksplisit, gaya commit repo), push ke branch MR yang sama, perbarui
   deskripsi menjadi `E2E: lulus` dan tandai siap (`glab mr update <n> --ready` / `gh pr ready <n>`). PR dari
   rencana: ikutkan `python3 "$R/scripts/plan-status.py" <rencana> --repo <path kerja> --set PR-<n>=review --write`
-  di commit itu. Mode `push-base`: push ke base mengikuti aturan `push-base` di skill `develop` langkah 5.5.
+  di commit itu. Mode `push-base`: push ke base mengikuti aturan `push-base` di `$R/skills/develop/ship.md`.
+- **Jalur persis**: bug dari laporan (feedback, QA) diuji lewat jalur yang sama dengan laporan (sumber gambar
+  kamera/galeri, tombol, perangkat), sebelum dan sesudah perbaikan. Jangan menyimpulkan "tidak bisa diuji"
+  sebelum mencoba cara yang didokumentasikan (adapter, rules, dokumentasi tool).
 - **Gagal karena bug produk**: jangan ubah kode produk dan jangan longgarkan assertion. Laporkan flow,
   langkah, yang diharapkan, dan yang terjadi. *Berikutnya* berisi `/clint:develop perbaiki <ringkasan> di !<n>`.
 - **Tertunda** (perangkat, build, atau channel belum siap): laporkan langkah persis dari `e2e-tester`; MR
   tetap Draft.
 
-Fitur baru (bukan MR): bila lulus, push dan buat MR seperti skill `develop` langkah 5.5.
+Fitur baru (bukan MR): bila lulus, push dan buat MR seperti `$R/skills/develop/ship.md`.
 
 ## 4. Laporan
 
 Maksimal ±8 baris, ditambah satu baris per MR bila beberapa: status E2E, flow yang dibuat/dijalankan, hasil per
-flow, dan tindak lanjutnya. Blok terakhir wajib **Berikutnya** (aturan skill `develop` bagian 6).
+flow, dan tindak lanjutnya. Blok terakhir wajib **Berikutnya** (`$R/skills/develop/berikutnya.md`).
 
-Tutup dengan kabar suara: satu kalimat inti (maks ±20 kata, tanpa simbol/kode/path):
-
-```bash
-printf '%s' "<kalimat inti>" > "${TMPDIR:-/tmp}/clint-kabar-<sid>.txt"
-```
+Tutup dengan kabar suara: satu kalimat inti (maks ±20 kata, tanpa simbol/kode/path), ditulis dengan tool Write
+ke path `kabar` di baris *Sesi clint*.

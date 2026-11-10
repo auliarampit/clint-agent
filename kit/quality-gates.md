@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.{ts,tsx,js,jsx,mjs,cjs,kt,kts,java,swift,dart,py,go,php,rb,cs,sql}"
+---
+
 # Gerbang kualitas: dipasang mesin, diukur di perangkat
 
 > **Portable.** Berlaku di semua project (mobile, web, backend). Disalin `/clint:setup` ke

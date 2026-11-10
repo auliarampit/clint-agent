@@ -49,7 +49,7 @@ Repo sudah ditarik di atas.
 ## 2. Pilih peninjau sesuai ukuran diff (hemat token)
 
 `python3 "$R/scripts/review-prep.py" <path> <base> [--design]` → `pr.diff` di folder kerja PR, `ukuran=`,
-`sensitif=`, dan kandidat auditor beserta buktinya (aturan skill `develop` 5.3: ukuran skrip batas bawah,
+`sensitif=`, dan kandidat auditor beserta buktinya (`$R/skills/develop/review.md`: ukuran skrip batas bawah,
 kandidat titik awal). Isi diff yang menyentuh auth, token, query, atau pembayaran = area sensitif walaupun nama
 filenya netral.
 
@@ -65,7 +65,7 @@ menjalankan ulang.
 | MR orang lain (`--only`) | `conformance-reviewer` + `code-reviewer` + semua auditor yang pemicunya tersentuh |
 
 Auditor `wajib=` dari skrip (`design-auditor`, `security-auditor`, `performance-auditor` bila menjadi kandidat)
-selalu dipanggil dan tidak dihitung dalam kuota (aturan skill `develop` 5.3).
+selalu dipanggil dan tidak dihitung dalam kuota (`$R/skills/develop/review.md`).
 
 Pemicu auditor:
 - `security-auditor`: auth, API/HTTP, storage, konfigurasi, dependensi, WebView/deep link;
@@ -99,7 +99,7 @@ Tunggu semua peninjau selesai, baru gabungkan tanpa token: `python3 "$R/scripts/
   worktree (aturan skill `develop` langkah 5.1).
 - Putaran ulang: jalankan ulang `review-prep.py`, lalu **hanya** peninjau di `putaran_ulang=`, dengan
   path `findings.md`; mereka memverifikasi temuannya dan baris yang berubah karena perbaikan. Maksimal 3 putaran.
-  Temuan Low tidak memicu putaran ulang (aturan skill `develop` 5.3): `hanya_low=ya` → cukup `run-checks.py`
+  Temuan Low tidak memicu putaran ulang (`$R/skills/develop/review.md`): `hanya_low=ya` → cukup `run-checks.py`
   lulus dan laporan `developer` menandai setiap butir.
 
 ## 4. Tandai sudah ditinjau
@@ -116,5 +116,5 @@ diisi) hanya dipasang bila user memintanya atau `mr.reviewComments` di `clint.js
 `false`, supaya tidak dobel dengan bot review di server).
 
 Isi: verdict per peninjau, apa saja yang sudah diperbaiki, temuan yang masih tersisa (bila batas
-putaran tercapai), dan usulan yang dilewati beserta alasannya. Tutup dengan blok **Berikutnya** (aturan skill `develop` bagian 6),
+putaran tercapai), dan usulan yang dilewati beserta alasannya. Tutup dengan blok **Berikutnya** (`$R/skills/develop/berikutnya.md`),
 mis. `[siap] /clint:develop` untuk membuat MR dari perubahan ini.

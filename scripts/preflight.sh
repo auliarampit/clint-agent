@@ -31,5 +31,8 @@ done
 bash "$sini/sync-repos.sh" "$dir" | sed 's/^repo=/related=/'
 gb="$(df -g ~ | awk 'NR==2 {print $4}')"
 if [ "$gb" -ge 20 ]; then par=3; elif [ "$gb" -ge 5 ]; then par=1; else par=0; fi
-echo "disk_gb=$gb paralel=$par"
+ram="$(( $(sysctl -n hw.memsize 2>/dev/null || echo 0) / 1073741824 ))"
+batas=""
+if [ "$ram" -gt 0 ] && [ "$ram" -le 8 ] && [ "$par" -gt 2 ]; then par=2; batas=" batas=ram"; fi
+echo "disk_gb=$gb ram_gb=$ram paralel=$par$batas"
 [ "$par" -gt 0 ] || { echo "error=sisa disk < 5 GB"; exit 2; }
