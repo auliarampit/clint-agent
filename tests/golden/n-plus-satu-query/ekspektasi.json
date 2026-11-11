@@ -1,0 +1,10 @@
+{
+  "cacat": "Query order_items dijalankan satu kali per order di dalam loop (N+1).",
+  "wajib": [
+    {
+      "file": "src/orders/orders.service.ts",
+      "kata": ["n+1", "n + 1", "loop", "per order", "tiap order", "setiap order"],
+      "tingkat_min": "Minor"
+    }
+  ]
+}

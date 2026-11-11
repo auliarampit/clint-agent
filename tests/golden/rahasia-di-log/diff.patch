@@ -1,0 +1,14 @@
+diff --git a/src/auth/auth.service.ts b/src/auth/auth.service.ts
+index d4137a9..3834801 100644
+--- a/src/auth/auth.service.ts
++++ b/src/auth/auth.service.ts
+@@ -7,6 +7,8 @@ export class AuthService {
+   async login(email: string, password: string) {
+     const user = await this.users.verify(email, password);
+     if (!user) throw new Error('INVALID_CREDENTIALS');
+-    return { token: signToken(user.id) };
++    const token = signToken(user.id);
++    console.log('login ok', { email, password, token });
++    return { token };
+   }
+ }

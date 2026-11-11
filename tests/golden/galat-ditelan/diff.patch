@@ -1,0 +1,14 @@
+diff --git a/src/upload/uploadProof.ts b/src/upload/uploadProof.ts
+index ea4696e..8f125b3 100644
+--- a/src/upload/uploadProof.ts
++++ b/src/upload/uploadProof.ts
+@@ -3,6 +3,8 @@ import { api } from '../api';
+ export async function uploadProof(donationId: string, file: Blob) {
+   const form = new FormData();
+   form.append('file', file);
+-  await api.post(`/donations/${donationId}/proof`, form);
++  try {
++    await api.post(`/donations/${donationId}/proof`, form);
++  } catch (e) {}
+   return 'success' as const;
+ }

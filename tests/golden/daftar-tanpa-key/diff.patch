@@ -1,0 +1,20 @@
+diff --git a/src/catalog/ProductList.tsx b/src/catalog/ProductList.tsx
+index cbb66d1..d56c08f 100644
+--- a/src/catalog/ProductList.tsx
++++ b/src/catalog/ProductList.tsx
+@@ -1,7 +1,13 @@
+-import { FlatList, Text } from 'react-native';
++import { ScrollView, Text } from 'react-native';
+ import { ProductCard } from './ProductCard';
+ 
+ export function ProductList({ items }: { items: { id: string; name: string }[] }) {
+   if (items.length === 0) return <Text>Belum ada produk</Text>;
+-  return <FlatList data={items} keyExtractor={(i) => i.id} renderItem={({ item }) => <ProductCard item={item} />} />;
++  return (
++    <ScrollView>
++      {items.map((item) => (
++        <ProductCard item={item} />
++      ))}
++    </ScrollView>
++  );
+ }

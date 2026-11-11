@@ -1,0 +1,10 @@
+{
+  "cacat": "Galat unggah ditelan catch kosong, fungsi tetap mengembalikan 'success'.",
+  "wajib": [
+    {
+      "file": "src/upload/uploadProof.ts",
+      "kata": ["catch", "ditelan", "menelan", "success", "gagal"],
+      "tingkat_min": "Major"
+    }
+  ]
+}

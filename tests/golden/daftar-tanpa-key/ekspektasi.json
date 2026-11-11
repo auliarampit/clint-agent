@@ -1,0 +1,10 @@
+{
+  "cacat": "FlatList diganti ScrollView + map tanpa prop key: semua kartu dirender sekaligus dan React tidak bisa melacak item.",
+  "wajib": [
+    {
+      "file": "src/catalog/ProductList.tsx",
+      "kata": ["key", "flatlist", "virtual", "scrollview"],
+      "tingkat_min": "Minor"
+    }
+  ]
+}

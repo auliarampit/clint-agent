@@ -774,6 +774,30 @@ PR, putaran tinjauan, subagent dan waktu cek per PR, per modul (rencana), serta 
 `ship-pr.py` (MR atau push). PR yang dibuat di luar alur itu tidak terhitung per PR, tetapi tokennya tetap
 masuk total per perintah.
 
+### Mengukur mutu
+
+Tiga skrip tanpa token yang menjawab "apakah hasil clint makin benar", bukan hanya "berapa biayanya":
+
+| Skrip | Menjawab | Sumber |
+|---|---|---|
+| `python3 scripts/outcome-mr.py [--sejak YYYY-MM-DD] [--json <file>]` | Berapa MR yang lolos tanpa komentar manusia, MR mana yang dikomentari padahal sudah ditinjau clint, push susulan setelah MR dibuka, jam sampai merge | `kirim` dan `tinjau` di `pr.jsonl` + GitLab lewat `glab api` |
+| `python3 scripts/pelajaran.py [--min N] [--repo <kata>]` | Kategori temuan peninjau yang berulang di ≥ N PR (default 3) per repo, dengan contoh | `<repo>/.git/clint/**/temuan-*.md` |
+| `python3 scripts/golden-check.py <folder kasus> <folder temuan>` | Apakah peninjau masih menemukan cacat yang ditanam di kasus uji emas | `tests/golden/<kasus>/` + `temuan-<agent>.md` hasil peninjau |
+
+- **Hasil MR.** MR merged/closed disimpan di `~/Library/Logs/clint/outcome.jsonl`, jadi panggilan berikutnya hanya
+  menarik MR baru. Angka "lolos tanpa komentar" baru bermakna bila MR memang direview orang lain; MR yang
+  di-merge sendiri selalu terhitung lolos. Push susulan adalah perkiraan kasar: push clint dan push manual
+  tidak dibedakan.
+- **Pelajaran.** Skrip hanya mendaftar kandidat. Kategori yang memang berulang dirumuskan jadi satu baris aturan
+  di adapter project bagian "Larangan khusus project ini" (sudah diperiksa `conformance-reviewer`), dengan
+  persetujuan pemilik project. Satu temuan cukup dicatat di satu tempat: bila sudah jadi aturan adapter, tidak
+  ditulis lagi di ingatan.
+- **Uji emas.** Setiap kasus berisi `diff.patch` dengan satu cacat yang ditanam dan `ekspektasi.json` (file,
+  kata kunci, tingkat minimal). Setiap kali instruksi peninjau diubah: jalankan peninjau itu pada `diff.patch`
+  tiap kasus tanpa menyebut cacatnya, simpan jawabannya sebagai `temuan-<agent>.md`, lalu jalankan
+  `golden-check.py`. Keluar 1 berarti ada cacat wajib yang tidak lagi ditemukan. Kasus baru ditambah dari bug
+  yang lolos ke review manusia atau QA.
+
 ## Konfigurasi
 
 ### Per project: `.claude/clint.json`
@@ -909,7 +933,7 @@ clint/
   agents/            21 agent
   skills/            status · develop · review · test · docs · release · setup
   hooks/             prinsip kerja + bahasa, ingatan mempalace, tolak edit lewat skrip, format, review otomatis, kabar, status sesi
-  scripts/           tarik repo kerja + relatedRepos (sync-repos.sh), status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), cek lokal (run-checks.py), potongan rencana (plan-slice.py), audit pemakaian (audit-usage.py), bahan logbook (logbook-draft.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
+  scripts/           tarik repo kerja + relatedRepos (sync-repos.sh), status rencana (plan-status.py), cek repo dipakai (repo-busy.sh), cek lokal (run-checks.py), potongan rencana (plan-slice.py), audit pemakaian (audit-usage.py), mutu (outcome-mr.py, pelajaran.py, golden-check.py), bahan logbook (logbook-draft.sh), sapaan pagi, layar laporan, perintah suara, aksi menu bar, ikon
   menubar/           aplikasi menu bar (ClintBar.swift), panel (panel.html), data (data.py), build.sh
   kit/               master skill/rules/adapter + sonarqube.md yang DISALIN ke project (lihat kit/README.md)
   docs/images/       gambar README; sumbernya di docs/images/source (python3 build.py)
@@ -947,6 +971,7 @@ Lalu **Reload Window** di VS Code. Gambar README dibuat ulang dengan `python3 do
 | 7c | **v2.16 gerbang kualitas** (dari audit Sprint 1–4 magnet-rezeki, 137 temuan): `kit/quality-gates.md` (gerbang mesin sonarjs/jscpd/knip/lapisan/audit/glosarium, harness ukur startup/FPS/memori/ukuran, anggaran aset, penutupan modul, deviasi), auditor design/security/performance di luar kuota, kebenaran selalu diperiksa `code-reviewer`, aturan galat ditolak vs tak terjangkau, scrubber monitoring, keychain setelah pasang ulang | selesai |
 | 7d | **v2.17 hemat izin dan konteks** (dari audit 3–10 Nov): hook menolak edit file lewat python inline (326 edit tanpa cek teks ketemu), path plugin dan file kabar ditulis literal supaya tidak meminta izin, `develop/SKILL.md` 31 → 18 KB (detail di `review.md`, `ship.md`, `klaim.md`, `berikutnya.md`), `quality-gates.md` dan `sonarqube.md` hanya dimuat saat menyentuh kode, tarik ulang docs sebelum menyimpulkan sesuatu belum ada dan `tertinggal=` untuk repo `fetch-saja` | selesai |
 | 7e | **v2.18 verifikasi dan hemat sumber daya** (dari audit 3–10 Nov): perbaikan bug/feedback wajib mereproduksi jalur persis laporan sebelum dan sesudah (developer, bug-investigator, test), dilarang menyimpulkan "tidak bisa" tanpa mencoba cara yang didokumentasikan, status butir ditulis ke tracker docs utama lewat `tech-writer` beserta Definition of Done, `preflight.sh` membatasi paralel maks 2 di RAM ≤ 8 GB (`batas=ram`), pola menunggu diganti notifikasi background dan pertanyaan digabung, `setup` mencetak perintah allowlist untuk dijalankan user. PR Kecil: satu `code-reviewer` (plus conformance dan a11y), design/perf hanya bila skor ≥ 6 (perf juga bila kena dependensi/aset), security tetap; post-hook Load Meter hanya di akhir rangkaian MR/commit; v2.18.1: `pr.jsonl` mencatat `prep` (ukuran, wajib, skor), `preflight` (RAM, paralel), dan `verifikasi` di `kirim`, serta `audit-usage.py` punya bagian pembanding sebelum/sesudah | selesai |
+| 7f | **v2.19 mengukur mutu** (dari audit 6 Okt–11 Nov): `outcome-mr.py` (hasil nyata tiap MR dari GitLab: komentar manusia, push susulan, jam ke merge), `pelajaran.py` (kategori temuan berulang per repo sebagai bahan aturan adapter), kasus uji emas di `tests/golden/` + `golden-check.py` (cacat yang ditanam harus tetap ditemukan setiap kali instruksi peninjau diubah) | selesai |
 | 8 | **Layout repo Badr**: repo root + repo domain (docs, design, qa, app, data-pipeline, mobile), `clint.json` di repo root, status dan `change-tracker` lintas repo domain, commit tetap per repo; `setup audit` untuk repo standard (skrip) | ditunda, menunggu standar repo Badr resmi (bentuk repo root dan isi wajib tiap repo) |
 | 9 | **Logbook dan memori**: `/clint:docs logbook` menulis entri harian per orang di `docs/logbook/YYYY-MM.md` (bahan dari skrip `logbook-draft.sh`); mempalace untuk ingatan antar sesi (`embeddinggemma`, wake-up wing project di awal sesi, transkrip disimpan saat sesi berakhir); satu fakta di satu tempat | selesai |
 | 10 | **Dokumen lengkap**: rantai dokumen per project (`docs` di `clint.json`) + template `kit/docs/` (PRD, SAD, ERD, STD, API contract OpenAPI 3.1, ADR, UAT, BAST, quick guide, sprint review); `solution-architect`: SAD dan ERD per domain; `business-analyst`: UAT dan BAST; uji terpandu `qa-analyst`; tampilan `status` per peran; skrip `trace` (AC↔TC, cascade ID) dan `sprint-evidence` | agent BA, QA, sprint-tracker sudah ada; sisanya rencana |

@@ -17,6 +17,8 @@ Kalau permintaan, dokumen, atau kode ambigu, berhenti dan tanya. Satu pertanyaan
 lebih murah daripada satu implementasi yang salah.
 
 - Tidak menebak kebutuhan, stack, atau perilaku yang tidak tertulis.
+- Tidak menyampaikan penilaian sebagai dugaan. Kalau datanya bisa diambil (skrip, log, kode), ambil dulu
+  baru simpulkan; kalau tidak bisa, tulis "belum diketahui" dan sebut apa yang perlu diukur.
 - Tidak menyelesaikan ambiguitas atau konflik antar dokumen secara diam-diam.
 - Keputusan user yang membuat kode menyimpang dari dokumen dicatat sebagai deviasi (`quality-gates.md` §4),
   bukan hanya di commit atau adapter.

@@ -1,0 +1,10 @@
+{
+  "cacat": "Password dan token dicetak ke log saat login berhasil.",
+  "wajib": [
+    {
+      "file": "src/auth/auth.service.ts",
+      "kata": ["password", "kata sandi", "token", "kredensial", "rahasia"],
+      "tingkat_min": "Major"
+    }
+  ]
+}
