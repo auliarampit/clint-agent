@@ -136,5 +136,20 @@ class SaranProsa(unittest.TestCase):
         self.assertFalse(m.prosa("return null"))
 
 
+class TabelRencana(unittest.TestCase):
+    def test_tabel_lebih_dari_80_baris_terbaca_utuh(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("plan_status", os.path.join(SKRIP, "plan-status.py"))
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        baris = ["## Urutan pekerjaan", "", "| PR | Branch | Isi | Bergantung |", "|---|---|---|---|"]
+        baris += [f"| PR-{i} | fix/b{i} | isi | {'PR-1' if i == 90 else '—'} |" for i in range(1, 91)]
+        baris += ["", "## Lain", "| PR-999 | x | y | — |"]
+        prs = m.parse_table(baris)
+        self.assertEqual(len(prs), 90)
+        self.assertEqual(prs[-1]["id"], "PR-90")
+        self.assertEqual(prs[-1]["deps"], ["PR-1"])
+
+
 if __name__ == "__main__":
     unittest.main()

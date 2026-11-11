@@ -8,7 +8,7 @@ Fakta: MR (glab/gh per branch), trailer `Plan: <rencana> PR-n` di base, branch l
 (~/Library/Logs/clint/kerja/*.json), dan bagian `## Status PR` di file rencana.
 STATE untuk --set: done, review, draft, held, blocked, todo. Status "unknown" (push-base tanpa bukti) tidak ditulis.
 """
-import argparse, glob, json, os, re, subprocess, sys, time
+import argparse, glob, itertools, json, os, re, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor
 
 HOME = os.path.expanduser("~")
@@ -40,7 +40,8 @@ def parse_table(lines):
     start = next((i for i, l in enumerate(lines) if re.match(r"#+ .*Urutan pekerjaan", l)), None)
     if start is None:
         return []
-    rows = [l for l in lines[start + 1:start + 80] if l.startswith("|")]
+    body = list(itertools.dropwhile(lambda l: not l.startswith("|"), lines[start + 1:]))
+    rows = list(itertools.takewhile(lambda l: l.startswith("|"), body))
     if len(rows) < 2:
         return []
     head = [c.strip().lower() for c in rows[0].strip("|").split("|")]
