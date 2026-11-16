@@ -57,6 +57,15 @@ Kegagalan satu PR (masih ada temuan setelah 3 putaran, test gagal, konflik rebas
   laporan untuk diperiksa user. (Working tree bersih = hook tinjau otomatis tidak terpicu ulang.)
 - PR yang bergantung padanya **dilewati**; PR lain tetap jalan.
 
+## 5.5b Belajar dari temuan yang lolos
+
+Setiap kali membaca review MR (AI Code Review, Warden, komentar manusia), bandingkan temuannya dengan
+`findings.md` dan `temuan-*.md` folder kerja PR. Temuan yang tidak ditangkap peninjau lokal, atau yang
+diusulkan peninjau lokal padahal salah, dicatat sebagai kasus uji emas baru di repo clint
+(`tests/golden/<nama>/diff.patch` + `ekspektasi.json`, README bagian Mutu). Kalau penyebabnya instruksi
+peninjau atau alur, instruksinya diperbaiki juga, lalu `golden-check.py` dijalankan. Tanyakan ke user sebelum
+commit ke repo clint.
+
 ## 5.6 Penutupan modul (`quality-gates.md` §3)
 
 Setelah PR terakhir sebuah rencana modul jadi MR (sisa `plan-status.py` hanya PR penutupan, atau semua ✅/🔍),

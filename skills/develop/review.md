@@ -67,6 +67,11 @@ dengan path `findings.md` + `pr.diff`; mereka memverifikasi temuannya dan baris 
 bukan meninjau dari awal. `putaran_ulang=` hanya memuat peninjau dengan temuan Critical/Major/Minor; peninjau
 yang hanya memberi Low tidak dipanggil lagi. `hanya_low=ya` → setelah `developer` memperbaiki, cukup
 `run-checks.py` lulus dan laporannya menandai setiap butir `diperbaiki`/`dilewati`, tanpa tinjauan ulang.
+Butir apa pun tingkatnya yang `dilewati` dikirim balik ke peninjau asalnya beserta alasan `developer`
+(SendMessage, satu pesan untuk semua butir); peninjau menjawab `diterima` atau `tetap` per butir. Yang `tetap`
+diperbaiki. Hanya yang `diterima` boleh masuk blok saran MR.
+Usulan peninjau yang menunda sebagian perbaikan ke PR lain (salinan lama, TODO) dicocokkan dulu dengan
+`.claude/rules/`; melanggar → perbaiki semuanya di PR ini, jangan ditulis sebagai "belum dikerjakan".
 **Maksimal 3 putaran perbaikan.** Masih ada temuan setelah itu → berhenti, laporkan
 ke user, jangan buat MR. Temuan luar cakupan dan usulan yang dilewati karena bertentangan dengan aturan project
 dicantumkan di deskripsi MR.

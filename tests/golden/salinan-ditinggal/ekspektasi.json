@@ -1,0 +1,10 @@
+{
+  "cacat": "optionalAuth dipindah ke src/shared/api/optional-auth.ts, tetapi salinan lama di library.api.ts tetap hidup dan malah dipakai fungsi baru: dua sumber kebenaran (MR !425 magnet-rezeki/mobile).",
+  "wajib": [
+    {
+      "file": "src/features/library/data/library.api.ts",
+      "kata": ["optionalauth", "duplikasi", "salinan", "shared"],
+      "tingkat_min": "Minor"
+    }
+  ]
+}

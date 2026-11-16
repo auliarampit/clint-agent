@@ -1,0 +1,14 @@
+{
+  "cacat": "putStoryLike wajib bearer menurut kontrak, tetapi hanya mengandalkan default withAuth = true dan test-nya memock apiRequest, jadi tidak ada yang mengunci header Authorization (MR !425 magnet-rezeki/mobile).",
+  "wajib": [
+    {
+      "file": "src/features/stories/",
+      "kata": [
+        "withauth",
+        "authorization",
+        "bearer"
+      ],
+      "tingkat_min": "Minor"
+    }
+  ]
+}

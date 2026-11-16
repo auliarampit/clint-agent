@@ -21,6 +21,9 @@ branch, dan bagian rencana PR.
      dilanggar.
    - **Kebenaran**: hanya bila `code-reviewer` tidak ikut di putaran ini (butir kebenaran selalu miliknya).
    - **Kebersihan**: tidak ada file sampah (screenshot, log, build output) di perubahan.
+   - **Yang ditunda**: butir "belum dikerjakan" atau "PR terpisah" di laporan developer/deskripsi MR yang
+     melanggar aturan project (mis. salinan lama dibiarkan hidup berdampingan) = Minor, menahan MR.
+   - **Test**: logika baru di diff punya test perilaku yang mengunci hasilnya; tanpa test = Minor.
    - **Deviasi**: kode yang menyimpang dari PRD/SAD/STD/kontrak/prototipe tanpa ID di `## Deviasi` rencana atau
      Change Request = Major (`.claude/rules/quality-gates.md` §4). Status feedback/bug "Fixed" yang bertentangan
      dengan PRD ditandai.

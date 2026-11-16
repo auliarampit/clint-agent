@@ -1,0 +1,35 @@
+diff --git a/src/shared/api/optional-auth.ts b/src/shared/api/optional-auth.ts
+new file mode 100644
+--- /dev/null
++++ b/src/shared/api/optional-auth.ts
+@@ -0,0 +1,5 @@
++import { tokenStore } from '@/shared/storage/token-store';
++
++export async function optionalAuth(): Promise<{ withAuth: boolean }> {
++  return { withAuth: (await tokenStore.getAccessToken()) !== null };
++}
+diff --git a/src/features/stories/data/stories.api.ts b/src/features/stories/data/stories.api.ts
+new file mode 100644
+--- /dev/null
++++ b/src/features/stories/data/stories.api.ts
+@@ -0,0 +1,8 @@
++import { apiRequest } from '@/shared/api/client';
++import { optionalAuth } from '@/shared/api/optional-auth';
++
++export const storiesApi = {
++  async listStories() {
++    return apiRequest('/stories', { ...(await optionalAuth()) });
++  },
++};
+diff --git a/src/features/library/data/library.api.ts b/src/features/library/data/library.api.ts
+--- a/src/features/library/data/library.api.ts
++++ b/src/features/library/data/library.api.ts
+@@ -48,6 +48,10 @@ import { tokenStore } from '@/shared/storage/token-store';
+ 
+ async function optionalAuth(): Promise<{ withAuth: boolean }> {
+   return { withAuth: (await tokenStore.getAccessToken()) !== null };
+ }
++
++export async function listSeries() {
++  return apiRequest('/library/series', { ...(await optionalAuth()) });
++}

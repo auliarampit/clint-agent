@@ -150,6 +150,23 @@ class TabelRencana(unittest.TestCase):
         self.assertEqual(prs[-1]["id"], "PR-90")
         self.assertEqual(prs[-1]["deps"], ["PR-1"])
 
+    def test_set_review_tidak_membawa_catatan_tanpa_mr(self):
+        import importlib.util, subprocess, tempfile
+        spec = importlib.util.spec_from_file_location("plan_status", os.path.join(SKRIP, "plan-status.py"))
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        d = tempfile.mkdtemp()
+        for args in (["init", "-q", "-b", "dev"], ["commit", "-q", "--allow-empty", "-m", "a"],
+                     ["branch", "feat/x"]):
+            subprocess.run(["git", "-C", d, *args], check=True)
+        plan = os.path.join(d, "rencana.md")
+        open(plan, "w").write("## Urutan pekerjaan\n\n| PR | Branch | Isi |\n|---|---|---|\n| PR-1 | feat/x | isi |\n")
+        cfg = {"baseBranch": "dev", "mr": {"mode": "push-base"}}
+        tanpa = m.evaluate(plan, d, cfg, "", {})["prs"][0]
+        self.assertIn("tanpa MR", tanpa["note"])
+        r = m.evaluate(plan, d, cfg, "", {"PR-1": ("review", "")})["prs"][0]
+        self.assertEqual((r["state"], r["note"]), ("review", ""))
+
 
 if __name__ == "__main__":
     unittest.main()

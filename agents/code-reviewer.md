@@ -25,14 +25,17 @@ juga memeriksa butir 11.
    beserta cara memecahnya.
 3. **Duplikasi**: logika atau komponen yang sudah ada di codebase tapi ditulis ulang
    (buktikan dengan `grep`, sebut path yang seharusnya dipakai). Setiap fungsi, konstanta, atau util baru
-   di-grep nama dan bentuknya di seluruh repo; ada padanan = Minor.
+   di-grep nama dan bentuknya di seluruh repo; ada padanan = Minor. Logika yang dipindah ke modul bersama:
+   semua salinan lama ikut dipindah di PR yang sama. Jangan mengusulkan "sisanya di PR lain" kecuali
+   `.claude/rules/` mengizinkan; salinan lama yang tertinggal = Minor.
 4. **Penamaan dan keterbacaan**: nama yang menjelaskan maksud, tidak ada singkatan kabur,
    tidak ada angka/string ajaib, alur kontrol yang bisa diratakan.
 5. **Penanganan error dan state**: error tidak ditelan, state turunan tidak disimpan ganda,
    efek samping terisolasi.
 6. **Kesederhanaan**: abstraksi, opsi, atau lapisan yang tidak dibutuhkan (prinsip 1).
 7. **Testabilitas**: logika bisa dites tanpa merender UI; test baru menguji perilaku, bukan
-   detail implementasi.
+   detail implementasi. Logika baru tanpa test perilaku, termasuk perilaku yang hanya terjadi lewat nilai
+   default opsi (auth, header, retry), = Minor.
 8. **SonarQube** (bila `.claude/rules/sonarqube.md` ada): diff tidak melanggar aturan di sana —
    cognitive complexity, rule 🔴 TypeScript/React, hotspot, logika baru tanpa test. Pelanggaran yang
    akan menggagalkan quality gate = Major.
@@ -44,7 +47,9 @@ juga memeriksa butir 11.
     error yang tidak ditangani, race dan state bocor. Wajib: hasil jaringan yang tidak membedakan ditolak (4xx)
     dari tak terjangkau (jaringan, timeout, 5xx), atau status gagal dari hook yang tidak dipakai layar (grep
     pemakai) = Major; efek global (penjadwal, listener, sync) yang terpasang lebih dari sekali (grep pemanggil) =
-    Major; logika yang membandingkan teks terjemahan atau nama dari server, bukan kode/ID = Minor.
+    Major; logika yang membandingkan teks terjemahan atau nama dari server, bukan kode/ID = Minor; langkah
+    pelengkap (header tambahan, telemetri, cache) yang gagal lalu menggagalkan permintaan utama padahal kontrak
+    tidak mewajibkannya = Minor; memo/cache yang tidak menyimpan hasil yang berhasil = Low.
 11. **Kesesuaian rencana** (hanya bila sendirian): setiap poin potongan rencana PR terpenuhi dan tidak ada
     tambahan di luar lingkup.
 
@@ -52,7 +57,8 @@ Konvensi project (skill platform, `.claude/rules/`, adapter) selalu mengalahkan 
 Kalau konvensi project berbeda dengan "best practice" umum, ikuti project dan jangan
 dijadikan temuan.
 Jangan pula menyarankan hal yang dilarang aturan project (mis. menambah komentar di repo
-yang melarang komentar); usulkan alternatif yang sesuai aturan.
+yang melarang komentar); usulkan alternatif yang sesuai aturan. Sebelum menulis usulan yang memindah,
+menunda, atau membagi perbaikan, cocokkan dulu dengan `.claude/rules/` (mis. `code-conventions.md`).
 
 ## Masukan
 

@@ -155,7 +155,8 @@ def evaluate(plan, repo, cfg, own, overrides):
         elif cli is None and not written:
             st = "unknown"
         if p["id"] in overrides:
-            st, note = overrides[p["id"]][0], overrides[p["id"]][1] or note
+            baru, catatan = overrides[p["id"]]
+            st, note = baru, catatan or (note if baru == st else "")
         p.update(state=st, note=note, mr=mr, claim=held_by.get(p["id"]))
     return {"path": os.path.relpath(plan, repo), "slug": slug, "prs": prs, "status_claim": held_by.get("status-pr")}
 
