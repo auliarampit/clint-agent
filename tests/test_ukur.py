@@ -2,6 +2,7 @@
 ulang), dan audit-usage.py (pasangan mulai → kirim di pr.jsonl dengan token dari transkrip).
 Jalankan: python3 -m unittest discover -s tests"""
 import json, os, shutil, subprocess, tempfile, unittest
+from unittest import mock
 
 AKAR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SKRIP = os.path.join(AKAR, "scripts")
@@ -123,6 +124,26 @@ class RunChecks(unittest.TestCase):
         log = open(os.path.join(self.kerja, ".git", "clint", "feat/x", "checks", "mobile.lint.log")).read()
         self.assertIn("PENUH", log)
         self.assertIn("mobile.lint=lulus", r.stdout)
+
+    def cek_dengan_ram(self, ram):
+        jalur = os.path.join(self.kerja, ".claude", "clint.json")
+        cfg = json.load(open(jalur))
+        cfg["surfaces"][0]["testRelated"] = "echo jest"
+        json.dump(cfg, open(jalur, "w"))
+        with mock.patch.dict(os.environ, {"CLINT_RAM_GB": str(ram)}):
+            r = skrip("run-checks.py", self.kerja)
+        log = open(os.path.join(self.kerja, ".git", "clint", "feat/x", "checks", "mobile.test.log")).read()
+        return r.stdout, log
+
+    def test_ram_8gb_berurutan_dan_jest_dibatasi(self):
+        out, log = self.cek_dengan_ram(8)
+        self.assertIn("ram_gb=8 berurutan", out)
+        self.assertIn("jest --maxWorkers=2 b.tsx", log)
+
+    def test_ram_besar_paralel_tanpa_batas_jest(self):
+        out, log = self.cek_dengan_ram(32)
+        self.assertNotIn("berurutan", out)
+        self.assertNotIn("--maxWorkers", log)
 
 
 class MergeFindingsLow(unittest.TestCase):

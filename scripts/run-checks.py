@@ -9,6 +9,8 @@ diff terhadap `--base` (default `origin/<baseBranch>`) + perubahan belum di-comm
 Keluaran lengkap disimpan di `<folder kerja PR>/checks/<surface>-<cek>.log`, ringkasan di `checks.md`.
 Stdout: `<surface>.<cek>=lulus|gagal|lewat <detik>s`, lalu 40 baris terakhir keluaran cek yang gagal.
 Exit 1 bila ada yang gagal.
+RAM <= 8 GB (atau `CLINT_RAM_GB`): cek dijalankan berurutan dan Jest dibatasi `--maxWorkers=2`, karena lint penuh
+plus Jest dengan worker default (jumlah CPU - 1) memenuhi RAM dan swap laptop 8 GB.
 """
 import json, os, re, shlex, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor
@@ -26,6 +28,21 @@ def berubah(kerja, base):
     nama |= set(git(kerja, "diff", "--name-only", "--diff-filter=d", "HEAD").split())
     nama |= set(git(kerja, "ls-files", "--others", "--exclude-standard").split())
     return sorted(n for n in nama if os.path.exists(os.path.join(kerja, n)))
+
+
+def ram_gb():
+    if os.environ.get("CLINT_RAM_GB"):
+        return int(os.environ["CLINT_RAM_GB"])
+    try:
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") // 1024 ** 3
+    except (ValueError, OSError):
+        return 0
+
+
+def batasi_jest(perintah):
+    if "jest" in perintah and "--maxWorkers" not in perintah and "-w " not in perintah:
+        return perintah.replace("jest", "jest --maxWorkers=2", 1)
+    return perintah
 
 
 def jalan(nama, perintah, cwd, log):
@@ -72,7 +89,12 @@ def main():
             else:
                 tugas.append((nama, perintah, cwd, os.path.join(folder, "checks", f"{nama}.log")))
 
-    with ThreadPoolExecutor(max_workers=max(len(tugas), 1)) as ex:
+    ram = ram_gb()
+    hemat = 0 < ram <= 8
+    if hemat:
+        tugas = [(n, batasi_jest(p), c, l) for n, p, c, l in tugas]
+        print(f"ram_gb={ram} berurutan, jest --maxWorkers=2")
+    with ThreadPoolExecutor(max_workers=1 if hemat else max(len(tugas), 1)) as ex:
         hasil = list(ex.map(lambda t: jalan(*t), tugas))
 
     ringkas = [f"# Cek lokal ({'penuh' if penuh else 'file berubah'}, {len(files)} file berubah)", ""]
