@@ -92,7 +92,7 @@ def main():
     ram = ram_gb()
     hemat = 0 < ram <= 8
     if hemat:
-        tugas = [(n, batasi_jest(p), c, l) for n, p, c, l in tugas]
+        tugas = [(n, batasi_jest(p) if n.endswith(".test") else p, c, l) for n, p, c, l in tugas]
         print(f"ram_gb={ram} berurutan, jest --maxWorkers=2")
     with ThreadPoolExecutor(max_workers=1 if hemat else max(len(tugas), 1)) as ex:
         hasil = list(ex.map(lambda t: jalan(*t), tugas))

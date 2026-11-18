@@ -140,6 +140,13 @@ class RunChecks(unittest.TestCase):
         self.assertIn("ram_gb=8 berurutan", out)
         self.assertIn("jest --maxWorkers=2 b.tsx", log)
 
+    def test_ram_8gb_lint_tidak_ikut_dibatasi_jest(self):
+        open(os.path.join(self.kerja, "jest.setup.ts"), "w").write("4")
+        self.cek_dengan_ram(8)
+        log = open(os.path.join(self.kerja, ".git", "clint", "feat/x", "checks", "mobile.lint.log")).read()
+        self.assertIn("echo LINT b.tsx jest.setup.ts", log)
+        self.assertNotIn("--maxWorkers", log)
+
     def test_ram_besar_paralel_tanpa_batas_jest(self):
         out, log = self.cek_dengan_ram(32)
         self.assertNotIn("berurutan", out)
