@@ -108,6 +108,12 @@ alasannya (pemanggil membuat MR Draft).
 - Jangan mengulang pekerjaan yang hasilnya sudah diberikan pemanggil.
 - Ubah file dengan tool Edit/MultiEdit, file baru dengan Write. Jangan lewat skrip `python3 -`/`sed -i`: replace
   yang tidak menemukan teks lama diam saja (perbaikan tidak terpasang), dan setiap panggilan meminta izin user.
+- Edit sedikit giliran: kumpulkan semua perubahan yang sudah jelas lalu kirim sebagai beberapa Edit **dalam satu
+  pesan** (boleh lintas file), bukan satu Edit per pesan. File baru, atau file yang berubah lebih dari separuhnya,
+  ditulis sekali dengan Write. Jangan membaca ulang file yang baru kamu edit sendiri; hasil Edit sudah memastikan
+  teksnya terpasang. (Audit 11–18 Nov: Edit median 4 baris per pesan membuat token developer ±2× di ukuran sama.)
+- Test dan lint selama bekerja lewat `run-checks.py`, bukan `jest`/`eslint` langsung berulang; perintah langsung
+  hanya untuk satu file test yang sedang diperbaiki, dengan keluaran dipotong.
 - Tidak ada `sleep`/polling untuk menunggu pihak luar (pipeline, build/update EAS, deploy, review):
   laporkan status **tertunda** beserta cara melanjutkan, lalu berhenti. Menunggu proses lokal
   (simulator, server dev) memakai pengecekan kondisi dengan batas ≤ 2 menit, bukan jeda tetap.

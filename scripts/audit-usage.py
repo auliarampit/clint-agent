@@ -22,6 +22,7 @@ CEK = [("run-checks", r"run-checks\.py"), ("lint", r"\beslint\b|run lint"), ("ty
        ("test", r"\bjest\b|vitest|run test"), ("e2e", r"maestro|playwright")]
 JEDA = 600
 TUNGGU = Counter()  # path transkrip → jumlah perintah Bash sleep/until
+GILIRAN_EDIT = defaultdict(set)  # path transkrip → id pesan model yang memanggil Edit/MultiEdit/Write
 
 
 def waktu(s):
@@ -61,6 +62,8 @@ def transkrip(path):
                 continue
             if c.get("type") == "tool_use":
                 inp = c.get("input") or {}
+                if c.get("name") in ("Edit", "MultiEdit", "Write") and m.get("id"):
+                    GILIRAN_EDIT[path].add(m["id"])
                 if c.get("name") == "Skill" and str(inp.get("skill", "")).startswith("clint:"):
                     perintah.append(inp["skill"])
                 if c.get("name") == "Bash":
@@ -173,7 +176,8 @@ def main():
             jenis = json.load(open(meta)).get("agentType", "?") if os.path.exists(meta) else "?"
             st, sk, _, scek, sprompt = transkrip(sf)
             if sk:
-                subs.append({"jenis": jenis, "titik": st, "kejadian": sk, "cek": scek, "prompt": sprompt})
+                subs.append({"jenis": jenis, "titik": st, "kejadian": sk, "cek": scek, "prompt": sprompt,
+                             "edit": len(GILIRAN_EDIT[sf])})
                 cek.update(scek)
                 loop += TUNGGU[sf]
         semua = sorted(kejadian + [t for s in subs for t in s["kejadian"]])
@@ -182,12 +186,14 @@ def main():
                                          "perintah": sorted(set(perintah)), "aktif": aktif(semua)}
 
     # Pasangan mulai → kirim dari log PR.
-    pr, buka = [], {}
+    pr, buka, baris = [], {}, {}
     for d in (baca(LOG) if os.path.exists(LOG) else []):
         t = waktu(d["t"])
         if not (sejak <= t < sampai):
             continue
         kunci = (d.get("repo"), d.get("branch"))
+        if d["jadi"] == "prep":
+            baris[kunci] = d.get("baris")
         if d["jadi"] == "mulai":
             buka[kunci] = {"sid": d.get("sid"), "mulai": t, "repo": kunci[0], "branch": kunci[1], "putaran": 0,
                            "hanya_low": 0}
@@ -216,6 +222,10 @@ def main():
         kej = [t for t in sorted(t for x in milik for t in x["kejadian"]) if t <= p["kirim"]]
         p["aktif"] = aktif(sorted(kej + [t for t, _ in s["titik"] if p["mulai"] <= t <= p["kirim"]]))
         p["cek"] = sum((x["cek"] for x in milik), Counter())
+        dev = [x for x in milik if x["jenis"] == "clint:developer"]
+        p["dev_token"] = sum(total(jumlah(x["titik"])) for x in dev) if dev else None
+        p["dev_edit"] = sum(x["edit"] for x in dev) / len(dev) if dev else None
+        p["baris"] = baris.get((p["repo"], p["branch"]))
 
     akhir = sampai - timedelta(days=1) if a.sampai else datetime.now(lokal)
     out = [f"# Audit clint {sejak:%d %b} – {akhir:%d %b %Y}", ""]
@@ -266,6 +276,11 @@ def main():
                                                    sum((p["subagent"] for p in ada), Counter()).most_common()),
                 f"- Waktu cek per PR (detik): " + ", ".join(f"{j} {v / len(ada):.0f}" for j, v in
                                                           sum((p["cek"] for p in ada), Counter()).most_common())]
+        dev = [p for p in ada if p.get("dev_token") and p.get("baris")]
+        if dev:
+            out.append(f"- Developer ({len(dev)} PR ber-prep): token per 100 baris diff "
+                       f"{ringkas([p['dev_token'] / 1e6 / (p['baris'] / 100) for p in dev], '{:.2f}')} jt · "
+                       f"giliran Edit/Write per run {ringkas([p['dev_edit'] for p in dev], '{:.0f}')}")
         for p in sorted(ada, key=lambda p: p["mulai"]):
             out.append(f"  - {p['mulai']:%d/%m %H:%M} {os.path.basename(p['repo'] or '')} "
                        f"{('!' + str(p['mr'])) if p['mr'] else 'push'} {p['pr'] or p['branch']} · {p['aktif']:.0f} mnt · "
