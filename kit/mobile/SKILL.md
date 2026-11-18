@@ -959,6 +959,12 @@ find {featuresRoot}/{feature-terdekat} -name '*.test.*' -o -name '*.spec.*'
 - **Hook/logic** — render hook; assert tiap cabang error dan state hasil.
 - **Komponen** — cari elemen lewat **testID, bukan string teks** (string berubah saat copy
   diperbarui atau locale berganti; testID adalah kontrak).
+- **Jalur gagal dan fallback** — assert apa yang terlihat pengguna (salinan tetap tampil, gambar pengganti
+  muncul, pesan galat), bukan hanya elemen lama hilang atau fungsi dipanggil. Nama test menyebut kasus yang
+  benar-benar dirender.
+- **Util bersama yang diubah** (format angka/uang, validasi, nama berkas) — kunci perilaku lama untuk input tepi
+  (NaN/Infinity, string kosong, format tak lazim, karakter di awal/akhir) dengan test **sebelum** mengubahnya;
+  perubahan perilaku yang disengaja terlihat sebagai test yang ikut diubah.
 
 ### E2E
 

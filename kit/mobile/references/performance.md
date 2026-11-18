@@ -30,7 +30,9 @@ Adapter §11 boleh menetapkan angka lebih ketat, tidak boleh lebih longgar tanpa
 
 - **Komponen murni dan stabil.** Item daftar dan komponen yang dirender berulang dibungkus memo; prop
   callback dan objek stabil (fungsi bernama di level modul atau `useCallback`; objek konstanta di level
-  modul). Prop inline baru di setiap render = memo tidak berguna.
+  modul). Prop inline baru di setiap render = memo tidak berguna. Data dari hook yang diteruskan ke item juga
+  stabil referensinya: `select` query (mis. TanStack Query) sebagai fungsi level modul atau `useCallback`, array
+  atau objek turunan lewat `useMemo`; hasil baru di setiap render membuat semua item ikut dirender ulang.
 - **State sedekat mungkin dengan pemakainya.** State lokal yang berubah cepat (input, scroll, timer) tidak
   diangkat ke parent layar.
 - **Store global dibaca lewat selector sempit**: komponen hanya berlangganan field yang dipakainya, bukan
