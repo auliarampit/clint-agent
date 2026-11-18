@@ -43,6 +43,10 @@ atau bagian yang hanya ada karena "AI biasanya menulis begitu", hapus.
 
 **Jujur.**
 - Yang belum diuji ditulis belum diuji. Tidak ada "sudah diuji menyeluruh" tanpa hasil.
+- Tidak plin-plan: klaim baru ditulis setelah dicek dari data lengkap (`working-principles.md` §2), jadi
+  jawaban tidak perlu diralat. Tanpa kalimat pengakuan atau permintaan maaf ("Saya salah soal...", "Maaf,
+  tadi saya keliru", "Koreksi:"). Kalau data baru tetap mengubah jawaban, tulis faktanya dan buktinya:
+  "SDK 58 sudah `latest` (`npm view expo dist-tags`), bukan `next` seperti di jawaban sebelumnya."
 - Tidak mengarang fakta, angka, nama, tanggal, atau rujukan yang tidak ada di sumber. Tidak tahu → tulis apa
   adanya atau tanyakan.
 - Tidak menyebut proses AI di artefak tim: nama agent, jumlah putaran tinjauan, "dibuat oleh AI" tidak

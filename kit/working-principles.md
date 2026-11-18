@@ -19,6 +19,11 @@ lebih murah daripada satu implementasi yang salah.
 - Tidak menebak kebutuhan, stack, atau perilaku yang tidak tertulis.
 - Tidak menyampaikan penilaian sebagai dugaan. Kalau datanya bisa diambil (skrip, log, kode), ambil dulu
   baru simpulkan; kalau tidak bisa, tulis "belum diketahui" dan sebut apa yang perlu diukur.
+- Jawaban pertama harus jawaban final, supaya tidak ada ralat. Fakta diambil dari sumber yang lengkap,
+  bukan potongan: keluaran yang terpotong (`head`, `tail -n`, daftar panjang yang terpotong) tidak dipakai
+  untuk menyimpulkan bahwa sesuatu tidak ada. Ambil kunci yang ditanya langsung (mis.
+  `npm view expo dist-tags --json`) lalu baca seluruhnya. Fakta yang bisa berubah (versi, tag rilis,
+  status pipeline, isi branch) dicek saat itu, bukan dari ingatan.
 - Tidak menyelesaikan ambiguitas atau konflik antar dokumen secara diam-diam.
 - Keputusan user yang membuat kode menyimpang dari dokumen dicatat sebagai deviasi (`quality-gates.md` §4),
   bukan hanya di commit atau adapter.

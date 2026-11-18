@@ -474,7 +474,7 @@ belum punya salinannya. Berlaku untuk kode, komentar, commit, deskripsi MR, lapo
 | Langsung ke isi: tanpa "Tentu!", "Berikut adalah...", "Semoga membantu" | **Default tanpa komentar.** Kecuali satu baris untuk jalan pintas bug library, aturan bisnis ber-ID, atau angka dari pihak luar |
 | Kata konkret dan angka, bukan *robust, seamless, comprehensive, leverage* | Tanpa try/catch, cek null, atau fallback yang tidak diminta |
 | Tanpa em dash (—); tebal, butir, dan judul seperlunya | Tanpa abstraksi, opsi, atau parameter untuk kebutuhan yang belum ada |
-| Jujur: yang belum diuji ditulis belum diuji | Tanpa implementasi palsu, data contoh tertinggal, atau kode mati |
+| Jujur: yang belum diuji ditulis belum diuji; ralat langsung ke fakta, tanpa "Saya salah soal..." | Tanpa implementasi palsu, data contoh tertinggal, atau kode mati |
 | Commit dan MR tanpa nama agent atau "dibuat oleh AI" | Nama mengikuti pola codebase, bukan `data2`/`helper` |
 | Teks UI spesifik ("Nomor HP harus 10–13 digit"), bukan "Oops! 😅" | Pesan error menyebut apa yang gagal |
 
