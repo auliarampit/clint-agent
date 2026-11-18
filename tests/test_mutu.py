@@ -107,6 +107,39 @@ class OutcomeMr(unittest.TestCase):
         self.assertIn("!2 fix/b · 3 komentar · clint 1 putaran, 0 Major di putaran 1", out)
 
 
+class UtangMutu(unittest.TestCase):
+    def setUp(self):
+        self.u = muat("utang-mutu.py")
+
+    def test_e2e_tertunda_dibaca_dari_deskripsi_bukan_draft(self):
+        self.assertEqual(self.u.e2e_tertunda("Ringkasan\nE2E: tertunda. iPhone uji tidak tersambung."),
+                         "iPhone uji tidak tersambung.")
+        self.assertEqual(self.u.e2e_tertunda("**E2E:** tertunda"), "tanpa alasan tertulis")
+        self.assertIsNone(self.u.e2e_tertunda("E2E: tidak perlu; flow dikerjakan di PR-10."))
+        self.assertIsNone(self.u.e2e_tertunda("E2E: tertunda, perangkat belum ada\n...\nE2E: lulus"))
+        self.assertIsNone(self.u.e2e_tertunda("Tanpa baris status"))
+
+    def test_susun_memisahkan_merged_tertunda_dan_feedback_tanpa_verifikasi(self):
+        kirim = [
+            {"mr": 1, "branch": "fix/fb-mob01-001-a", "verifikasi": "lulus", "draft": True},
+            {"mr": 2, "branch": "fix/fb-mob01-002-b", "verifikasi": "belum", "draft": True},
+            {"mr": 3, "branch": "feat/c", "verifikasi": None, "draft": True},
+            {"mr": 4, "branch": "fix/fb-mob01-004-d", "verifikasi": None, "draft": False},
+        ]
+        info = {1: ("merged", "E2E: tertunda. butuh HP fisik"), 2: ("merged", "E2E: tidak perlu"),
+                3: ("opened", "E2E: tertunda. belum"), 4: None}
+        tertunda, feedback, gagal = self.u.susun(kirim, info)
+        self.assertEqual(tertunda, ["!1 fix/fb-mob01-001-a · butuh HP fisik"])
+        self.assertEqual(feedback, ["!2 fix/fb-mob01-002-b · verifikasi=belum",
+                                    "!4 fix/fb-mob01-004-d · verifikasi=kosong"])
+        self.assertEqual(gagal, 1)
+
+    def test_daftar_terbaru_dulu_dan_dibatasi(self):
+        out = self.u.daftar([f"!{i}" for i in range(1, 13)]).splitlines()
+        self.assertEqual((out[0], out[9], out[-1]), ("!12", "!3", "(+2 lainnya)"))
+        self.assertEqual(self.u.daftar([]), "(tidak ada)")
+
+
 class Pelajaran(unittest.TestCase):
     def setUp(self):
         self.d = tempfile.mkdtemp()

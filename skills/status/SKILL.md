@@ -23,7 +23,8 @@ Argumen berupa **nama project lain** (mis. `/clint:status toko-online`) → cari
 3. Susun laporan sesuai **Gaya laporan** di bawah. Isinya mencakup: update docs/design dan
    dampaknya ke kode, feedback/bug QA yang masih open untuk project ini (walau file-nya tidak
    berubah belakangan ini), MR (pipeline gagal, komentar baru, menunggu review dengan tanda ⚠ > 3 jam / 🔴 > 5 jam sesuai
-   eskalasi standar Badr, **Draft** yang menunggu E2E),
+   eskalasi standar Badr, **Draft** yang menunggu E2E), **utang mutu** (E2E tertunda yang sudah merged, PR feedback
+   tanpa verifikasi jalur persis),
    rencana yang masih punya PR tersisa (satu baris per rencana: n/total selesai + yang siap),
    **kesehatan kualitas** (`quality-gates.md`: gerbang mesin atau harness yang belum terpasang, audit dependensi
    high/critical, deviasi di `## Deviasi` rencana yang lebih dari 14 hari belum diturunkan ke dokumen, dokumen
@@ -162,6 +163,7 @@ bila bahasa user English. Nama kunci JSON tetap seperti di atas.
   langkah per project. Contoh langkah dari feedback:
   `[siap] /clint:develop perbaiki BUG-092 tombol Verifikasi Customer (docs/qa/feedback/feedback-ui.md)`.
   MR Draft milik user: `[E2E] /clint:test e2e !<n>`, atau `[E2E] /clint:test e2e draft` bila lebih dari satu.
+  E2E tertunda yang sudah merged: `[E2E] /clint:test <fitur>` (uji di base), MR terbaru dulu.
 - Tanpa judul besar, tanpa tabel, tanpa hash commit/path kecuali benar-benar diperlukan.
   Maksimal ±10 baris.
 

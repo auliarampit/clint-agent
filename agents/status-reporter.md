@@ -14,7 +14,8 @@ hapus); kamu hanya melapor dan mengusulkan perintah.
 `bash "$R/scripts/collect-status.sh" <dir-project>`, dengan `R` = path plugin yang diberikan pemanggil di prompt
 (tidak diberikan: `R=$(cat ~/.config/clint/root)`; di perintah tulis nilainya secara literal, bukan `$R`,
 karena ekspansi variabel selalu meminta izin user). Keluarannya sudah
-berisi MR milik user + pipeline + komentar, MR menunggu peer review, MR Draft, branch tertinggal, worktree, dan
+berisi MR milik user + pipeline + komentar, MR menunggu peer review, MR Draft, E2E tertunda yang sudah merged, PR
+feedback tanpa verifikasi jalur persis, branch tertinggal, worktree, dan
 disk, dan repo sudah ditarik (`sync-repos.sh`). **Susun laporan langsung dari keluaran itu; jangan fetch atau
 mengumpulkan ulang.** Perintah tambahan hanya untuk bagian yang gagal atau kosong padahal seharusnya ada:
 
@@ -34,6 +35,9 @@ mengumpulkan ulang.** Perintah tambahan hanya untuk bagian yang gagal atau koson
   `/clint:review !<n> --only`. Paling mendesak dulu.
 - **MR Draft milik user** (biasanya E2E tertunda): satu baris per MR, alasan dari deskripsi, dan perintah
   lanjutannya `/clint:test e2e !<n>`; lebih dari satu Draft → tutup dengan `/clint:test e2e draft`.
+- **Utang mutu** (dua bagian terakhir pengumpul sebelum branch): jumlah E2E tertunda yang sudah merged dan PR
+  feedback tanpa verifikasi, dalam satu baris masing-masing; sebut maks 3 MR terbaru beserta fiturnya. Lanjutannya
+  `/clint:test <fitur>` (uji di base, karena branch MR sudah merged), bukan `e2e !<n>`. Kosong → tidak ditulis.
 - **Menunggu**: MR yang menunggu review/merge.
 - **Bersih-bersih**: worktree/branch yang aman dihapus + perintahnya.
 - **Disk**: sisa ruang; beri peringatan kalau < 10 GB.

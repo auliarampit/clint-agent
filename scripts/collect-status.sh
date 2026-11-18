@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Kumpulkan bahan status-reporter dalam SATU panggilan: MR milik user, pipeline, MR Draft, branch tertinggal, worktree, disk.
+# Kumpulkan bahan status-reporter dalam SATU panggilan: MR milik user, pipeline, MR Draft, E2E tertunda yang sudah merged, PR feedback tanpa verifikasi, branch tertinggal, worktree, disk.
 # Pakai: collect-status.sh <dir-project>
 sini="$(cd "$(dirname "$0")" && pwd)"
 dir="$1"; cfg="$dir/.claude/clint.json"; cd "$dir" || exit 0
@@ -46,6 +46,7 @@ else
 fi
 echo "### MR/PR Draft milik Anda (E2E mungkin tertunda: /clint:test e2e <nomor>)"
 [ -n "$draft" ] && echo "$draft" | paste -sd' ' - || echo "(tidak ada)"
+python3 "$sini/utang-mutu.py" "$dir"
 echo "### Branch lokal tertinggal dari origin/$base"
 for b in $(git for-each-ref --format='%(refname:short)' refs/heads/ | head -30); do
   n="$(git rev-list --count "$b..origin/$base" 2>/dev/null)"; [ "${n:-0}" -gt 0 ] && echo "$b tertinggal $n"
