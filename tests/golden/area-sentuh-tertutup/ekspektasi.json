@@ -1,0 +1,10 @@
+{
+  "cacat": "View kepala (progress bar + tombol tutup) dirender sesudah Pressable area ketuk selebar layar tanpa pointerEvents=\"box-none\": ketukan maju/mundur di ±120 px teratas ditelan View itu (MR !432 magnet-rezeki/mobile, lolos peninjau clint, ditemukan Hermes).",
+  "wajib": [
+    {
+      "file": "src/features/stories/presentation/StoryViewer.tsx",
+      "kata": ["pointerevents", "box-none", "menutupi", "menelan", "target sentuh"],
+      "tingkat_min": "Major"
+    }
+  ]
+}

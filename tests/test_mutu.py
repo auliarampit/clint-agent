@@ -44,7 +44,49 @@ class OutcomeMr(unittest.TestCase):
             {"system": True, "author": {}, "body": "changed the description", "created_at": "2026-11-10T10:01:00.000+07:00"},
         ]
         self.assertEqual(self.o.susun(mr, notes),
-                         {"state": "merged", "komentar_manusia": 1, "push_susulan": 1, "jam_ke_merge": 2.5})
+                         {"v": 2, "state": "merged", "komentar_manusia": 1, "push_susulan": 1, "jam_ke_merge": 2.5,
+                          "hermes": None})
+
+    def test_susun_hermes_warden_dan_balasan_clint_bukan_manusia(self):
+        mr = {"state": "merged", "created_at": "2026-11-16T10:00:00+07:00", "merged_at": "2026-11-16T11:00:00+07:00"}
+        orang = {"bot": False, "username": "arya"}
+        nf = ("<!-- hermes-mr-review --> <!-- verdict:NeedsFix sha:abc -->\n## AI Code Review\n### Temuan\n"
+              "- **[Major] [Best practice]** `src/a/StoryViewer.tsx:93` - View kepala menelan ketukan.\n"
+              "- **[Critical] [Requirement]** `eas.json:43`\n  buildArtifactPaths salah tempat.\n"
+              "- **[Minor] [Standard]** `src/a/x.ts:1` - nama kurang jelas.\n")
+        notes = [
+            {"system": False, "author": orang, "body": nf, "created_at": "2026-11-16T10:05:00+07:00"},
+            {"system": False, "author": orang, "body": "<!-- warden-report --> 0 findings",
+             "created_at": "2026-11-16T10:06:00+07:00"},
+            {"system": False, "author": {"bot": False, "username": "project_1479_bot_bfac93"},
+             "body": "Tindak lanjut di 5288f4ca", "created_at": "2026-11-16T10:20:00+07:00"},
+            {"system": False, "author": orang, "body": "<!-- hermes-mr-review --> <!-- verdict:LGTM sha:def -->",
+             "created_at": "2026-11-16T10:30:00+07:00"},
+        ]
+        r = self.o.susun(mr, notes)
+        self.assertEqual(r["komentar_manusia"], 0)
+        self.assertEqual((r["hermes"]["pertama"], r["hermes"]["akhir"], r["hermes"]["jumlah"]), ("NeedsFix", "LGTM", 2))
+        self.assertEqual(r["hermes"]["berat"], [
+            {"tingkat": "Major", "lokasi": "src/a/StoryViewer.tsx:93", "teks": "View kepala menelan ketukan."},
+            {"tingkat": "Critical", "lokasi": "eas.json:43", "teks": "buildArtifactPaths salah tempat."}])
+
+    def test_ringkasan_memisahkan_needsfix_lolos_peninjau_dan_tanpa_peninjau(self):
+        h = lambda v, berat=(): {"pertama": v, "akhir": "LGTM", "jumlah": 1, "berat": list(berat)}
+        maj = {"tingkat": "Major", "lokasi": "src/a.ts:1", "teks": "state basi"}
+        rows = [
+            {"repo": "/x/app", "mr": 1, "branch": "feat/a", "state": "merged", "komentar_manusia": 0, "push_susulan": 0,
+             "jam_ke_merge": 1.0, "hermes": h("LGTM"), "tinjau": {"berat": 0, "putaran": 1}},
+            {"repo": "/x/app", "mr": 2, "branch": "feat/b", "state": "merged", "komentar_manusia": 0, "push_susulan": 1,
+             "jam_ke_merge": 1.0, "hermes": h("NeedsFix", [maj]), "tinjau": {"berat": 0, "putaran": 1}},
+            {"repo": "/x/app", "mr": 3, "branch": "chore/c", "state": "merged", "komentar_manusia": 0, "push_susulan": 0,
+             "jam_ke_merge": 1.0, "hermes": h("NeedsFix"), "tinjau": None},
+        ]
+        out = self.o.ringkasan(rows, "(uji)")
+        self.assertIn("Hermes: 3 MR ditinjau · LGTM sejak awal 1 (33%) · NeedsFix 2 "
+                      "(lolos peninjau clint 1, tanpa peninjau clint 1)", out)
+        self.assertIn("- !2 feat/b · lolos peninjau clint (1 putaran)", out)
+        self.assertIn("[Major] src/a.ts:1 · state basi", out)
+        self.assertIn("Lolos tanpa komentar manusia: 3 dari 3 MR selesai (100%)", out)
 
     def test_susun_mr_open_tanpa_waktu_merge(self):
         r = self.o.susun({"state": "opened", "created_at": "2026-11-10T10:00:00+07:00", "merged_at": None}, [])

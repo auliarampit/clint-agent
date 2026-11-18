@@ -19,8 +19,8 @@ bila ia menambah nilai yang tidak bisa didapat murah di sesi ini. **Tugas kecil 
 
 | Ukuran | Ciri | Tim |
 |---|---|---|
-| **Mikro** | 1–2 file, ≤ ~30 baris, area biasa (teks, warna, testID, satu kondisi, konfigurasi kecil) | **Tanpa subagent.** Kerjakan langsung di sesi ini mengikuti skill platform → `run-checks.py` → commit → MR. Cocokkan sendiri dengan checklist skill |
-| **Kecil** | 1 PR, ≤ ~150 baris, area biasa | `developer` + `code-reviewer` (clean code + aturan project) + auditor `wajib=` (5.3) |
+| **Mikro** | 1–2 file, ≤ ~30 baris, area biasa (teks, warna, testID, satu kondisi). **Bukan Mikro**: konfigurasi produksi/build/rilis (`app.config.*`, `app.json`, `eas.json`, URL API/env, file CI, allowlist keamanan seperti `.gitleaks.toml`) → minimal Kecil, berapa pun barisnya | **Tanpa subagent.** Kerjakan langsung di sesi ini mengikuti skill platform → `run-checks.py` → commit → MR. Cocokkan sendiri dengan checklist skill |
+| **Kecil** | 1 PR, ≤ ~150 baris, area biasa, atau konfigurasi produksi/build kecil | `developer` + `code-reviewer` (clean code + aturan project) + auditor `wajib=` (5.3; file konfigurasi itu selalu mewajibkan `security-auditor`) |
 | **Sedang** | 1 PR > ~150 baris, atau menyentuh area sensitif (auth, token/penyimpanan data sensitif, query/data/migrasi, kontrak API, pembayaran), dinilai dari **isi** diff, bukan hanya nama file | `developer` + `conformance-reviewer` + `code-reviewer` + auditor `wajib=` + **maksimal 2** auditor lain paling relevan (tabel 5.3) |
 | **Besar** | modul / > 1 PR / lintas platform / arsitektur atau teknologi baru | `solution-architect` sekali (tinjau rencana) → `planner` → setiap PR ditangani sesuai ukurannya sendiri |
 

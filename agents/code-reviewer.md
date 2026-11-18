@@ -50,6 +50,12 @@ juga memeriksa butir 11.
     Major; logika yang membandingkan teks terjemahan atau nama dari server, bukan kode/ID = Minor; langkah
     pelengkap (header tambahan, telemetri, cache) yang gagal lalu menggagalkan permintaan utama padahal kontrak
     tidak mewajibkannya = Minor; memo/cache yang tidak menyimpan hasil yang berhasil = Low.
+    **Perilaku saat berjalan**: telusuri urutan nyata (A → B → kembali ke A, sumber berganti, item lain) dan tulis
+    skenarionya di temuan. Status yang dikunci pada identitas objek yang dipakai ulang (pemutar, koneksi, instance)
+    dan bukan pada sumbernya (url, id), atau tidak direset saat sumber berganti/null = Major; penjaga per item yang
+    memakai status satu mutation/state bersama banyak item (`isPending`, `variables` yang hanya menyimpan panggilan
+    terakhir) = Major; kontainer/overlay yang dirender di atas area sentuh tanpa `pointerEvents="box-none"` (atau
+    padanan platform) sehingga ketukan ke lapisan bawah tertelan = Major.
 11. **Kesesuaian rencana** (hanya bila sendirian): setiap poin potongan rencana PR terpenuhi dan tidak ada
     tambahan di luar lingkup.
 

@@ -1,0 +1,56 @@
+diff --git a/src/features/stories/hooks/useStoryResponse.ts b/src/features/stories/hooks/useStoryResponse.ts
+new file mode 100644
+index 0000000..5feb9e2
+--- /dev/null
++++ b/src/features/stories/hooks/useStoryResponse.ts
+@@ -0,0 +1,50 @@
++import { useMutation } from '@tanstack/react-query';
++import { useState } from 'react';
++
++import { sendLike, sendReaction } from '../data/stories.api';
++import type { ReactionCode, Story } from '../domain/story';
++
++type ResponseState = { liked: boolean; reaction: ReactionCode | null };
++
++export function useStoryResponse(story: Story) {
++  const [local, setLocal] = useState<Record<string, ResponseState>>({});
++  const current = local[story.uuid] ?? { liked: story.liked, reaction: story.reaction };
++
++  function patch(uuid: string, change: Partial<ResponseState>): void {
++    setLocal((all) => ({ ...all, [uuid]: { ...(all[uuid] ?? current), ...change } }));
++  }
++
++  const like = useMutation({
++    mutationFn: sendLike,
++    onError: (_error, change) => patch(change.uuid, { liked: !change.liked }),
++  });
++
++  const reaction = useMutation({
++    mutationFn: sendReaction,
++    onError: (_error, change) => patch(change.uuid, { reaction: change.previous }),
++  });
++
++  function toggleLike(): void {
++    if (like.isPending && like.variables.uuid === story.uuid) {
++      return;
++    }
++    const change = { uuid: story.uuid, liked: !current.liked };
++    patch(change.uuid, { liked: change.liked });
++    like.mutate(change);
++  }
++
++  function react(picked: ReactionCode): void {
++    if (reaction.isPending && reaction.variables.uuid === story.uuid) {
++      return;
++    }
++    const change = {
++      uuid: story.uuid,
++      reaction: current.reaction === picked ? null : picked,
++      previous: current.reaction,
++    };
++    patch(change.uuid, { reaction: change.reaction });
++    reaction.mutate(change);
++  }
++
++  return { ...current, toggleLike, react };
++}

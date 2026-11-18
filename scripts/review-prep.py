@@ -22,7 +22,8 @@ ABAIKAN = re.compile(r"(^|/)(locales?|i18n|translations?)/|(^|/)(eslint|prettier
 AUDITOR = {
     "security-auditor": (
         r"auth|login|session|token|secur|crypt|permission|role|guard|middleware|storage|keychain|webview|"
-        r"deeplink|linking|upload|\.env|package\.json|dockerfile|nginx",
+        r"deeplink|linking|upload|\.env|package\.json|dockerfile|nginx|(^|/)app\.(json|config\.[jt]s)$|"
+        r"(^|/)eas\.json$|\.gitlab-ci|\.github/workflows/|gitleaks",
         r"token|password|secret|jwt|bearer|authorization|cookie|securestore|asyncstorage|localstorage|keychain|"
         r"crypto|eval\(|dangerouslysetinnerhtml|webview|linking\.|http://|owner|userid|businessid|tenant|"
         r"signedurl|presign|upload|deleteobject|sql\.raw|\.raw\(|\.execute\(|\$\{[^}]+\}.*\b(where|from|and)\b"),

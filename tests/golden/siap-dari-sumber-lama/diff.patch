@@ -1,0 +1,56 @@
+diff --git a/src/features/stories/hooks/useVideoPlayback.ts b/src/features/stories/hooks/useVideoPlayback.ts
+new file mode 100644
+index 0000000..df51903
+--- /dev/null
++++ b/src/features/stories/hooks/useVideoPlayback.ts
+@@ -0,0 +1,50 @@
++import { useVideoPlayer, type VideoPlayer } from 'expo-video';
++import { useEffect, useState } from 'react';
++
++import type { StoryPlayer } from './useStoryPlayer';
++import { assignSlots, EMPTY_SLOTS, videoUrlOf, type VideoSlots } from './video-slots';
++
++function pickActive(current: string | null, slots: VideoSlots, first: VideoPlayer, second: VideoPlayer) {
++  if (current === null) {
++    return null;
++  }
++  if (slots.a === current) {
++    return first;
++  }
++  return slots.b === current ? second : null;
++}
++
++function useIsReady(player: VideoPlayer | null): boolean {
++  const [readyPlayer, setReadyPlayer] = useState<VideoPlayer | null>(null);
++
++  useEffect(() => {
++    if (player === null) {
++      return;
++    }
++    const subscription = player.addListener('statusChange', ({ status }) => {
++      setReadyPlayer(status === 'readyToPlay' ? player : null);
++    });
++    return () => subscription.remove();
++  }, [player]);
++
++  return player !== null && (readyPlayer === player || player.status === 'readyToPlay');
++}
++
++export function useVideoPlayback(story: StoryPlayer, onWaitingChange: (isWaiting: boolean) => void) {
++  const current = videoUrlOf(story.story);
++  const [slots, setSlots] = useState<VideoSlots>(EMPTY_SLOTS);
++  const first = useVideoPlayer(slots.a);
++  const second = useVideoPlayer(slots.b);
++  const active = pickActive(current, slots, first, second);
++  const isReady = useIsReady(active);
++  const wanted = assignSlots(slots, current, videoUrlOf(story.upcoming), isReady);
++  if (wanted.a !== slots.a || wanted.b !== slots.b) {
++    setSlots(wanted);
++  }
++
++  useEffect(() => {
++    onWaitingChange(!isReady);
++  }, [isReady, onWaitingChange]);
++
++  return active;
++}

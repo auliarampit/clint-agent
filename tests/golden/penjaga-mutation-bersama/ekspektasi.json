@@ -1,0 +1,10 @@
+{
+  "cacat": "Penjaga ketuk ganda memakai like.isPending + like.variables.uuid dari satu useMutation yang dipakai semua story, padahal variables hanya menyimpan panggilan terakhir: Suka A (berjalan) → Suka B → kembali ke A lolos penjaga, urutan balasan server tidak dijamin (MR !435 magnet-rezeki/mobile, lolos peninjau clint, ditemukan Hermes).",
+  "wajib": [
+    {
+      "file": "src/features/stories/hooks/useStoryResponse.ts",
+      "kata": ["variables", "ispending", "bersama", "panggilan terakhir", "per uuid"],
+      "tingkat_min": "Major"
+    }
+  ]
+}

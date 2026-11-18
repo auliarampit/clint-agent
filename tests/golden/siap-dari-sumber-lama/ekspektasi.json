@@ -1,0 +1,10 @@
+{
+  "cacat": "useIsReady mengunci status siap pada identitas objek VideoPlayer, bukan sumbernya; instance yang dipakai ulang untuk url baru masih dianggap siap (video → foto → video), dan state tidak direset saat player null (MR !436 magnet-rezeki/mobile, lolos peninjau clint, ditemukan Hermes).",
+  "wajib": [
+    {
+      "file": "src/features/stories/hooks/useVideoPlayback.ts",
+      "kata": ["readyplayer", "sumber", "url", "basi", "tertinggal", "reset"],
+      "tingkat_min": "Major"
+    }
+  ]
+}

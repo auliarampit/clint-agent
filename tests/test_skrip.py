@@ -123,6 +123,14 @@ class ReviewFitur(unittest.TestCase):
         self.assertIn("performance-auditor", h["kandidat"])
         self.assertEqual(h["wajib"], ["performance-auditor"])
 
+    def test_konfigurasi_build_mewajibkan_security_auditor(self):
+        kerja = os.path.join(self.d, "app")
+        open(os.path.join(kerja, "eas.json"), "w").write('{"build": {"production": {}}}\n')
+        git("add", ".", cwd=kerja); git("commit", "-q", "-m", "b", cwd=kerja)
+        out = subprocess.run(["python3", os.path.join(SKRIP, "review-prep.py"), kerja, "HEAD~1", "--json"],
+                             capture_output=True, text=True, check=True).stdout
+        self.assertIn("security-auditor", json.loads(out)["wajib"])
+
 
 class SaranProsa(unittest.TestCase):
     def test_prosa_tidak_jadi_suggestion(self):

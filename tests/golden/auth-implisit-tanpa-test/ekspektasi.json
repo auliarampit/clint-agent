@@ -6,7 +6,9 @@
       "kata": [
         "withauth",
         "authorization",
-        "bearer"
+        "bearer",
+        "auth bawaan",
+        "auth default"
       ],
       "tingkat_min": "Minor"
     }

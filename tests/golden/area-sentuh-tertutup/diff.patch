@@ -1,0 +1,50 @@
+diff --git a/src/features/stories/presentation/StoryViewer.tsx b/src/features/stories/presentation/StoryViewer.tsx
+new file mode 100644
+index 0000000..5a457f3
+--- /dev/null
++++ b/src/features/stories/presentation/StoryViewer.tsx
+@@ -0,0 +1,44 @@
++import { type GestureResponderEvent, Pressable, View } from 'react-native';
++import { useSafeAreaInsets } from 'react-native-safe-area-context';
++
++import { StoryCloseButton } from './StoryCloseButton';
++import { StoryMedia } from './StoryMedia';
++import { StoryProgressBars } from './StoryProgressBars';
++import { tapZone } from './tap-zone';
++import type { StoryViewerProps } from './story-viewer.types';
++
++const HEADER_TOP_GAP = 8;
++
++export function StoryViewer({ circle, position, player, width }: StoryViewerProps) {
++  const insets = useSafeAreaInsets();
++  const story = circle.stories[position.story];
++
++  function handleTap(event: GestureResponderEvent) {
++    const zone = tapZone(event.nativeEvent.locationX, width);
++    if (zone === 'next') {
++      player.next();
++    } else if (zone === 'previous') {
++      player.previous();
++    }
++  }
++
++  return (
++    <View className="flex-1 bg-black" testID="stories-viewer-screen">
++      <StoryMedia story={story} />
++      <Pressable
++        className="absolute inset-0"
++        onPress={handleTap}
++        testID="stories-viewer-tap-area"
++      />
++      <View
++        className="gap-2.5 px-2.5"
++        style={{ paddingTop: insets.top + HEADER_TOP_GAP }}
++      >
++        <StoryProgressBars active={position.story} stories={circle.stories} />
++        <View className="flex-row justify-end">
++          <StoryCloseButton onPress={player.close} />
++        </View>
++      </View>
++    </View>
++  );
++}
