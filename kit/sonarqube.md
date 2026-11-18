@@ -56,6 +56,7 @@ diingat):
 | 🔴 S6557 / S6594 | `s.indexOf(p) === 0`, `s.match(re)` | `s.startsWith(p)`, `re.exec(s)` |
 | 🔴 S7763 re-export | import lalu export | `export { x } from './x'` |
 | S3403 perbandingan selalu benar/salah (**Bug**) | `if (!active \|\| url === null)` padahal `active` sudah menjamin `url !== null`; `===` antar tipe berbeda | hapus cek yang mubazir, atau samakan tipenya |
+| 🔴 S7727 fungsi dioper langsung ke method array (**Bug**, tidak ada di `eslint-plugin-sonarjs`) | `verses.reduce(addVerse, [])`, `pages.flatMap(pageIssues)` (argumen indeks/array ikut masuk) | `verses.reduce((acc, v) => addVerse(acc, v), [])` |
 | S2871 `sort()` tanpa pembanding (**Bug**) | `names.sort()` | `names.sort((a, b) => a.localeCompare(b))` |
 
 ## 4. Security hotspot yang sering muncul
