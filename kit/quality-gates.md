@@ -20,7 +20,7 @@ skrip `lint` project supaya ikut `ciOnMr`. Nilai dan perintahnya dicatat di adap
 
 | Gerbang | JS/TS (mobile, web, backend Node) | Bahasa lain | Ambang |
 |---|---|---|---|
-| Rule SonarQube | `eslint-plugin-sonarjs` config `recommended` | job `sonar` di pipeline MR (`sonar.pullrequest.*`) | 0 pelanggaran |
+| Rule SonarQube | `eslint-plugin-sonarjs` config `recommended`, **dengan info tipe** untuk TypeScript (`parserOptions.projectService: true` pada file `.ts/.tsx`); tanpa itu ±57 rule, termasuk rule BUG seperti S3403 dan S2871, diam-diam tidak berjalan | job `sonar` di pipeline MR (`sonar.pullrequest.*`) | 0 pelanggaran |
 | Duplikasi | `jscpd` (`--min-tokens 50 --threshold 3`, folder sumber, tanpa test) | `jscpd` atau PMD CPD | ≤ 3% |
 | Kode mati | `knip` (ekspor, berkas, dependensi tak terpakai; test tidak dihitung pemakai) | `staticcheck`/`deadcode` (Go), `vulture` (Python), padanan lain di adapter | 0 |
 | Batas lapisan | `import/no-restricted-paths` atau `no-restricted-imports` sesuai lapisan di adapter §6 (presentation tidak mengimpor data/API/store mentah; fitur tidak mengimpor fitur lain) | `dependency-cruiser`, ArchUnit, `depguard` | 0 |

@@ -61,7 +61,9 @@ Isi file instruksi clint (skill, agent, rules) selalu bahasa Indonesia; yang ber
      aturan impor lapisan, audit dependensi, glosarium. Yang belum ada diusulkan **dalam satu pertanyaan**: paket,
      versi, perintah, dan tempatnya di skrip `lint`. Setelah user setuju, pasang sebagai devDependency, sambungkan
      ke `lint` (supaya ikut `ciOnMr`), jalankan sekali, dan catat di adapter §10. Pelanggaran lama tidak dibungkam;
-     sebutkan jumlahnya dan usulkan PR perbaikan. Sonar tidak ada di `ciOnMr` → sonarjs (atau job sonar MR) tidak
+     sebutkan jumlahnya dan usulkan PR perbaikan. Project TypeScript: sonarjs dianggap terpasang hanya bila config
+     ESLint memberi info tipe (`projectService`); `preflight.sh` menandai `sonarjs-tanpa-tipe` bila belum.
+     Sonar tidak ada di `ciOnMr` → sonarjs (atau job sonar MR) tidak
      boleh dilewati; bila tetap ditolak, tulis `TIDAK ADA (ditolak <tanggal>, <alasan>)` di adapter §10.
    - Tanya perangkat acuan fisik (model dan OS; mobile: satu Android dan satu iPhone) dan catat di adapter §11.
      Harness ukur belum ada → laporan setup menyebut PR pertama `chore/perf-baseline` lewat `/clint:develop`.

@@ -42,7 +42,8 @@ juga memeriksa butir 11.
 9. **AI slop** (`.claude/rules/no-ai-slop.md` §2): implementasi palsu, data contoh tertinggal, kode mati, dan
    **komentar baru yang tidak termasuk pengecualian** (komentar per langkah, JSDoc fungsi internal, banner,
    kode dikomentari) = Minor, usulannya menghapus komentar atau memperjelas nama; kode defensif yang tidak
-   perlu, nama generik, dan abstraksi spekulatif = Low.
+   perlu, nama generik, dan abstraksi spekulatif = Low. Pengecualian: cek yang hasilnya selalu benar/salah karena
+   tipe atau kondisi sebelumnya sudah menjaminnya (Sonar S3403, berjenis Bug) = Minor.
 10. **Kebenaran** (selalu): bug nyata, kasus tepi (daftar kosong, null dari API, nilai batas),
     error yang tidak ditangani, race dan state bocor. Wajib: hasil jaringan yang tidak membedakan ditolak (4xx)
     dari tak terjangkau (jaringan, timeout, 5xx), atau status gagal dari hook yang tidak dipakai layar (grep

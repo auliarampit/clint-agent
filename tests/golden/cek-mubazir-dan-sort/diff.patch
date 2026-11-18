@@ -1,0 +1,39 @@
+diff --git a/src/features/library/hooks/sort-titles.ts b/src/features/library/hooks/sort-titles.ts
+new file mode 100644
+index 0000000..bfd344f
+--- /dev/null
++++ b/src/features/library/hooks/sort-titles.ts
+@@ -0,0 +1,5 @@
++import type { LibraryItem } from '@/features/library/domain/library-item';
++
++export function sortedTitles(items: LibraryItem[]): string[] {
++  return items.map((item) => item.title).sort();
++}
+diff --git a/src/features/library/hooks/useTempFetch.ts b/src/features/library/hooks/useTempFetch.ts
+new file mode 100644
+index 0000000..a500b45
+--- /dev/null
++++ b/src/features/library/hooks/useTempFetch.ts
+@@ -0,0 +1,22 @@
++import { useEffect } from 'react';
++
++import type { DownloadFile } from '@/features/library/downloads/download-manager';
++import { tempFetcher } from '@/features/library/downloads/temp-fetcher';
++import { usePlayerStore } from '@/shared/audio/player.store';
++
++export function useTempFetch(uuid: string, file: DownloadFile | null, streaming: boolean): void {
++  const playing = usePlayerStore((state) => state.status === 'playing');
++  const url = file?.url ?? null;
++  const sizeBytes = file?.sizeBytes ?? 0;
++  const active = streaming && playing && url !== null;
++
++  useEffect(() => {
++    if (!active || url === null) {
++      return;
++    }
++    tempFetcher.start(uuid, url, sizeBytes);
++    return () => {
++      void tempFetcher.pause(uuid);
++    };
++  }, [active, uuid, url, sizeBytes]);
++}

@@ -25,6 +25,11 @@ jq -r '.surfaces[]? | "\(.root // ".")\t\(.adapter // "")"' "$cfg" | while IFS=$
     [ -f "$ad" ] && grep -qiE "$nama.*ditolak" "$ad" && continue
     kurang="$kurang $nama"
   done
+  # sonarjs tanpa info tipe: ±57 rule (banyak berjenis BUG) diam-diam tidak berjalan.
+  if grep -q '"eslint-plugin-sonarjs"' "$pj" && grep -q '"typescript"' "$pj"; then
+    cfgs="$(ls "$root"/eslint.config.* "$root"/.eslintrc* 2>/dev/null)"
+    [ -n "$cfgs" ] && ! grep -qE 'projectService|\bproject\s*:' $cfgs && kurang="$kurang sonarjs-tanpa-tipe"
+  fi
   [ -n "$kurang" ] && echo "gerbang_kurang=$root:$kurang"
   [ -f "$root/docs/performa/baseline.md" ] || [ -f docs/performa/baseline.md ] || echo "harness=tidak ada ($root)"
 done

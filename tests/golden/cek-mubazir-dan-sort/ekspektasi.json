@@ -1,0 +1,15 @@
+{
+  "cacat": "Rule SonarQube berjenis BUG yang lolos karena sonarjs di magnet-rezeki/mobile berjalan tanpa info tipe: `url === null` selalu salah karena `active` sudah menjamin url tidak null (S3403, useTempFetch.ts:19), dan `sort()` tanpa fungsi pembanding pada string (S2871, mis. usePrices.ts:30).",
+  "wajib": [
+    {
+      "file": "src/features/library/hooks/useTempFetch.ts",
+      "kata": ["selalu", "always", "redundan", "mubazir", "tidak perlu", "dua kali", "s3403"],
+      "tingkat_min": "Minor"
+    },
+    {
+      "file": "src/features/library/hooks/sort-titles.ts",
+      "kata": ["localecompare", "pembanding", "compare", "s2871"],
+      "tingkat_min": "Minor"
+    }
+  ]
+}
